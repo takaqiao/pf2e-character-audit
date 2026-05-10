@@ -89,6 +89,10 @@
           "Title": "未选择关键属性 (Key Ability)",
           "Hint": "在角色卡上为职业指定 Key Ability。"
         },
+        "CLASS_SUBCLASS_MISSING": {
+          "Title": "{className} 未选择 {feature}",
+          "Hint": "该职业要求在 1 级时选定子类（如吟游诗人的缪斯、牧师的信条、野蛮人的本能）。请把相应的子类专长拖入角色。"
+        },
         "BOOST_COUNT_MISMATCH": {
           "Title": "等级 {level} 属性提升数量不符",
           "Hint": "应有 4 个属性提升，实际 {actual} 个。"

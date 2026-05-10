@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.6] - 2026-05-11
+
+### Added
+- **Babele 反向查表**（`scripts/utils/babele-bridge.js`）: 在第一次审计时，自动扫描已加载的 Babele 翻译模组（pf2e_compendium_chn、pf2e_cn 等），构建 `中文名 → 英文 canonical 名`映射表。这一步在 CN normalizer 的最前面跑，让"鲁莽骑手入门"这种被翻译模组覆盖到的引用直接还原为英文（"Reckless Rider Dedication"），不需要我维护硬编码字典。覆盖 pf2e_compendium_chn 中 **1700+ 个 dedication 模式**和 **2000+ 个 plain CJK 引用**。
+
+- **CN normalizer 新模式**:
+  - `<X>入门` → `<X> Dedication`（fallback，Babele 没装时用）
+  - `<X>学识受训` → `trained in <X> Lore`（简写形式，无"熟练度"）
+  - `<ability><num>` 紧凑形式（如"魅力14"）→ `Charisma 14`
+  - 自动剥离尾部"。"等终止标点
+- **CN normalizer 词表扩充**: 聚能池/法术打击/奥术奔涌/神力源泉/觉醒阶段/能够施法 等 10+ 个常见 class feature 名
+
+- **新检查 `CLASS_SUBCLASS_MISSING`**: 验证职业的子类选项在 1 级时已确定。覆盖 24 个职业（Bard 缪斯/Cleric 信条/Sorcerer 血裔/Wizard 学派/Druid 教派/Champion 事业/Barbarian 本能/Ranger 猎人之锋/Rogue 突袭风格/Witch 渊源/Alchemist 研究领域/Investigator 调查方法/Swashbuckler 突袭风格/Oracle 神秘事项/Psychic 意识心智/Magus 混合研究/Inventor 改造/Kineticist 能门/Summoner 万灵/Gunslinger 路线/Animist 灵显/Commander 旗帜 等）。如果对应子类专长 slug 不在 actor 的 feats 里，报 error。
+
+### Changed
+- prereq 步骤现在以 `applyReverseLookup` 开头，跑完仍有 CJK 才走后续 regex 路径。
+
+[0.1.6]: https://github.com/takaqiao/pf2e-character-audit/releases/tag/0.1.6
+
 ## [0.1.5] - 2026-05-11
 
 ### Fixed

@@ -1,6 +1,93 @@
 import { SEVERITY } from "../constants.js";
 import { expectedSlots } from "./slot-tables.js";
 
+// Required subclass selectors per class. Keys are class slugs; each entry has
+// `featureName` (i18n hint suffix) and `slugs` (any of these feat/feature slugs
+// satisfies the requirement). Slugs match PF2e core compendium IDs.
+const CLASS_SUBCLASS_REQUIREMENTS = {
+  bard: { featureName: "muse", slugs: ["maestro", "polymath", "enigma", "warrior"] },
+  cleric: { featureName: "doctrine", slugs: ["warpriest", "cloistered-cleric"] },
+  sorcerer: {
+    featureName: "bloodline",
+    slugs: [
+      "angelic", "demonic", "diabolic", "draconic", "fey", "genie", "hag",
+      "imperial", "phoenix", "psychopomp", "shadow", "undead", "aberrant",
+      "elemental", "harrow", "nymph", "wyrmblessed"
+    ]
+  },
+  wizard: {
+    featureName: "school",
+    slugs: [
+      "school-of-ars-grammatica", "school-of-battle-magic", "school-of-civic-wizardry",
+      "school-of-mentalism", "school-of-protean-form", "school-of-the-boundary",
+      "school-of-unified-magical-theory",
+      "abjuration", "conjuration", "divination", "enchantment", "evocation",
+      "illusion", "necromancy", "transmutation", "universalist"
+    ]
+  },
+  druid: { featureName: "order", slugs: ["animal", "flame", "leaf", "storm", "untamed", "wave"] },
+  champion: {
+    featureName: "cause",
+    slugs: [
+      "liberator", "paladin", "redeemer", "antipaladin", "tyrant", "desecrator",
+      "the-tenets-of-good", "the-tenets-of-evil"
+    ]
+  },
+  barbarian: {
+    featureName: "instinct",
+    slugs: ["animal-instinct", "dragon-instinct", "fury-instinct", "giant-instinct",
+            "spirit-instinct", "superstition-instinct"]
+  },
+  witch: {
+    featureName: "patron",
+    slugs: ["faith", "fervor", "knowledge", "mosquito", "rune", "silence",
+            "spinner-of-threads", "stitches", "wild", "winter"]
+  },
+  ranger: { featureName: "hunter's edge", slugs: ["flurry", "outwit", "precision"] },
+  rogue: {
+    featureName: "racket",
+    slugs: ["eldritch-trickster", "mastermind", "ruffian", "scoundrel", "thief"]
+  },
+  monk: { featureName: null, slugs: [] }, // no required subclass
+  fighter: { featureName: null, slugs: [] }, // no required subclass
+  alchemist: { featureName: "research field", slugs: ["bomber", "chirurgeon", "mutagenist", "toxicologist"] },
+  investigator: { featureName: "methodology", slugs: ["alchemical-sciences", "empiricism", "forensic-medicine", "interrogation"] },
+  swashbuckler: { featureName: "style", slugs: ["braggart", "fencer", "gymnast", "rascal", "wit"] },
+  oracle: {
+    featureName: "mystery",
+    slugs: ["ancestors", "battle", "bones", "cosmos", "flames", "life", "lore",
+            "tempest", "time"]
+  },
+  psychic: { featureName: "conscious mind", slugs: ["distant-grasp", "infinite-eye", "oscillating-wave", "precision", "silent-whisper", "tangible-dream", "unbound-step"] },
+  magus: { featureName: "hybrid study", slugs: ["inexorable-iron", "laughing-shadow", "shooting-star", "starlit-span", "sustaining-steel", "twisting-tree"] },
+  inventor: { featureName: "innovation", slugs: ["armor-innovation", "construct-innovation", "weapon-innovation"] },
+  kineticist: { featureName: "kinetic gate", slugs: ["dual-gate", "single-gate", "elemental-gate-fire", "elemental-gate-air", "elemental-gate-earth", "elemental-gate-water", "elemental-gate-metal", "elemental-gate-wood"] },
+  summoner: { featureName: "eidolon", slugs: ["angel", "anger-phantom", "beast", "construct", "demon", "devotion-phantom", "dragon", "dragon-tyrant", "elemental", "fey", "psychopomp", "undead-phantom"] },
+  gunslinger: { featureName: "way", slugs: ["pistolero", "sniper", "drifter", "vanguard", "triggerbrand", "fortune", "drifter"] },
+  thaumaturge: { featureName: null, slugs: [] }, // selects implement instead, checked separately
+  animist: { featureName: "apparition", slugs: ["champion-of-the-fallen", "custodian-of-groves-and-gardens", "imposter-in-hidden-places", "lurker-in-devouring-dark", "monarch-who-bows-to-none", "musician-of-the-eternal-chord", "stalker-in-darkened-boughs", "steward-of-stone-and-fire", "witness-to-ancient-battles"] },
+  commander: { featureName: "banner", slugs: ["assault-banner", "regimental-banner", "stoic-banner", "trickster-banner"] }
+};
+
+function checkClassSubclass(actor, issues) {
+  const classSlug = actor.class?.slug ?? actor.class?.system?.slug;
+  if (!classSlug) return;
+  const req = CLASS_SUBCLASS_REQUIREMENTS[classSlug];
+  if (!req || !req.featureName) return;
+  const ownedSlugs = new Set(
+    (actor.itemTypes.feat ?? [])
+      .map((f) => f.slug ?? f.system?.slug)
+      .filter(Boolean)
+  );
+  const hasOne = req.slugs.some((slug) => ownedSlugs.has(slug));
+  if (!hasOne) {
+    issues.push(makeIssue("CLASS_SUBCLASS_MISSING", SEVERITY.ERROR, {
+      className: actor.class?.name ?? classSlug,
+      feature: req.featureName
+    }));
+  }
+}
+
 function makeIssue(code, severity, params = {}, extra = {}) {
   return {
     code,
@@ -234,6 +321,7 @@ export function auditCompleteness(actor, variants) {
   const expected = expectedSlots(actor, variants);
 
   checkBasics(actor, issues);
+  checkClassSubclass(actor, issues);
   checkBoosts(actor, expected, variants, issues);
   checkLanguages(actor, issues);
   checkFeatSlots(actor, expected, issues);

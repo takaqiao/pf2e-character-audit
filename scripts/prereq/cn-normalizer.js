@@ -4,6 +4,12 @@
 // stored on owned items is Chinese. We translate the most common patterns
 // back to a normalized English form before passing to the parser.
 //
+// Step 0 of normalization is a runtime Babele reverse-lookup (built lazily
+// from the loaded translation packs in scripts/utils/babele-bridge.js). This
+// resolves named references like "鲁莽骑手入门" → "Reckless Rider Dedication"
+// without us maintaining 2000+ hand-coded pairs — it falls out of whatever
+// translation pack the user has installed.
+//
 // Coverage focuses on the high-frequency patterns in PF2E core:
 //   - "<skill>技能熟练度为<rank>"           → "<rank> in <skill>"
 //   - "<skill>技能的熟练度达到<rank>"        → "<rank> in <skill>"
@@ -119,6 +125,25 @@ const FEATURE_CN_TO_EN = {
   "武装攻击": "unarmed attacks",
   "聚能法术": "focus spell",
   "聚能点": "focus point",
+  "聚能池": "Focus Pool",
+  "焦能池": "Focus Pool",
+  "施法": "spellcasting",
+  "法术位": "spell slot",
+  "法术打击": "Spellstrike",
+  "奥术奔涌": "Arcane Cascade",
+  "神力源泉": "Divine Font",
+  "神圣盟友": "Divine Ally",
+  "觉醒阶段": "Awakened Stage",
+  "本能出神": "instinct trance",
+  "出神": "trance",
+  "幻能": "psi",
+  "法师": "magus",
+  "魔仆": "familiar",
+  "神器": "implement",
+  "奇具": "implement",
+  "弱点发掘": "Exploit Vulnerability",
+  "能够从法术位施法": "able to cast spells from spell slots",
+  "能够施法": "able to cast spells",
 
   // Bard muses (drop "缪斯" suffix → bare feat name)
   "丹心缪斯": "Enigma",
@@ -175,6 +200,8 @@ const FEATURE_CN_TO_EN = {
   "意识心智": "conscious mind",
   "潜意识心智": "subconscious mind"
 };
+
+import { applyReverseLookup } from "../utils/babele-bridge.js";
 
 // Greedy CJK run: used for whole-phrase captures (在 X 上 rank).
 const CJK_RUN = "[\\u4e00-\\u9fff]+";
@@ -250,7 +277,15 @@ export function normalizeRequirement(text) {
   if (!text) return text;
   if (!hasCJK(text)) return text;
 
-  let out = String(text);
+  // Strip trailing CJK fullstop and other terminal punctuation so the parser
+  // doesn't get confused by "受训。" trailing markers.
+  let out = String(text).replace(/[。．；;]+\s*$/g, "").trim();
+
+  // Step 0: ask Babele for any CN named-reference we can swap out (covers
+  // dedications, class features, focus spells, etc.). Runs first so the
+  // subsequent regex patterns operate on a partially-English string.
+  out = applyReverseLookup(out);
+  if (!hasCJK(out)) return out;
 
   // Pattern: "一个能用来回忆知识的技能熟练度为<rank>"
   // Expand into an OR of all 7 RK skills so the leveler parser can route to
@@ -285,13 +320,27 @@ export function normalizeRequirement(text) {
     (_, phrase, rank) => `${rankToEn(rank)} in ${skillToEn(phrase)}`
   );
 
-  // Pattern: "<ability> <num> 或更高" / "<ability>调整值+<num>" → "<ability> +<num>"
+  // Pattern: "<X>学识受训" (lore-trained shorthand, no 熟练度) → "trained in <X> Lore"
+  out = out.replace(
+    new RegExp(`(${CJK_RUN_LAZY})学识${RANK_GROUP}`, "g"),
+    (_, stem, rank) => `${rankToEn(rank)} in ${stem} Lore`
+  );
+
+  // Fallback dedication pattern: "<X>入门" → "<X> Dedication"
+  // Babele reverse-lookup (Step 0) handles most cases, but if a translation
+  // pack isn't loaded this gives the parser a fighting chance.
+  out = out.replace(new RegExp(`(${CJK_RUN})入门`, "g"), (_, stem) => `${stem} Dedication`);
+
+  // Pattern: "<ability><num>" / "<ability> <num> 或更高" / "<ability>调整值+<num>"
+  // → "<ability> <num>". Leveler parser handles both "Strength 14" (score) and
+  // "Strength +2" (modifier) so we emit raw score by default.
   out = out.replace(
     new RegExp(`(${CJK_RUN_LAZY})(?:调整值)?(?:为|达到)?\\s*([+]?\\d+)\\s*(?:或更高|或以上)?`, "g"),
     (m, attr, num) => {
       const en = ABILITY_CN_TO_EN[attr];
       if (!en) return m;
-      return `${en} ${num.startsWith("+") ? num : "+" + num}`;
+      const n = num.startsWith("+") ? num : num;
+      return `${en} ${n}`;
     }
   );
 

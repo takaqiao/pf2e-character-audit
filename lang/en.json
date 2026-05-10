@@ -74,6 +74,7 @@
         "MISSING_BACKGROUND": { "Title": "Missing Background", "Hint": "Drag a Background item onto this actor." },
         "MISSING_CLASS": { "Title": "Missing Class", "Hint": "Drag a Class item onto this actor." },
         "MISSING_KEY_ABILITY": { "Title": "Key Ability not selected", "Hint": "Select a Key Ability for the class." },
+        "CLASS_SUBCLASS_MISSING": { "Title": "{className} missing {feature}", "Hint": "This class requires a subclass selection at level 1 (e.g. a Bard's muse, a Cleric's doctrine, a Barbarian's instinct). Drag the corresponding subclass feat onto the actor." },
         "BOOST_COUNT_MISMATCH": { "Title": "Boost count mismatch at level {level}", "Hint": "Expected 4 boosts, found {actual}." },
         "ANCESTRY_FLAW_MISMATCH": { "Title": "Ancestry flaw mismatch", "Hint": "Ancestry has mandatory flaws but build.flaws is empty ({actual}/{expected})." },
         "APEX_MISSING_AT_17": { "Title": "Missing Apex item at level {level}", "Hint": "17+ characters should have an apex item (unless ABP is on)." },
