@@ -39,7 +39,16 @@ function deriveAttributes(actor) {
 function deriveSkills(actor) {
   const out = {};
   for (const k of SKILLS) {
-    out[k] = actor.system?.skills?.[k]?.rank ?? 0;
+    // PF2e v8 exposes skills via `actor.skills.<slug>.rank`; older paths use
+    // `actor.system.skills.<slug>.rank`. Try both, plus a flat-number fallback.
+    const a = actor?.skills?.[k];
+    const b = actor?.system?.skills?.[k];
+    let rank = 0;
+    if (a && typeof a === "object") rank = a.rank ?? 0;
+    else if (typeof a === "number") rank = a;
+    else if (b && typeof b === "object") rank = b.rank ?? 0;
+    else if (typeof b === "number") rank = b;
+    out[k] = rank;
   }
   return out;
 }

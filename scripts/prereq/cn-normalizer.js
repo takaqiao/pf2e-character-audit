@@ -105,6 +105,11 @@ const CLASS_CN_TO_EN = {
   "运演师": "exemplar"
 };
 
+// Subclass-selector translations: emit ONLY the feat name (drop the suffix
+// like "muse"/"instinct"/"bloodline"). The leveler parser then recognises it
+// as a feat reference and `matchFeat(slug)` resolves against the actor's
+// owned-feat set. This is the entire trick that makes "大师缪斯" pass —
+// otherwise the parser produces slug "maestro-muse" which doesn't exist.
 const FEATURE_CN_TO_EN = {
   // Generic concepts
   "神祇": "deity",
@@ -112,25 +117,50 @@ const FEATURE_CN_TO_EN = {
   "简易武器": "simple weapons",
   "无武装攻击": "unarmed attacks",
   "武装攻击": "unarmed attacks",
-  "回忆知识": "Recall Knowledge",
   "聚能法术": "focus spell",
   "聚能点": "focus point",
-  // Bard muses
-  "丹心缪斯": "enigma muse",
-  "大师缪斯": "maestro muse",
-  "宝典缪斯": "polymath muse",
-  "战士缪斯": "warrior muse",
-  "战乐缪斯": "warrior muse",
+
+  // Bard muses (drop "缪斯" suffix → bare feat name)
+  "丹心缪斯": "Enigma",
+  "大师缪斯": "Maestro",
+  "宝典缪斯": "Polymath",
+  "战士缪斯": "Warrior",
+  "战乐缪斯": "Warrior",
   "缪斯": "muse",
-  // Cleric doctrines
-  "战斗祭司": "warpriest doctrine",
-  "战祭司": "warpriest doctrine",
-  "虔信者": "cloistered cleric doctrine",
-  // Champion causes (sample)
-  "解放者": "liberator",
-  "守护者": "paladin",
-  "复仇者": "antipaladin",
-  // Common subclass words
+
+  // Barbarian instincts (drop "本能" suffix)
+  "动物本能": "Animal Instinct",
+  "龙之本能": "Dragon Instinct",
+  "狂怒本能": "Fury Instinct",
+  "巨人本能": "Giant Instinct",
+  "灵魂本能": "Spirit Instinct",
+  "超感本能": "Superstition Instinct",
+
+  // Cleric doctrines (drop "信条" suffix)
+  "战斗祭司": "Warpriest",
+  "战祭司": "Warpriest",
+  "虔信者": "Cloistered Cleric",
+
+  // Champion causes
+  "解放者": "Liberator",
+  "守护者": "Paladin",
+  "复仇者": "Antipaladin",
+
+  // Sorcerer bloodlines (drop "血裔" suffix)
+  "天界血裔": "Angelic",
+  "恶魔血裔": "Demonic",
+  "魔鬼血裔": "Diabolic",
+  "巨龙血裔": "Draconic",
+  "妖精血裔": "Fey",
+  "异界血裔": "Genie",
+  "蛇魔血裔": "Hag",
+  "灵异血裔": "Imperial",
+  "纯粹血裔": "Phoenix",
+  "心灵血裔": "Psychopomp",
+  "暗影血裔": "Shadow",
+  "禁忌血裔": "Undead",
+
+  // Generic suffix words (matched as standalone, last)
   "本能": "instinct",
   "学派": "school",
   "血裔": "bloodline",
@@ -142,7 +172,6 @@ const FEATURE_CN_TO_EN = {
   "调查方法": "methodology",
   "突袭风格": "racket",
   "猎人之锋": "hunter's edge",
-  "守护元素": "instinct",
   "意识心智": "conscious mind",
   "潜意识心智": "subconscious mind"
 };
@@ -223,10 +252,24 @@ export function normalizeRequirement(text) {
 
   let out = String(text);
 
-  // Pattern: "一个能用来回忆知识的技能熟练度为<rank>" → "<rank> in a Recall Knowledge skill"
+  // Pattern: "一个能用来回忆知识的技能熟练度为<rank>"
+  // Expand into an OR of all 7 RK skills so the leveler parser can route to
+  // matchSkill for each — matchRecallKnowledgeSkill is too narrow (Lore skills
+  // also count for Recall Knowledge but it doesn't check them).
   out = out.replace(
     new RegExp(`(?:一个)?能?用来?回忆知识(?:用)?的?技能(?:的)?熟练度(?:为|达到)${RANK_GROUP}`, "g"),
-    (_, rank) => `${rankToEn(rank)} in a Recall Knowledge skill`
+    (_, rank) => {
+      const r = rankToEn(rank);
+      return [
+        `${r} in Society`,
+        `${r} in Arcana`,
+        `${r} in Crafting`,
+        `${r} in Medicine`,
+        `${r} in Nature`,
+        `${r} in Occultism`,
+        `${r} in Religion`
+      ].join(" or ");
+    }
   );
 
   // Pattern: "<skill>(技能)?(的)?熟练度(为|达到)<rank>" → "<rank> in <skill>"

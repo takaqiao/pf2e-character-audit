@@ -1,69 +1,137 @@
 /* PF2e Character Audit — UI styles
- * Self-contained palette with explicit text colors so we don't rely on
- * theme inheritance for contrast. Works on both light and dark FVTT themes.
+ *
+ * Fully self-contained palette with hardcoded hex values. Does NOT inherit
+ * from FVTT theme variables — that turned out to break contrast in third-party
+ * themes. Dark mode is opt-in via `prefers-color-scheme: dark` so the audit
+ * window always renders with WCAG-AA-or-better contrast.
  */
 
 .pf2e-character-audit.audit-report,
 .pf2e-character-audit.party-audit {
-  --ca-bg: var(--color-bg-option, #fdfdfd);
-  --ca-bg-soft: rgba(0, 0, 0, 0.03);
-  --ca-bg-softer: rgba(0, 0, 0, 0.015);
-  --ca-fg: var(--color-text-dark-primary, #1f2937);
-  --ca-fg-muted: var(--color-text-dark-secondary, #4b5563);
-  --ca-border: var(--color-border-light-2, #d1d5db);
-  --ca-border-strong: var(--color-border-dark-1, #9ca3af);
+  /* Light surface */
+  --ca-surface: #ffffff;
+  --ca-surface-2: #f9fafb;
+  --ca-surface-3: #f3f4f6;
+  /* Text */
+  --ca-text: #111827;
+  --ca-text-muted: #4b5563;
+  --ca-text-faint: #6b7280;
+  /* Borders */
+  --ca-border: #e5e7eb;
+  --ca-border-strong: #d1d5db;
+  /* Accent */
   --ca-accent: #2563eb;
-  --ca-accent-soft: rgba(37, 99, 235, 0.12);
+  --ca-accent-bg: #eff6ff;
+  --ca-accent-border: #93c5fd;
 
-  /* Severity tokens — explicit fg/bg/border for guaranteed contrast. */
-  --ca-error-fg: #7f1d1d;
-  --ca-error-bg: #fee2e2;
-  --ca-error-border: #dc2626;
+  /* Severity (light) — text and bg are explicitly paired for AA contrast. */
+  --ca-error-text: #7f1d1d;
+  --ca-error-bg:   #fee2e2;
+  --ca-error-line: #dc2626;
 
-  --ca-warn-fg: #78350f;
-  --ca-warn-bg: #fef3c7;
-  --ca-warn-border: #d97706;
+  --ca-warn-text:  #713f12;
+  --ca-warn-bg:    #fef3c7;
+  --ca-warn-line:  #b45309;
 
-  --ca-info-fg: #1e3a8a;
-  --ca-info-bg: #dbeafe;
-  --ca-info-border: #2563eb;
+  --ca-info-text:  #1e3a8a;
+  --ca-info-bg:    #dbeafe;
+  --ca-info-line:  #2563eb;
 
-  --ca-ok-fg: #064e3b;
-  --ca-ok-bg: #d1fae5;
-  --ca-ok-border: #059669;
+  --ca-ok-text:    #064e3b;
+  --ca-ok-bg:      #d1fae5;
+  --ca-ok-line:    #059669;
 
   font-size: 13px;
-  line-height: 1.5;
-  color: var(--ca-fg);
+  line-height: 1.55;
+  color: var(--ca-text);
+  background: var(--ca-surface);
 }
 
-/* Dark theme overrides — use translucent backgrounds, lighter text. */
-.theme-dark .pf2e-character-audit.audit-report,
-.theme-dark .pf2e-character-audit.party-audit,
+/* Dark mode via OS preference. Stays cohesive even when FVTT picks a different
+   theme, since we override the same tokens. */
+@media (prefers-color-scheme: dark) {
+  .pf2e-character-audit.audit-report,
+  .pf2e-character-audit.party-audit {
+    --ca-surface:   #1f2937;
+    --ca-surface-2: #111827;
+    --ca-surface-3: #0f172a;
+    --ca-text:      #f3f4f6;
+    --ca-text-muted:#cbd5e1;
+    --ca-text-faint:#94a3b8;
+    --ca-border:    #374151;
+    --ca-border-strong: #4b5563;
+    --ca-accent:    #60a5fa;
+    --ca-accent-bg: #1e293b;
+    --ca-accent-border: #3b82f6;
+
+    --ca-error-text: #fecaca;
+    --ca-error-bg:   #3f1216;
+    --ca-error-line: #ef4444;
+
+    --ca-warn-text:  #fde68a;
+    --ca-warn-bg:    #3a2710;
+    --ca-warn-line:  #f59e0b;
+
+    --ca-info-text:  #bfdbfe;
+    --ca-info-bg:    #1e2a4a;
+    --ca-info-line:  #3b82f6;
+
+    --ca-ok-text:    #a7f3d0;
+    --ca-ok-bg:      #0f2e22;
+    --ca-ok-line:    #10b981;
+  }
+}
+
+/* Force light/dark via FVTT body class as fallback. */
+body.theme-dark .pf2e-character-audit.audit-report,
+body.theme-dark .pf2e-character-audit.party-audit,
 body.dark-theme .pf2e-character-audit.audit-report,
 body.dark-theme .pf2e-character-audit.party-audit {
-  --ca-fg: #e5e7eb;
-  --ca-fg-muted: #9ca3af;
-  --ca-bg-soft: rgba(255, 255, 255, 0.04);
-  --ca-bg-softer: rgba(255, 255, 255, 0.02);
-  --ca-border: rgba(255, 255, 255, 0.12);
-  --ca-border-strong: rgba(255, 255, 255, 0.24);
+  --ca-surface:   #1f2937;
+  --ca-surface-2: #111827;
+  --ca-surface-3: #0f172a;
+  --ca-text:      #f3f4f6;
+  --ca-text-muted:#cbd5e1;
+  --ca-text-faint:#94a3b8;
+  --ca-border:    #374151;
+  --ca-border-strong: #4b5563;
+  --ca-accent:    #60a5fa;
+  --ca-accent-bg: #1e293b;
+  --ca-accent-border: #3b82f6;
 
-  --ca-error-fg: #fca5a5;
-  --ca-error-bg: rgba(220, 38, 38, 0.18);
-  --ca-error-border: #ef4444;
+  --ca-error-text: #fecaca;
+  --ca-error-bg:   #3f1216;
+  --ca-error-line: #ef4444;
 
-  --ca-warn-fg: #fde68a;
-  --ca-warn-bg: rgba(217, 119, 6, 0.18);
-  --ca-warn-border: #f59e0b;
+  --ca-warn-text:  #fde68a;
+  --ca-warn-bg:    #3a2710;
+  --ca-warn-line:  #f59e0b;
 
-  --ca-info-fg: #93c5fd;
-  --ca-info-bg: rgba(37, 99, 235, 0.18);
-  --ca-info-border: #3b82f6;
+  --ca-info-text:  #bfdbfe;
+  --ca-info-bg:    #1e2a4a;
+  --ca-info-line:  #3b82f6;
 
-  --ca-ok-fg: #6ee7b7;
-  --ca-ok-bg: rgba(5, 150, 105, 0.18);
-  --ca-ok-border: #10b981;
+  --ca-ok-text:    #a7f3d0;
+  --ca-ok-bg:      #0f2e22;
+  --ca-ok-line:    #10b981;
+}
+
+/* Force a high-contrast surface on the application body so FVTT's window
+   chrome can't bleed through. */
+.pf2e-character-audit.audit-report,
+.pf2e-character-audit.party-audit {
+  background: var(--ca-surface);
+  color: var(--ca-text);
+}
+
+/* Container layout helpers */
+.audit-report-app,
+.party-audit-app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  background: var(--ca-surface);
+  color: var(--ca-text);
 }
 
 /* ─── Header ─────────────────────────────────────────────── */
@@ -74,37 +142,38 @@ body.dark-theme .pf2e-character-audit.party-audit {
   justify-content: space-between;
   align-items: flex-start;
   gap: 0.75rem;
-  padding: 0.75rem 1rem;
+  padding: 0.85rem 1rem;
   border-bottom: 1px solid var(--ca-border);
-  background: var(--ca-bg-soft);
+  background: var(--ca-surface-2);
 }
 
 .pf2e-character-audit .audit-actor-info { flex: 1; min-width: 0; }
 
 .pf2e-character-audit .audit-header h2 {
   margin: 0;
-  font-size: 1.15rem;
+  font-size: 1.18rem;
   font-weight: 700;
   line-height: 1.3;
-  color: var(--ca-fg);
+  color: var(--ca-text);
   border: none;
 }
 
 .pf2e-character-audit .audit-level {
   display: inline-block;
-  margin-left: 0.4rem;
-  padding: 0.05rem 0.4rem;
-  background: var(--ca-accent-soft);
+  margin-left: 0.45rem;
+  padding: 0.1rem 0.5rem;
+  background: var(--ca-accent-bg);
   color: var(--ca-accent);
+  border: 1px solid var(--ca-accent-border);
   border-radius: 999px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  vertical-align: middle;
+  font-size: 0.78rem;
+  font-weight: 700;
+  vertical-align: 0.1em;
 }
 
 .pf2e-character-audit .audit-actor-meta {
-  margin: 0.25rem 0 0;
-  color: var(--ca-fg-muted);
+  margin: 0.3rem 0 0;
+  color: var(--ca-text-muted);
   font-size: 0.85rem;
 }
 
@@ -112,7 +181,7 @@ body.dark-theme .pf2e-character-audit.party-audit {
 
 .pf2e-character-audit .audit-summary-badges {
   display: flex;
-  gap: 0.3rem;
+  gap: 0.35rem;
   align-items: center;
   flex-wrap: wrap;
 }
@@ -121,27 +190,27 @@ body.dark-theme .pf2e-character-audit.party-audit {
   display: inline-flex;
   align-items: center;
   gap: 0.2rem;
-  padding: 0.15rem 0.55rem;
+  padding: 0.18rem 0.6rem;
   border-radius: 999px;
   font-size: 0.78rem;
   font-weight: 700;
   line-height: 1.2;
-  border: 1px solid currentColor;
+  border: 1px solid;
   white-space: nowrap;
 }
-.pf2e-character-audit .audit-badge.error { color: var(--ca-error-fg); background: var(--ca-error-bg); border-color: var(--ca-error-border); }
-.pf2e-character-audit .audit-badge.warn  { color: var(--ca-warn-fg);  background: var(--ca-warn-bg);  border-color: var(--ca-warn-border); }
-.pf2e-character-audit .audit-badge.info  { color: var(--ca-info-fg);  background: var(--ca-info-bg);  border-color: var(--ca-info-border); }
-.pf2e-character-audit .audit-badge.ok    { color: var(--ca-ok-fg);    background: var(--ca-ok-bg);    border-color: var(--ca-ok-border); }
+.pf2e-character-audit .audit-badge.error { color: var(--ca-error-text); background: var(--ca-error-bg); border-color: var(--ca-error-line); }
+.pf2e-character-audit .audit-badge.warn  { color: var(--ca-warn-text);  background: var(--ca-warn-bg);  border-color: var(--ca-warn-line); }
+.pf2e-character-audit .audit-badge.info  { color: var(--ca-info-text);  background: var(--ca-info-bg);  border-color: var(--ca-info-line); }
+.pf2e-character-audit .audit-badge.ok    { color: var(--ca-ok-text);    background: var(--ca-ok-bg);    border-color: var(--ca-ok-line); }
 
 /* ─── Tabs ─────────────────────────────────────────────────── */
 
 .pf2e-character-audit .audit-tabs {
   display: flex;
-  gap: 0.25rem;
+  gap: 0.15rem;
   padding: 0.5rem 1rem 0;
   border-bottom: 1px solid var(--ca-border);
-  background: var(--ca-bg-softer);
+  background: var(--ca-surface-2);
   flex-wrap: wrap;
 }
 
@@ -149,29 +218,33 @@ body.dark-theme .pf2e-character-audit.party-audit {
   background: transparent;
   border: 1px solid transparent;
   border-bottom: 3px solid transparent;
-  padding: 0.45rem 0.9rem;
+  padding: 0.5rem 1rem;
   cursor: pointer;
-  border-radius: 4px 4px 0 0;
-  color: var(--ca-fg-muted);
+  border-radius: 6px 6px 0 0;
+  color: var(--ca-text-muted);
   font-weight: 500;
   font-size: 0.92rem;
   line-height: 1.2;
   transition: color 0.15s, border-color 0.15s, background 0.15s;
 }
 .pf2e-character-audit .audit-tab:hover {
-  background: var(--ca-bg-soft);
-  color: var(--ca-fg);
+  background: var(--ca-surface-3);
+  color: var(--ca-text);
 }
 .pf2e-character-audit .audit-tab.active {
   color: var(--ca-accent);
+  background: var(--ca-surface);
   font-weight: 700;
   border-bottom-color: var(--ca-accent);
+  margin-bottom: -1px;
 }
 
 .pf2e-character-audit .audit-tab-content {
   padding: 1rem;
   flex: 1;
   overflow: auto;
+  background: var(--ca-surface);
+  color: var(--ca-text);
 }
 
 /* ─── Overview ─────────────────────────────────────────────── */
@@ -185,18 +258,22 @@ body.dark-theme .pf2e-character-audit.party-audit {
 
 .pf2e-character-audit .audit-overview-section {
   border: 1px solid var(--ca-border);
-  border-radius: 8px;
-  padding: 0.65rem 0.85rem;
-  background: var(--ca-bg);
+  border-radius: 10px;
+  padding: 0.75rem 0.95rem;
+  background: var(--ca-surface);
+  color: var(--ca-text);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
 }
 
 .pf2e-character-audit .audit-overview-section h3 {
-  margin: 0 0 0.5rem;
+  margin: 0 0 0.55rem;
   font-size: 0.92rem;
   font-weight: 700;
+  border: none;
+  padding-bottom: 0.35rem;
+  color: var(--ca-text);
   border-bottom: 1px solid var(--ca-border);
-  padding-bottom: 0.3rem;
-  color: var(--ca-fg);
+  letter-spacing: 0.01em;
 }
 
 .pf2e-character-audit .audit-summary-counts {
@@ -205,28 +282,30 @@ body.dark-theme .pf2e-character-audit.party-audit {
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
+  gap: 0.25rem;
 }
 .pf2e-character-audit .audit-summary-counts.inline {
   flex-direction: row;
   flex-wrap: wrap;
   gap: 0.5rem;
-  margin: 0 0 0.6rem 0;
+  margin: 0 0 0.7rem 0;
 }
 .pf2e-character-audit .audit-summary-counts li {
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
-  padding: 0.15rem 0.5rem;
-  border-radius: 4px;
+  padding: 0.2rem 0.55rem;
+  border-radius: 5px;
   font-size: 0.85rem;
-  background: var(--ca-bg-soft);
-  border: 1px solid transparent;
+  font-weight: 600;
+  background: var(--ca-surface-2);
+  color: var(--ca-text);
+  border: 1px solid var(--ca-border);
 }
-.pf2e-character-audit .audit-summary-counts li.error { color: var(--ca-error-fg); background: var(--ca-error-bg); border-color: var(--ca-error-border); }
-.pf2e-character-audit .audit-summary-counts li.warn  { color: var(--ca-warn-fg);  background: var(--ca-warn-bg);  border-color: var(--ca-warn-border); }
-.pf2e-character-audit .audit-summary-counts li.info  { color: var(--ca-info-fg);  background: var(--ca-info-bg);  border-color: var(--ca-info-border); }
-.pf2e-character-audit .audit-summary-counts li.pass  { color: var(--ca-ok-fg);    background: var(--ca-ok-bg);    border-color: var(--ca-ok-border); }
+.pf2e-character-audit .audit-summary-counts li.error { color: var(--ca-error-text); background: var(--ca-error-bg); border-color: var(--ca-error-line); }
+.pf2e-character-audit .audit-summary-counts li.warn  { color: var(--ca-warn-text);  background: var(--ca-warn-bg);  border-color: var(--ca-warn-line); }
+.pf2e-character-audit .audit-summary-counts li.info  { color: var(--ca-info-text);  background: var(--ca-info-bg);  border-color: var(--ca-info-line); }
+.pf2e-character-audit .audit-summary-counts li.pass  { color: var(--ca-ok-text);    background: var(--ca-ok-bg);    border-color: var(--ca-ok-line); }
 
 .pf2e-character-audit .audit-variant-list {
   list-style: none;
@@ -238,26 +317,37 @@ body.dark-theme .pf2e-character-audit.party-audit {
 .pf2e-character-audit .audit-variant-list li {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   font-size: 0.85rem;
-  padding: 0.15rem 0.4rem;
+  padding: 0.2rem 0.5rem;
   border-radius: 4px;
+  color: var(--ca-text);
 }
-.pf2e-character-audit .audit-variant-list li.on  { color: var(--ca-ok-fg); background: var(--ca-ok-bg); font-weight: 600; }
-.pf2e-character-audit .audit-variant-list li.off { color: var(--ca-fg-muted); }
+.pf2e-character-audit .audit-variant-list li.on  {
+  color: var(--ca-ok-text);
+  background: var(--ca-ok-bg);
+  font-weight: 700;
+  border: 1px solid var(--ca-ok-line);
+}
+.pf2e-character-audit .audit-variant-list li.off {
+  color: var(--ca-text-muted);
+}
 
 /* ─── Callouts ────────────────────────────────────────────── */
 
 .pf2e-character-audit .audit-callout {
-  padding: 0.7rem 0.9rem;
-  border-radius: 8px;
+  padding: 0.75rem 0.95rem;
+  border-radius: 10px;
   margin-top: 0.5rem;
   border-left: 4px solid;
-  font-weight: 500;
+  font-weight: 600;
+  font-size: 0.95rem;
+  line-height: 1.5;
 }
-.pf2e-character-audit .audit-callout.ok    { color: var(--ca-ok-fg);    background: var(--ca-ok-bg);    border-color: var(--ca-ok-border); }
-.pf2e-character-audit .audit-callout.warn  { color: var(--ca-warn-fg);  background: var(--ca-warn-bg);  border-color: var(--ca-warn-border); }
-.pf2e-character-audit .audit-callout.error { color: var(--ca-error-fg); background: var(--ca-error-bg); border-color: var(--ca-error-border); }
-.pf2e-character-audit .audit-callout.info  { color: var(--ca-info-fg);  background: var(--ca-info-bg);  border-color: var(--ca-info-border); }
+.pf2e-character-audit .audit-callout.ok    { color: var(--ca-ok-text);    background: var(--ca-ok-bg);    border-color: var(--ca-ok-line); }
+.pf2e-character-audit .audit-callout.warn  { color: var(--ca-warn-text);  background: var(--ca-warn-bg);  border-color: var(--ca-warn-line); }
+.pf2e-character-audit .audit-callout.error { color: var(--ca-error-text); background: var(--ca-error-bg); border-color: var(--ca-error-line); }
+.pf2e-character-audit .audit-callout.info  { color: var(--ca-info-text);  background: var(--ca-info-bg);  border-color: var(--ca-info-line); }
 
 /* ─── Tables ──────────────────────────────────────────────── */
 
@@ -265,73 +355,109 @@ body.dark-theme .pf2e-character-audit.party-audit {
   display: flex;
   gap: 0.7rem;
   flex-wrap: wrap;
-  margin-bottom: 0.6rem;
-  padding: 0.5rem 0.7rem;
-  background: var(--ca-bg-soft);
-  border-radius: 6px;
+  margin-bottom: 0.7rem;
+  padding: 0.55rem 0.75rem;
+  background: var(--ca-surface-2);
+  border: 1px solid var(--ca-border);
+  border-radius: 8px;
   font-size: 0.85rem;
-  color: var(--ca-fg);
+  color: var(--ca-text);
+  font-weight: 600;
+}
+
+.pf2e-character-audit .audit-publication h3,
+.pf2e-character-audit .audit-completeness h3,
+.pf2e-character-audit .audit-prereq h3 {
+  margin: 1rem 0 0.5rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--ca-text);
+  border: none;
 }
 
 .pf2e-character-audit .audit-table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   margin: 0.5rem 0 1rem;
-  background: var(--ca-bg);
-  color: var(--ca-fg);
-  border-radius: 6px;
+  background: var(--ca-surface);
+  color: var(--ca-text);
+  border: 1px solid var(--ca-border);
+  border-radius: 8px;
   overflow: hidden;
 }
 .pf2e-character-audit .audit-table thead th {
-  background: var(--ca-bg-soft);
-  color: var(--ca-fg);
+  background: var(--ca-surface-3);
+  color: var(--ca-text);
   font-weight: 700;
   font-size: 0.85rem;
   letter-spacing: 0.02em;
   text-align: left;
-  padding: 0.45rem 0.6rem;
-  border-bottom: 1px solid var(--ca-border);
+  padding: 0.5rem 0.7rem;
+  border-bottom: 1px solid var(--ca-border-strong);
 }
 .pf2e-character-audit .audit-table td {
-  padding: 0.4rem 0.6rem;
+  padding: 0.45rem 0.7rem;
   border-bottom: 1px solid var(--ca-border);
   vertical-align: top;
+  color: var(--ca-text);
 }
 .pf2e-character-audit .audit-table tr:last-child td { border-bottom: none; }
-.pf2e-character-audit .audit-table tr:hover td { background: var(--ca-bg-soft); }
+.pf2e-character-audit .audit-table tbody tr:hover td { background: var(--ca-accent-bg); }
 .pf2e-character-audit .audit-table td.num,
 .pf2e-character-audit .audit-table th.num { text-align: right; font-variant-numeric: tabular-nums; }
-.pf2e-character-audit .audit-table tr.unknown td       { color: var(--ca-error-fg); }
-.pf2e-character-audit .audit-table tr.unknown td:first-child::before { content: "⚠ "; }
-.pf2e-character-audit .audit-table tr.whitelisted td   { color: var(--ca-ok-fg); }
+.pf2e-character-audit .audit-table tr.unknown td       { color: var(--ca-error-text); background: var(--ca-error-bg); }
+.pf2e-character-audit .audit-table tr.whitelisted td   { color: var(--ca-ok-text); background: var(--ca-ok-bg); }
 
+/* Details / accordion */
 .pf2e-character-audit details {
   margin: 0.4rem 0;
-  padding: 0.4rem 0.6rem;
-  background: var(--ca-bg-soft);
-  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  background: var(--ca-surface-2);
+  border-radius: 8px;
   border: 1px solid var(--ca-border);
+  color: var(--ca-text);
 }
 .pf2e-character-audit details > summary {
   cursor: pointer;
-  font-weight: 600;
-  color: var(--ca-fg);
-  padding: 0.2rem 0;
+  font-weight: 700;
+  color: var(--ca-text);
+  padding: 0.25rem 0;
+  list-style: none;
+  position: relative;
+  padding-left: 1.2rem;
 }
-.pf2e-character-audit details[open] > summary { border-bottom: 1px solid var(--ca-border); margin-bottom: 0.4rem; }
+.pf2e-character-audit details > summary::-webkit-details-marker { display: none; }
+.pf2e-character-audit details > summary::before {
+  content: "▶";
+  position: absolute;
+  left: 0;
+  color: var(--ca-text-muted);
+  font-size: 0.7rem;
+  transform: rotate(0deg);
+  transition: transform 0.15s;
+  top: 0.45rem;
+}
+.pf2e-character-audit details[open] > summary::before { transform: rotate(90deg); }
+.pf2e-character-audit details[open] > summary {
+  border-bottom: 1px solid var(--ca-border);
+  margin-bottom: 0.4rem;
+  padding-bottom: 0.45rem;
+}
 .pf2e-character-audit details ul.audit-item-list {
   list-style: none;
   margin: 0;
   padding: 0;
 }
 .pf2e-character-audit .audit-item-list li {
-  padding: 0.2rem 0;
+  padding: 0.3rem 0;
   border-bottom: 1px dashed var(--ca-border);
   font-size: 0.88rem;
+  color: var(--ca-text);
 }
 .pf2e-character-audit .audit-item-list li:last-child { border-bottom: none; }
 .pf2e-character-audit .audit-meta {
-  color: var(--ca-fg-muted);
+  color: var(--ca-text-muted);
   font-size: 0.85rem;
   margin-left: 0.3rem;
 }
@@ -344,84 +470,103 @@ body.dark-theme .pf2e-character-audit.party-audit {
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.55rem;
 }
 
 .pf2e-character-audit .audit-issue {
   display: flex;
-  gap: 0.6rem;
-  padding: 0.6rem 0.8rem;
-  border-radius: 8px;
-  background: var(--ca-bg);
+  gap: 0.7rem;
+  padding: 0.7rem 0.9rem;
+  border-radius: 10px;
+  background: var(--ca-surface);
+  color: var(--ca-text);
   border: 1px solid var(--ca-border);
   border-left-width: 4px;
-  transition: transform 0.1s;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
 }
-.pf2e-character-audit .audit-issue:hover { transform: translateX(2px); }
-.pf2e-character-audit .audit-issue.error { border-left-color: var(--ca-error-border); background: var(--ca-error-bg); color: var(--ca-error-fg); }
-.pf2e-character-audit .audit-issue.warn  { border-left-color: var(--ca-warn-border);  background: var(--ca-warn-bg);  color: var(--ca-warn-fg);  }
-.pf2e-character-audit .audit-issue.info  { border-left-color: var(--ca-info-border);  background: var(--ca-info-bg);  color: var(--ca-info-fg);  }
+.pf2e-character-audit .audit-issue:hover {
+  transform: translateX(2px);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+.pf2e-character-audit .audit-issue.error {
+  border-left-color: var(--ca-error-line);
+  background: var(--ca-error-bg);
+  color: var(--ca-error-text);
+  border-color: var(--ca-error-line);
+}
+.pf2e-character-audit .audit-issue.warn {
+  border-left-color: var(--ca-warn-line);
+  background: var(--ca-warn-bg);
+  color: var(--ca-warn-text);
+  border-color: var(--ca-warn-line);
+}
+.pf2e-character-audit .audit-issue.info {
+  border-left-color: var(--ca-info-line);
+  background: var(--ca-info-bg);
+  color: var(--ca-info-text);
+  border-color: var(--ca-info-line);
+}
 
 .pf2e-character-audit .audit-issue-icon {
-  font-size: 1.05rem;
+  font-size: 1.1rem;
   flex-shrink: 0;
   line-height: 1.4;
 }
 
-.pf2e-character-audit .audit-issue-body {
-  flex: 1;
-  min-width: 0;
-}
+.pf2e-character-audit .audit-issue-body { flex: 1; min-width: 0; }
 
 .pf2e-character-audit .audit-issue-title {
   font-weight: 700;
   color: inherit;
   word-break: break-word;
+  font-size: 0.95rem;
 }
 
 .pf2e-character-audit .audit-issue-hint {
-  margin-top: 0.15rem;
+  margin-top: 0.25rem;
   color: inherit;
-  opacity: 0.85;
   font-size: 0.88rem;
   word-break: break-word;
 }
 
 .pf2e-character-audit .audit-issue-code {
   display: inline-block;
-  margin-top: 0.3rem;
-  padding: 0.05rem 0.35rem;
+  margin-top: 0.4rem;
+  padding: 0.1rem 0.4rem;
   font-size: 0.72rem;
   font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
-  background: rgba(0, 0, 0, 0.06);
+  background: rgba(255, 255, 255, 0.55);
   color: inherit;
-  opacity: 0.7;
+  border: 1px solid currentColor;
   border-radius: 3px;
+  opacity: 0.85;
+}
+@media (prefers-color-scheme: dark) {
+  .pf2e-character-audit .audit-issue-code { background: rgba(0, 0, 0, 0.35); }
 }
 
 .pf2e-character-audit .audit-issue small {
   color: inherit;
-  opacity: 0.7;
-  font-weight: 400;
+  opacity: 0.8;
+  font-weight: 500;
 }
 
 .pf2e-character-audit .audit-reasons {
   list-style: none;
-  margin: 0.3rem 0 0;
+  margin: 0.35rem 0 0;
   padding: 0;
   font-size: 0.85rem;
   color: inherit;
-  opacity: 0.85;
 }
-.pf2e-character-audit .audit-reasons li { padding: 0.1rem 0; }
+.pf2e-character-audit .audit-reasons li { padding: 0.12rem 0; }
 
 .pf2e-character-audit .audit-prereq-normalized {
   display: block;
-  margin-top: 0.2rem;
-  font-size: 0.78rem;
+  margin-top: 0.3rem;
+  font-size: 0.8rem;
   font-style: italic;
   color: inherit;
-  opacity: 0.7;
+  opacity: 0.8;
 }
 
 /* ─── Footer & links ───────────────────────────────────────── */
@@ -433,46 +578,58 @@ body.dark-theme .pf2e-character-audit.party-audit {
   cursor: pointer;
   padding: 0;
   font: inherit;
+  text-decoration: none;
 }
 .pf2e-character-audit .audit-link:hover { text-decoration: underline; }
 
 .pf2e-character-audit .audit-empty {
-  color: var(--ca-fg-muted);
+  color: var(--ca-text-muted);
   font-style: italic;
   text-align: center;
   padding: 1.5rem 1rem;
-  background: var(--ca-bg-soft);
-  border-radius: 8px;
-  border: 1px dashed var(--ca-border);
+  background: var(--ca-surface-2);
+  border-radius: 10px;
+  border: 1px dashed var(--ca-border-strong);
+  font-size: 0.95rem;
 }
-.pf2e-character-audit .audit-empty.ok { color: var(--ca-ok-fg); background: var(--ca-ok-bg); border-color: var(--ca-ok-border); font-weight: 600; font-style: normal; }
+.pf2e-character-audit .audit-empty.ok {
+  color: var(--ca-ok-text);
+  background: var(--ca-ok-bg);
+  border-color: var(--ca-ok-line);
+  font-weight: 700;
+  font-style: normal;
+}
 
 .pf2e-character-audit .audit-footer {
   display: flex;
   gap: 0.5rem;
-  padding: 0.6rem 1rem;
+  padding: 0.65rem 1rem;
   border-top: 1px solid var(--ca-border);
-  background: var(--ca-bg-soft);
+  background: var(--ca-surface-2);
   flex-wrap: wrap;
 }
 
 .pf2e-character-audit .audit-footer button {
-  padding: 0.4rem 0.8rem;
+  padding: 0.45rem 0.9rem;
   font-size: 0.88rem;
-  border: 1px solid var(--ca-border);
-  background: var(--ca-bg);
-  color: var(--ca-fg);
+  font-weight: 600;
+  border: 1px solid var(--ca-border-strong);
+  background: var(--ca-surface);
+  color: var(--ca-text);
   border-radius: 6px;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  transition: background 0.15s, border-color 0.15s;
+  gap: 0.4rem;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
 .pf2e-character-audit .audit-footer button:hover {
-  background: var(--ca-accent-soft);
+  background: var(--ca-accent-bg);
   border-color: var(--ca-accent);
   color: var(--ca-accent);
+}
+.pf2e-character-audit .audit-footer button:active {
+  transform: translateY(1px);
 }
 
 /* ─── Party audit layout ───────────────────────────────────── */
@@ -484,21 +641,24 @@ body.dark-theme .pf2e-character-audit.party-audit {
   gap: 0;
   height: 100%;
   min-height: 0;
+  background: var(--ca-surface);
 }
 
 .pf2e-character-audit .audit-member-list {
   border-right: 1px solid var(--ca-border);
-  padding: 0.7rem 0.5rem;
+  padding: 0.8rem 0.55rem;
   overflow: auto;
-  background: var(--ca-bg-softer);
+  background: var(--ca-surface-2);
+  color: var(--ca-text);
 }
 .pf2e-character-audit .audit-member-list h3 {
-  margin: 0 0 0.5rem 0.3rem;
-  font-size: 0.85rem;
+  margin: 0 0 0.55rem 0.3rem;
+  font-size: 0.78rem;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--ca-fg-muted);
+  letter-spacing: 0.06em;
+  color: var(--ca-text-faint);
   font-weight: 700;
+  border: none;
 }
 .pf2e-character-audit .audit-member-list ul {
   list-style: none;
@@ -510,39 +670,50 @@ body.dark-theme .pf2e-character-audit.party-audit {
 .pf2e-character-audit .audit-member {
   display: block;
   width: 100%;
-  padding: 0.5rem 0.65rem;
-  margin: 0 0 0.3rem 0;
+  padding: 0.55rem 0.7rem;
+  margin: 0 0 0.35rem 0;
   border: 1px solid transparent;
-  background: transparent;
+  background: var(--ca-surface);
   cursor: pointer;
-  border-radius: 6px;
+  border-radius: 8px;
   text-align: left;
   font-family: inherit;
   font-size: inherit;
   line-height: 1.35;
-  color: var(--ca-fg);
+  color: var(--ca-text);
   user-select: none;
-  transition: background 0.12s, border-color 0.12s;
+  transition: background 0.12s, border-color 0.12s, transform 0.08s;
 }
 .pf2e-character-audit .audit-member:hover {
-  background: var(--ca-bg-soft);
-  border-color: var(--ca-border);
+  background: var(--ca-accent-bg);
+  border-color: var(--ca-accent-border);
 }
 .pf2e-character-audit .audit-member.active {
-  background: var(--ca-accent-soft);
+  background: var(--ca-accent-bg);
   border-color: var(--ca-accent);
-  color: var(--ca-fg);
+  color: var(--ca-text);
+  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.15);
 }
-.pf2e-character-audit .audit-member.cross.active { background: var(--ca-bg-soft); border-color: var(--ca-border-strong); }
+.pf2e-character-audit .audit-member.cross {
+  border-style: dashed;
+  background: var(--ca-surface-2);
+}
+.pf2e-character-audit .audit-member.cross.active {
+  background: var(--ca-surface);
+  border-color: var(--ca-border-strong);
+  border-style: solid;
+}
 
 .pf2e-character-audit .audit-member .member-row {
   display: block;
   width: 100%;
+  color: inherit;
 }
 .pf2e-character-audit .audit-member .member-row-name {
-  font-weight: 600;
+  font-weight: 700;
   word-break: break-word;
-  color: var(--ca-fg);
+  color: var(--ca-text);
+  font-size: 0.95rem;
 }
 .pf2e-character-audit .audit-member .member-row-meta {
   display: flex;
@@ -550,13 +721,14 @@ body.dark-theme .pf2e-character-audit.party-audit {
   align-items: center;
   justify-content: space-between;
   gap: 0.35rem;
-  margin-top: 0.25rem;
+  margin-top: 0.3rem;
 }
 .pf2e-character-audit .audit-member .member-level {
-  color: var(--ca-fg-muted);
+  color: var(--ca-text-muted);
   font-size: 0.78rem;
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
+  font-weight: 600;
 }
 .pf2e-character-audit .audit-member .member-badges {
   display: inline-flex;
@@ -566,8 +738,8 @@ body.dark-theme .pf2e-character-audit.party-audit {
   justify-content: flex-end;
 }
 .pf2e-character-audit .audit-member .member-badges .audit-badge {
-  font-size: 0.7rem;
-  padding: 0.05rem 0.4rem;
+  font-size: 0.72rem;
+  padding: 0.1rem 0.45rem;
 }
 
 .pf2e-character-audit.party-audit .party-audit-main {
@@ -575,51 +747,52 @@ body.dark-theme .pf2e-character-audit.party-audit {
   flex-direction: column;
   min-height: 0;
   overflow: auto;
+  background: var(--ca-surface);
+  color: var(--ca-text);
 }
 
 .pf2e-character-audit.party-audit .audit-footer {
   grid-column: 1 / -1;
 }
 
-/* ─── Header anchors ───────────────────────────────────────── */
+/* ─── Header anchors (sheet header buttons) ────────────────── */
 
-a.header-control.pf2e-character-audit-btn,
-a.header-control.pf2e-character-audit-party-btn {
-  /* Inherit FVTT's native .header-control sizing entirely; only tint on hover. */
-}
 a.header-control.pf2e-character-audit-btn:hover,
 a.header-control.pf2e-character-audit-party-btn:hover {
-  color: var(--ca-accent, #2563eb);
+  color: #2563eb;
 }
 
 .pf2e-character-audit-directory-btn {
   margin: 0.3rem 0;
   padding: 0.35rem 0.7rem;
-  background: var(--color-bg-option, #fff);
-  color: var(--color-text-dark-primary, #1f2937);
-  border: 1px solid var(--color-border-light-2, #d1d5db);
+  background: #ffffff;
+  color: #1f2937;
+  border: 1px solid #d1d5db;
   border-radius: 6px;
   cursor: pointer;
   font-size: 0.88rem;
+  font-weight: 600;
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  transition: background 0.12s, border-color 0.12s;
+  gap: 0.4rem;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
 }
 .pf2e-character-audit-directory-btn:hover {
-  background: rgba(37, 99, 235, 0.1);
+  background: #eff6ff;
   border-color: #2563eb;
   color: #2563eb;
 }
 
-/* ─── Actor tag pill (cross-party breakdown) ───────────────── */
+/* ─── Cross-party actor pill ───────────────────────────────── */
 
 .pf2e-character-audit .actor-tag {
   display: inline-block;
-  padding: 0.05rem 0.45rem;
-  margin: 0.1rem 0.15rem 0.1rem 0;
-  background: var(--ca-bg-soft);
+  padding: 0.1rem 0.5rem;
+  margin: 0.15rem 0.2rem 0.15rem 0;
+  background: var(--ca-surface-2);
+  color: var(--ca-text);
+  border: 1px solid var(--ca-border);
   border-radius: 4px;
-  font-size: 0.75rem;
-  color: var(--ca-fg);
+  font-size: 0.78rem;
+  font-weight: 500;
 }
