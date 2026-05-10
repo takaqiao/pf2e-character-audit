@@ -3,6 +3,11 @@
 User-facing release notes for PF2e Character Audit.
 For full engineering history see [CHANGELOG-detailed.zh.md](CHANGELOG-detailed.zh.md).
 
+## [0.1.13] - 2026-05-11
+
+### Fixed
+- **Raw translation keys (e.g. `PF2E-CA.Label.Errors`) showing in the UI** when a user updates the module mid-world. Foundry caches the lang JSON at world launch and doesn't re-read it on file change, so newly-added keys appear unlocalized until the world restarts. We now inject hardcoded English fallbacks into `game.i18n.translations` during the `i18nInit` hook for ~40 commonly-used keys, so the UI stays readable even with a stale cache.
+
 ## [0.1.12] - 2026-05-11
 
 ### Added

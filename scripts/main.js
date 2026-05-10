@@ -2,6 +2,14 @@ import { MODULE_ID, MODULE_VERSION } from "./constants.js";
 import { registerSettings } from "./settings.js";
 import { registerHooks } from "./ui/injectors.js";
 import { createApi } from "./api.js";
+import { injectFallbacks } from "./i18n.js";
+
+Hooks.once("i18nInit", () => {
+  // Inject hardcoded English fallbacks for any translation key that didn't
+  // make it into game.i18n.translations (e.g. lang file added in a newer
+  // version that loaded into a stale cache).
+  injectFallbacks();
+});
 
 Hooks.once("init", () => {
   registerSettings();
