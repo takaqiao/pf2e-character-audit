@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.3] - 2026-05-11
+
+### Added
+- **Chinese prerequisite support** (`scripts/prereq/cn-normalizer.js`): a CN→EN preprocessor that translates common patterns ("X技能熟练度为受训" → "trained in X", "在你神祇的偏好武器上受训" → "trained in your deity's favored weapon", "大师缪斯" → "maestro muse" etc.) before passing to pf2e-leveler's parser. Covers all 16 PF2e core skills, 14 ancestries, 24 classes, attribute names, and common subclass features. Uses lazy regex captures so "技能" suffix doesn't get swallowed.
+- **Normalized requirement display**: when CN normalization happens, the report shows the translated text under the original (e.g. `→ trained in Medicine`) so users can see what got translated.
+
+### Changed
+- **Full UI repaint** (`styles/audit.css`):
+  - Explicit fg/bg/border tokens per severity (error/warn/info/ok) — guaranteed contrast, no more "yellow background + gray text" unreadable combos.
+  - Dark theme support via CSS variable overrides under `.theme-dark` / `body.dark-theme`.
+  - Card-style issue items with hover lift and left accent border.
+  - Pill-style level badge in headers; segmented status counts.
+  - Cleaner tab bar with active underline and accent color.
+  - Polished party member rows (rounded, accent ring on active).
+  - Better `<details>`/`<summary>` styling for grouped lists.
+  - Dashed empty-state cards.
+
+### Fixed
+- **Severity regex broken**: `severityForEvaluation` had a malformed regex (`[^ -\s\p{P}]`) that never triggered correctly. Replaced with the proper `hasCJK()` check from cn-normalizer.
+- **`Set.list` hack residue** in `build-state.js` removed (no consumer was reading it).
+
+[0.1.3]: https://github.com/takaqiao/pf2e-character-audit/releases/tag/0.1.3
+
 ## [0.1.2] - 2026-05-11
 
 ### Fixed

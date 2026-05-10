@@ -15,6 +15,9 @@
           <div class="audit-issue-body">
             <div class="audit-issue-title"><b>{{this.featName}}</b> <small>(Lv {{this.featLevel}}, {{this.featSource}})</small></div>
             <div class="audit-issue-hint"><b>{{localize "PF2E-CA.Field.Requirement"}}:</b> {{this.requirement}}</div>
+            {{#if this.normalizedRequirement}}{{#unless (eq this.normalizedRequirement this.requirement)}}
+              <span class="audit-prereq-normalized">→ {{this.normalizedRequirement}}</span>
+            {{/unless}}{{/if}}
             {{#if this.reasons.length}}
               <ul class="audit-reasons">
                 {{#each this.reasons}}
