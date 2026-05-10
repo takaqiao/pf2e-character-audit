@@ -1,9 +1,35 @@
-import { MODULE_ID } from "../constants.js";
+import { MODULE_ID, SEVERITY } from "../constants.js";
 import { auditParty } from "../audit/index.js";
 import { t, key } from "../i18n.js";
 import { toChat, toJournal, toJson } from "./exporters.js";
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
+
+function severityIcon(sev) {
+  if (sev === SEVERITY.ERROR) return "🔴";
+  if (sev === SEVERITY.WARN) return "🟡";
+  if (sev === SEVERITY.INFO) return "🔵";
+  return "";
+}
+
+function localizeIssue(issue) {
+  return {
+    ...issue,
+    icon: severityIcon(issue.severity),
+    titleText: game.i18n.format(`${issue.i18nKey}.Title`, issue.params ?? {}),
+    hintText: game.i18n.format(`${issue.i18nKey}.Hint`, issue.params ?? {})
+  };
+}
+
+function localizeReport(report) {
+  if (!report) return report;
+  return {
+    ...report,
+    completeness: report.completeness
+      ? { ...report.completeness, issues: (report.completeness.issues ?? []).map(localizeIssue) }
+      : null
+  };
+}
 
 export class PartyAuditApp extends HandlebarsApplicationMixin(ApplicationV2) {
   constructor(options = {}) {
@@ -44,7 +70,8 @@ export class PartyAuditApp extends HandlebarsApplicationMixin(ApplicationV2) {
       this._selectedActorId = pr.party[0].actorId;
     }
     if (this._selectedActorId === "__cross__") this._activeTab = "cross";
-    const selected = pr.party.find((r) => r.actorId === this._selectedActorId);
+    const rawSelected = pr.party.find((r) => r.actorId === this._selectedActorId);
+    const selected = localizeReport(rawSelected);
     return {
       partyReport: pr,
       members: pr.party.map((r) => ({

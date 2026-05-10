@@ -77,13 +77,26 @@ function checkBoosts(actor, expected, variants, issues) {
 
 function checkLanguages(actor, issues) {
   const value = actor.system?.details?.languages?.value ?? [];
-  const max = actor.system?.build?.languages?.max ?? actor.system?.details?.languages?.max ?? null;
-  if (typeof max === "number") {
-    if (value.length > max) {
-      issues.push(makeIssue("LANGUAGE_OVER_LIMIT", SEVERITY.ERROR, { actual: value.length, max }));
-    } else if (value.length < max) {
-      issues.push(makeIssue("LANGUAGE_UNDER_LIMIT", SEVERITY.WARN, { actual: value.length, max }));
-    }
+  const granted = actor.system?.build?.languages?.granted ?? [];
+  const max = actor.system?.build?.languages?.max ?? null;
+  if (typeof max !== "number") return;
+
+  // build.languages.max is the cap on *additional* selectable languages on top of
+  // the ancestry-granted ones (Common + ancestry language). Compare apples to apples.
+  const grantedSlugs = new Set(
+    granted.map((g) => (typeof g === "string" ? g : g?.slug)).filter(Boolean)
+  );
+  const chosenExtras = value.filter((slug) => !grantedSlugs.has(slug));
+  const extras = chosenExtras.length;
+
+  if (extras > max) {
+    issues.push(
+      makeIssue("LANGUAGE_OVER_LIMIT", SEVERITY.ERROR, { actual: extras, max, total: value.length })
+    );
+  } else if (extras < max) {
+    issues.push(
+      makeIssue("LANGUAGE_UNDER_LIMIT", SEVERITY.WARN, { actual: extras, max, total: value.length })
+    );
   }
 }
 

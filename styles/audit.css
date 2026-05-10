@@ -214,38 +214,62 @@
 }
 .pf2e-character-audit .audit-member-list h3 { margin: 0 0 0.4rem; }
 .pf2e-character-audit .audit-member-list ul { list-style: none; margin: 0; padding: 0; }
+.pf2e-character-audit .audit-member-list ul li { list-style: none; margin: 0; padding: 0; }
+
 .pf2e-character-audit .audit-member {
+  display: block;
   width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.2rem;
-  padding: 0.4rem 0.5rem;
+  padding: 0.45rem 0.55rem;
+  margin: 0 0 0.25rem 0;
   border: 1px solid transparent;
   background: transparent;
   cursor: pointer;
   border-radius: 4px;
   text-align: left;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: 1.35;
+  color: inherit;
+  user-select: none;
 }
 .pf2e-character-audit .audit-member:hover { background: rgba(0,0,0,0.05); }
 .pf2e-character-audit .audit-member.active {
-  background: rgba(26,79,139,0.1);
-  border-color: rgba(26,79,139,0.3);
+  background: rgba(26,79,139,0.12);
+  border-color: rgba(26,79,139,0.35);
 }
-.pf2e-character-audit .member-level {
+.pf2e-character-audit .audit-member .member-row {
+  display: block;
+  width: 100%;
+}
+.pf2e-character-audit .audit-member .member-row-name {
+  font-weight: 600;
+  word-break: break-word;
+}
+.pf2e-character-audit .audit-member .member-row-meta {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem;
+  margin-top: 0.2rem;
+}
+.pf2e-character-audit .audit-member .member-level {
   color: var(--color-text-dark-secondary, #777);
   font-size: 0.8rem;
+  white-space: nowrap;
+}
+.pf2e-character-audit .audit-member .member-badges {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.2rem;
+  align-items: center;
+  justify-content: flex-end;
 }
 
-.pf2e-character-audit-btn,
-.pf2e-character-audit-party-btn {
-  background: transparent;
-  border: 1px solid transparent;
-  cursor: pointer;
-  font-size: 1rem;
-}
-.pf2e-character-audit-btn:hover,
-.pf2e-character-audit-party-btn:hover { color: #1a4f8b; }
+/* Header anchors use FVTT's native .header-control sizing; no overrides needed.
+   We only tint on hover to match the audit accent color. */
+a.header-control.pf2e-character-audit-btn:hover,
+a.header-control.pf2e-character-audit-party-btn:hover { color: #1a4f8b; }
 
 .pf2e-character-audit-directory-btn {
   margin: 0.25rem 0;

@@ -4,21 +4,24 @@
     <ul>
       {{#each members}}
         <li>
-          <button type="button" class="audit-member {{#if (eq this.id ../selectedId)}}active{{/if}}" data-action="selectMember" data-actor-id="{{this.id}}">
-            <span class="member-name">{{this.name}}</span>
-            <span class="member-level">Lv {{this.level}}</span>
-            <span class="member-badges">
-              {{#if this.summary.completeness.errors}}<span class="audit-badge error">{{this.summary.completeness.errors}}</span>{{/if}}
-              {{#if this.summary.prerequisites.fail}}<span class="audit-badge error">{{this.summary.prerequisites.fail}}</span>{{/if}}
-              {{#if this.summary.completeness.warnings}}<span class="audit-badge warn">{{this.summary.completeness.warnings}}</span>{{/if}}
-            </span>
-          </button>
+          <div class="audit-member {{#if (eq this.id ../selectedId)}}active{{/if}}" role="button" tabindex="0" data-action="selectMember" data-actor-id="{{this.id}}">
+            <div class="member-row member-row-name">{{this.name}}</div>
+            <div class="member-row member-row-meta">
+              <span class="member-level">Lv {{this.level}}</span>
+              <span class="member-badges">
+                {{#if this.summary.completeness.errors}}<span class="audit-badge error">E {{this.summary.completeness.errors}}</span>{{/if}}
+                {{#if this.summary.prerequisites.fail}}<span class="audit-badge error">F {{this.summary.prerequisites.fail}}</span>{{/if}}
+                {{#if this.summary.completeness.warnings}}<span class="audit-badge warn">W {{this.summary.completeness.warnings}}</span>{{/if}}
+                {{#if this.summary.prerequisites.unknown}}<span class="audit-badge info">? {{this.summary.prerequisites.unknown}}</span>{{/if}}
+              </span>
+            </div>
+          </div>
         </li>
       {{/each}}
       <li>
-        <button type="button" class="audit-member cross {{#if (eq selectedId "__cross__")}}active{{/if}}" data-action="selectMember" data-actor-id="__cross__">
-          <span class="member-name">📊 {{labels.crossLabel}}</span>
-        </button>
+        <div class="audit-member cross {{#if (eq selectedId "__cross__")}}active{{/if}}" role="button" tabindex="0" data-action="selectMember" data-actor-id="__cross__">
+          <div class="member-row member-row-name">📊 {{labels.crossLabel}}</div>
+        </div>
       </li>
     </ul>
   </aside>

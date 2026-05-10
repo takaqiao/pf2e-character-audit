@@ -12,10 +12,11 @@ function fillCount(levels, max) {
   return out;
 }
 
-function getClassLevels(actor, key, fallback) {
-  const arr = actor?.class?.system?.[key];
-  if (Array.isArray(arr)) return arr;
-  return fallback;
+function readClassLevels(actor, key) {
+  const raw = actor?.class?.system?.[key];
+  if (Array.isArray(raw)) return raw;
+  if (Array.isArray(raw?.value)) return raw.value;
+  return null;
 }
 
 export function expectedSlots(actor, variants) {
@@ -24,20 +25,19 @@ export function expectedSlots(actor, variants) {
   const ancestryFeats = fillCount(ANCESTRY_FEAT_LEVELS, level);
   const generalFeats = fillCount(GENERAL_FEAT_LEVELS, level);
 
-  const classFeatLevels = getClassLevels(actor, "classFeatLevels", null)
-    ?? getClassLevels(actor, "featLevels", null)
-    ?? [2, 4, 6, 8, 10, 12, 14, 16, 18, 20];
-  const classFeats = fillCount(classFeatLevels.value ?? classFeatLevels, level);
+  const classFeatLevels =
+    readClassLevels(actor, "classFeatLevels") ??
+    readClassLevels(actor, "featLevels") ??
+    [2, 4, 6, 8, 10, 12, 14, 16, 18, 20];
+  const classFeats = fillCount(classFeatLevels, level);
 
-  const skillFeatLevels = getClassLevels(actor, "skillFeatLevels", null) ?? DEFAULT_SKILL_FEAT_LEVELS;
-  const skillFeats = fillCount(skillFeatLevels.value ?? skillFeatLevels, level);
+  const skillFeatLevels = readClassLevels(actor, "skillFeatLevels") ?? DEFAULT_SKILL_FEAT_LEVELS;
+  const skillFeats = fillCount(skillFeatLevels, level);
 
-  const skillIncreaseLevels = getClassLevels(actor, "skillIncreaseLevels", null) ?? DEFAULT_SKILL_INCREASE_LEVELS;
-  const skillIncreases = fillCount(skillIncreaseLevels.value ?? skillIncreaseLevels, level);
+  const skillIncreaseLevels = readClassLevels(actor, "skillIncreaseLevels") ?? DEFAULT_SKILL_INCREASE_LEVELS;
+  const skillIncreases = fillCount(skillIncreaseLevels, level);
 
-  const archetypeFeats = variants?.freeArchetype
-    ? fillCount(DEFAULT_SKILL_FEAT_LEVELS, level)
-    : {};
+  const archetypeFeats = variants?.freeArchetype ? fillCount(DEFAULT_SKILL_FEAT_LEVELS, level) : {};
 
   const boostLevels = BOOST_LEVELS.filter((l) => l <= level);
 

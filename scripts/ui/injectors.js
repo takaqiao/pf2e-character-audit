@@ -28,77 +28,83 @@ export function openPartyApp() {
   return new PartyAuditApp().render(true);
 }
 
-function injectButton(html, btn) {
-  if (!html) return;
-  const root = html instanceof HTMLElement ? html : html?.[0];
-  if (!root) return;
-  const headerActions = root.querySelector(".window-header .header-control") ?? root.querySelector(".window-header");
-  if (headerActions) {
-    headerActions.before(btn);
-  } else {
-    root.querySelector(".window-header")?.appendChild(btn);
-  }
+function rootEl(html, app) {
+  if (html instanceof HTMLElement) return html;
+  if (html && typeof html === "object" && typeof html.length === "number" && html[0] instanceof HTMLElement) return html[0];
+  return app?.element ?? null;
 }
 
-function makeButton({ icon, label, className, onClick }) {
-  const btn = document.createElement("button");
-  btn.type = "button";
-  btn.className = `header-control ${className ?? ""}`.trim();
-  btn.dataset.action = "pf2e-character-audit";
-  btn.title = label;
-  btn.innerHTML = `<i class="fas ${icon}"></i>`;
-  btn.addEventListener("click", (e) => {
+function makeHeaderControl({ icon, label, action, onClick }) {
+  const a = document.createElement("a");
+  a.className = "header-control";
+  a.dataset.action = action;
+  a.dataset.tooltip = label;
+  a.setAttribute("aria-label", label);
+  a.setAttribute("role", "button");
+  a.innerHTML = `<i class="fas ${icon}"></i>`;
+  a.addEventListener("click", (e) => {
     e.preventDefault();
     e.stopPropagation();
     onClick?.();
   });
-  return btn;
+  return a;
+}
+
+function placeInHeader(root, anchor) {
+  if (!root) return;
+  const header = root.querySelector(".window-header");
+  if (!header) return;
+  const closeBtn = header.querySelector('[data-action="close"], a.close, button.close, .header-button.close');
+  if (closeBtn) closeBtn.before(anchor);
+  else header.appendChild(anchor);
 }
 
 function injectCharacterSheetButton(app, html) {
   if (!app?.actor || app.actor.type !== "character") return;
   if (!isAuditAllowed()) return;
   if (!showButtonOnSheet()) return;
-  const root = html instanceof HTMLElement ? html : html?.[0] ?? app.element;
+  const root = rootEl(html, app);
   if (!root) return;
-  if (root.querySelector(`button[data-action="pf2e-character-audit"]`)) return;
-  const btn = makeButton({
+  if (root.querySelector('.pf2e-character-audit-btn')) return;
+  const a = makeHeaderControl({
     icon: "fa-clipboard-check",
     label: t("Action.AuditSheet"),
-    className: "pf2e-character-audit-btn",
+    action: "pf2e-character-audit",
     onClick: () => openAuditApp(app.actor)
   });
-  injectButton(root, btn);
+  a.classList.add("pf2e-character-audit-btn");
+  placeInHeader(root, a);
 }
 
 function injectPartySheetButton(app, html) {
   if (!isAuditAllowed()) return;
-  const root = html instanceof HTMLElement ? html : html?.[0] ?? app.element;
+  const root = rootEl(html, app);
   if (!root) return;
-  if (root.querySelector(`button[data-action="pf2e-character-audit-party"]`)) return;
-  const btn = makeButton({
-    icon: "fa-users",
+  if (root.querySelector('.pf2e-character-audit-party-btn')) return;
+  const a = makeHeaderControl({
+    icon: "fa-users-rectangle",
     label: t("Action.AuditParty"),
-    className: "pf2e-character-audit-party-btn",
+    action: "pf2e-character-audit-party",
     onClick: () => openPartyApp()
   });
-  btn.dataset.action = "pf2e-character-audit-party";
-  injectButton(root, btn);
+  a.classList.add("pf2e-character-audit-party-btn");
+  placeInHeader(root, a);
 }
 
 function injectActorDirectoryToolbar(app, html) {
   if (!game.user.isGM) return;
-  const root = html instanceof HTMLElement ? html : html?.[0];
+  const root = rootEl(html, app);
   if (!root) return;
-  if (root.querySelector(`.pf2e-character-audit-directory-btn`)) return;
+  if (root.querySelector('.pf2e-character-audit-directory-btn')) return;
   const btn = document.createElement("button");
   btn.type = "button";
   btn.className = "pf2e-character-audit-directory-btn";
   btn.innerHTML = `<i class="fas fa-clipboard-check"></i> ${t("Action.AuditParty")}`;
   btn.addEventListener("click", () => openPartyApp());
-  const target = root.querySelector(".directory-header .header-actions")
-    ?? root.querySelector(".directory-header")
-    ?? root.querySelector(".header-actions");
+  const target =
+    root.querySelector(".directory-header .header-actions") ??
+    root.querySelector(".directory-header") ??
+    root.querySelector(".header-actions");
   if (target) target.append(btn);
 }
 

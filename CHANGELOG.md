@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.2] - 2026-05-11
+
+### Fixed
+- **Character sheet header bloat**: switched the header button from `<button class="header-control">` to `<a class="header-control" data-tooltip="...">`, matching FVTT v14 / pf2e-leveler conventions so the header no longer expands.
+- **`LANGUAGE_OVER_LIMIT` false positives**: `system.build.languages.max` is the cap on *additional* selectable languages, not total. Now the check subtracts ancestry-granted languages before comparing.
+- **`classFeats` / `skillFeats` / `generalFeats` slot tables empty**: `actor.class.system.classFeatLevels` is `{value: [...]}` not a bare array. `slot-tables.js` now reads both shapes, so e.g. Barbarian's level-1 class feat is correctly required.
+- **Chinese prereq text reported as warnings**: pf2e-leveler's prerequisite parser is English/French only. When the requirement text contains CJK characters (translated PF2e packs), unknown evaluations are now demoted to `info` so the report isn't a sea of yellow warnings.
+- **Party audit member list layout broken**: `<button>` flex column layout was being overridden by FVTT base styles. Switched to `<div role="button">` with explicit `member-row` block children.
+- **Party audit completeness issues showed raw i18n keys**: localized `selected` report's completeness issues in `PartyAuditApp._prepareContext` (already done in `AuditReportApp`).
+
+### Added
+- **Legacy `cn` language code**: registered the `cn` lang code alongside `zh-CN` so users on older FVTT locale settings get Chinese text. Matches the dual-registration pattern used by pf2e-xp-tool.
+
+[0.1.2]: https://github.com/takaqiao/pf2e-character-audit/releases/tag/0.1.2
+
 ## [0.1.1] - 2026-05-10
 
 ### Fixed

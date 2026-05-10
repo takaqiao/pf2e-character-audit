@@ -102,12 +102,12 @@
           "Hint": "17 级及以上角色应配备一件 Apex 装备（除非启用了 ABP）。"
         },
         "LANGUAGE_OVER_LIMIT": {
-          "Title": "语言数量超过上限",
-          "Hint": "已选 {actual} 种，上限 {max} 种。"
+          "Title": "额外语言超过上限",
+          "Hint": "在 ancestry 自动授予之外，应至多再选 {max} 种，实际多选了 {actual} 种（语言总数 {total}）。"
         },
         "LANGUAGE_UNDER_LIMIT": {
-          "Title": "未用满语言名额",
-          "Hint": "已选 {actual} 种，可选 {max} 种。"
+          "Title": "未用满额外语言名额",
+          "Hint": "在 ancestry 自动授予之外可再选 {max} 种，实际只选了 {actual} 种（语言总数 {total}）。"
         },
         "ANCESTRY_FEAT_MISSING": {
           "Title": "祖先专长缺失（截至等级 {level}）",

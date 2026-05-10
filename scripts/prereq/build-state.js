@@ -135,17 +135,11 @@ function deriveFeats(actor) {
 }
 
 function deriveClassFeatures(actor) {
-  const list = (actor.itemTypes.feat ?? [])
+  const slugs = (actor.itemTypes.feat ?? [])
     .filter((f) => (f.system?.category ?? f.system?.featType) === "classfeature")
-    .map((f) => ({
-      slug: safeSlug(f),
-      name: f.name,
-      level: f.system?.level?.value ?? 1,
-      traits: f.system?.traits?.value ?? []
-    }));
-  const set = new Set(list.map((c) => c.slug).filter(Boolean));
-  set.list = list;
-  return set;
+    .map((f) => safeSlug(f))
+    .filter(Boolean);
+  return new Set(slugs);
 }
 
 function deriveDeityState(actor) {
@@ -297,7 +291,6 @@ export function buildBuildStateFromActor(actor) {
   const ancestryTraits = deriveAncestryTraits(actor);
 
   const featSet = new Set(featList.map((f) => f.slug).filter(Boolean));
-  featSet.list = featList;
 
   const classEntry = classSlug
     ? {
