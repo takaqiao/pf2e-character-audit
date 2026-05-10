@@ -341,6 +341,57 @@ function checkHP(actor, issues) {
   }
 }
 
+function checkStartingWealth(actor, issues) {
+  const level = actor.system?.details?.level?.value ?? 1;
+  if (level !== 1) return;
+  let copper = 0;
+  // Try the modern PF2e API first.
+  if (typeof actor.inventory?.coins?.copperValue === "number") {
+    copper = actor.inventory.coins.copperValue;
+  } else {
+    // Fallback: walk treasure items.
+    for (const item of actor.itemTypes.treasure ?? []) {
+      if (item.system?.stackGroup !== "coins") continue;
+      const slug = item.slug ?? item.system?.slug ?? "";
+      const qty = item.system?.quantity ?? 0;
+      const factor = slug === "platinum-pieces" ? 1000
+        : slug === "gold-pieces" ? 100
+        : slug === "silver-pieces" ? 10
+        : slug === "copper-pieces" ? 1 : 0;
+      copper += qty * factor;
+    }
+  }
+  const gp = copper / 100;
+  if (gp > 15) {
+    issues.push(makeIssue("STARTING_WEALTH_EXCEEDED", SEVERITY.INFO, { gp: Math.floor(gp * 10) / 10 }));
+  }
+}
+
+function checkSpellPreparation(actor, issues) {
+  const entries = actor.itemTypes.spellcastingEntry ?? [];
+  for (const entry of entries) {
+    const isPrepared = entry.system?.prepared?.value === "prepared";
+    if (!isPrepared) continue;
+    const slots = entry.system?.slots ?? {};
+    let unfilled = 0;
+    for (let rank = 0; rank <= 10; rank++) {
+      const slot = slots[`slot${rank}`];
+      if (!slot) continue;
+      const max = Number(slot.max ?? 0);
+      if (max <= 0) continue;
+      const prepared = Array.isArray(slot.prepared) ? slot.prepared : Object.values(slot.prepared ?? {});
+      const filled = prepared.filter((p) => p && (p.id || p.value)).length;
+      if (filled < max) unfilled += max - filled;
+    }
+    if (unfilled > 0) {
+      issues.push(makeIssue("SPELL_PREPARATION_INCOMPLETE", SEVERITY.WARN, {
+        entry: entry.name,
+        missing: unfilled
+      }));
+    }
+  }
+}
+
 function checkLevelXP(actor, issues) {
   const level = actor.system?.details?.level?.value ?? 1;
   if (level >= 20) return;
@@ -411,6 +462,8 @@ export function auditCompleteness(actor, variants) {
   checkSpellTraditions(actor, issues);
   checkHP(actor, issues);
   checkLevelXP(actor, issues);
+  checkStartingWealth(actor, issues);
+  checkSpellPreparation(actor, issues);
   checkLegacySource(actor, issues);
 
   const summary = {

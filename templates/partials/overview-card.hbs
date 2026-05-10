@@ -1,4 +1,23 @@
 <div class="audit-overview">
+  {{#if delta}}
+    <div class="audit-delta">
+      <i class="fa-solid fa-clock-rotate-left"></i>
+      <span class="delta-label">{{localize "PF2E-CA.Delta.LastAudit"}}:</span>
+      <span class="delta-time">{{delta.relativeTime}}</span>
+      {{#if (or delta.errors delta.warnings delta.fail delta.unknown delta.infos)}}
+        <span class="delta-separator">·</span>
+        {{#if delta.errors}}<span class="delta-chip delta-{{#if (gt delta.errors 0)}}up{{else}}down{{/if}}">E {{#if (gt delta.errors 0)}}+{{/if}}{{delta.errors}}</span>{{/if}}
+        {{#if delta.fail}}<span class="delta-chip delta-{{#if (gt delta.fail 0)}}up{{else}}down{{/if}}">F {{#if (gt delta.fail 0)}}+{{/if}}{{delta.fail}}</span>{{/if}}
+        {{#if delta.warnings}}<span class="delta-chip delta-{{#if (gt delta.warnings 0)}}up{{else}}down{{/if}}">W {{#if (gt delta.warnings 0)}}+{{/if}}{{delta.warnings}}</span>{{/if}}
+        {{#if delta.unknown}}<span class="delta-chip delta-{{#if (gt delta.unknown 0)}}up{{else}}down{{/if}}">? {{#if (gt delta.unknown 0)}}+{{/if}}{{delta.unknown}}</span>{{/if}}
+        {{#if delta.infos}}<span class="delta-chip delta-{{#if (gt delta.infos 0)}}up{{else}}down{{/if}}">I {{#if (gt delta.infos 0)}}+{{/if}}{{delta.infos}}</span>{{/if}}
+      {{else}}
+        <span class="delta-separator">·</span>
+        <span class="delta-chip delta-flat">{{localize "PF2E-CA.Delta.NoChange"}}</span>
+      {{/if}}
+    </div>
+  {{/if}}
+
   <div class="audit-overview-grid">
     <div class="audit-overview-section">
       <h3>{{localize "PF2E-CA.Overview.SectionVariants"}}</h3>
@@ -47,5 +66,12 @@
     <div class="audit-callout warn"><i class="fa-solid fa-triangle-exclamation"></i><div>{{localize "PF2E-CA.Overview.CalloutWarn"}}</div></div>
   {{else}}
     <div class="audit-callout ok"><i class="fa-solid fa-circle-check"></i><div>{{localize "PF2E-CA.Overview.CalloutOk"}}</div></div>
+  {{/if}}
+
+  {{#if suppressedCount}}
+    <div class="audit-callout info">
+      <i class="fa-solid fa-eye-slash"></i>
+      <div>{{labels.suppressedNote}} ({{suppressedCount}}) — <button type="button" class="audit-link" data-action="unsuppressAll">{{labels.unsuppressLabel}}</button></div>
+    </div>
   {{/if}}
 </div>

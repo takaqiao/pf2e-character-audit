@@ -1,5 +1,5 @@
 import { MODULE_ID, SEVERITY } from "../constants.js";
-import { auditActor } from "../audit/index.js";
+import { auditActor, suppressIssueCode, unsuppressAll } from "../audit/index.js";
 import { t, key } from "../i18n.js";
 import { toChat, toJournal, toJson } from "./exporters.js";
 
@@ -21,12 +21,45 @@ function localizeIssue(issue) {
   };
 }
 
+function applySeverityFilter(issues, filter) {
+  if (!filter || filter === "all" || !Array.isArray(issues)) return issues ?? [];
+  return issues.filter((i) => i.severity === filter || i.evaluation === filter);
+}
+
+function formatRelativeTime(timestamp) {
+  if (!timestamp) return "";
+  const diff = Date.now() - timestamp;
+  if (diff < 60_000) return game.i18n.localize(`${key("Time.JustNow")}`);
+  const mins = Math.floor(diff / 60_000);
+  if (mins < 60) return game.i18n.format(`${key("Time.MinutesAgo")}`, { n: mins });
+  const hrs = Math.floor(diff / 3_600_000);
+  if (hrs < 24) return game.i18n.format(`${key("Time.HoursAgo")}`, { n: hrs });
+  const days = Math.floor(diff / 86_400_000);
+  return game.i18n.format(`${key("Time.DaysAgo")}`, { n: days });
+}
+
+function deltaFromSnapshot(report, previous) {
+  if (!previous) return null;
+  const cur = report.summary ?? {};
+  const c = cur.completeness ?? {};
+  const p = cur.prerequisites ?? {};
+  return {
+    relativeTime: formatRelativeTime(previous.timestamp),
+    errors: (c.errors ?? 0) - (previous.completeness?.errors ?? 0),
+    warnings: (c.warnings ?? 0) - (previous.completeness?.warnings ?? 0),
+    infos: (c.infos ?? 0) - (previous.completeness?.infos ?? 0),
+    fail: (p.fail ?? 0) - (previous.prerequisites?.fail ?? 0),
+    unknown: (p.unknown ?? 0) - (previous.prerequisites?.unknown ?? 0)
+  };
+}
+
 export class AuditReportApp extends HandlebarsApplicationMixin(ApplicationV2) {
   constructor(actor, options = {}) {
     super(options);
     this.actor = actor;
     this._activeTab = "overview";
     this._report = null;
+    this._severityFilter = "all";
   }
 
   static DEFAULT_OPTIONS = {
@@ -37,16 +70,19 @@ export class AuditReportApp extends HandlebarsApplicationMixin(ApplicationV2) {
       title: key("App.Title.Single"),
       resizable: true,
       contentClasses: ["standard-form"],
-      icon: "fas fa-clipboard-check"
+      icon: "fa-solid fa-clipboard-check"
     },
-    position: { width: 780, height: 640 },
+    position: { width: 800, height: 660 },
     actions: {
       switchTab: AuditReportApp.#onSwitchTab,
       rerun: AuditReportApp.#onRerun,
       exportChat: AuditReportApp.#onExportChat,
       exportJournal: AuditReportApp.#onExportJournal,
       exportJson: AuditReportApp.#onExportJson,
-      openItem: AuditReportApp.#onOpenItem
+      openItem: AuditReportApp.#onOpenItem,
+      filterSev: AuditReportApp.#onFilterSev,
+      suppressIssue: AuditReportApp.#onSuppress,
+      unsuppressAll: AuditReportApp.#onUnsuppressAll
     }
   };
 
@@ -61,9 +97,28 @@ export class AuditReportApp extends HandlebarsApplicationMixin(ApplicationV2) {
   async _prepareContext(options) {
     if (!this._report) this._report = auditActor(this.actor);
     const r = this._report;
+    const filter = this._severityFilter ?? "all";
+
+    const completeness = r.completeness
+      ? {
+          ...r.completeness,
+          issues: applySeverityFilter(r.completeness.issues, filter).map(localizeIssue),
+          allIssueCount: r.completeness.issues?.length ?? 0
+        }
+      : null;
+    const prerequisites = r.prerequisites
+      ? {
+          ...r.prerequisites,
+          issues: applySeverityFilter(r.prerequisites.issues, filter)
+        }
+      : null;
+
     return {
       report: r,
       activeTab: this._activeTab,
+      severityFilter: filter,
+      delta: deltaFromSnapshot(r, r.previousSnapshot),
+      suppressedCount: (r.suppressedCodes ?? []).length,
       tabs: [
         { id: "overview", label: t("Tab.Overview") },
         { id: "publication", label: t("Tab.Publication") },
@@ -74,15 +129,14 @@ export class AuditReportApp extends HandlebarsApplicationMixin(ApplicationV2) {
       badge: r.badge,
       variants: r.variants,
       publication: r.publication,
-      completeness: r.completeness
-        ? { ...r.completeness, issues: (r.completeness.issues ?? []).map(localizeIssue) }
-        : null,
-      prerequisites: r.prerequisites,
+      completeness,
+      prerequisites,
       labels: {
         rerun: t("Action.Rerun"),
         chat: t("Action.SendChat"),
         journal: t("Action.ExportJournal"),
         json: t("Action.CopyJson"),
+        actorId: r.actorId,
         actorName: r.actorName,
         actorLevel: r.actorLevel,
         actorClass: r.actorClass ?? "—",
@@ -90,7 +144,15 @@ export class AuditReportApp extends HandlebarsApplicationMixin(ApplicationV2) {
         noIssues: t("Label.NoIssues"),
         passLabel: t("Label.Pass"),
         failLabel: t("Label.Fail"),
-        unknownLabel: t("Label.Unknown")
+        unknownLabel: t("Label.Unknown"),
+        filterAll: t("Filter.All"),
+        filterError: t("Filter.Errors"),
+        filterWarn: t("Filter.Warnings"),
+        filterInfo: t("Filter.Infos"),
+        filterShow: t("Filter.Show"),
+        suppressLabel: t("Action.Suppress"),
+        unsuppressLabel: t("Action.UnsuppressAll"),
+        suppressedNote: t("Label.SuppressedNote")
       }
     };
   }
@@ -122,7 +184,36 @@ export class AuditReportApp extends HandlebarsApplicationMixin(ApplicationV2) {
   static async #onOpenItem(event, target) {
     const uuid = target?.dataset?.uuid;
     if (!uuid) return;
-    const doc = await fromUuid(uuid);
-    doc?.sheet?.render(true);
+    try {
+      const doc = await fromUuid(uuid);
+      doc?.sheet?.render(true);
+    } catch (err) {
+      console.warn("[pf2e-character-audit] failed to open uuid", uuid, err);
+    }
+  }
+
+  static #onFilterSev(event, target) {
+    const sev = target?.dataset?.sev ?? "all";
+    this._severityFilter = sev;
+    this.render();
+  }
+
+  static async #onSuppress(event, target) {
+    const code = target?.dataset?.code;
+    if (!code || !this.actor) return;
+    const added = await suppressIssueCode(this.actor, code);
+    if (added) {
+      ui.notifications?.info(game.i18n.format(key("Action.SuppressedNotice"), { code }));
+      this._report = null;
+      this.render();
+    }
+  }
+
+  static async #onUnsuppressAll(event, target) {
+    if (!this.actor) return;
+    await unsuppressAll(this.actor);
+    ui.notifications?.info(game.i18n.localize(key("Action.UnsuppressNotice")));
+    this._report = null;
+    this.render();
   }
 }

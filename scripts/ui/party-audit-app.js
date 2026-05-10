@@ -1,5 +1,5 @@
 import { MODULE_ID, SEVERITY } from "../constants.js";
-import { auditParty } from "../audit/index.js";
+import { auditParty, suppressIssueCode, unsuppressAll } from "../audit/index.js";
 import { t, key } from "../i18n.js";
 import { toChat, toJournal, toJson } from "./exporters.js";
 
@@ -21,12 +21,27 @@ function localizeIssue(issue) {
   };
 }
 
-function localizeReport(report) {
+function applySeverityFilter(issues, filter) {
+  if (!filter || filter === "all" || !Array.isArray(issues)) return issues ?? [];
+  return issues.filter((i) => i.severity === filter || i.evaluation === filter);
+}
+
+function localizeReport(report, filter) {
   if (!report) return report;
   return {
     ...report,
     completeness: report.completeness
-      ? { ...report.completeness, issues: (report.completeness.issues ?? []).map(localizeIssue) }
+      ? {
+          ...report.completeness,
+          issues: applySeverityFilter(report.completeness.issues, filter).map(localizeIssue),
+          allIssueCount: report.completeness.issues?.length ?? 0
+        }
+      : null,
+    prerequisites: report.prerequisites
+      ? {
+          ...report.prerequisites,
+          issues: applySeverityFilter(report.prerequisites.issues, filter)
+        }
       : null
   };
 }
@@ -37,6 +52,7 @@ export class PartyAuditApp extends HandlebarsApplicationMixin(ApplicationV2) {
     this._partyReport = null;
     this._selectedActorId = null;
     this._activeTab = "overview";
+    this._severityFilter = "all";
   }
 
   static DEFAULT_OPTIONS = {
@@ -46,16 +62,20 @@ export class PartyAuditApp extends HandlebarsApplicationMixin(ApplicationV2) {
     window: {
       title: key("App.Title.Party"),
       resizable: true,
-      icon: "fas fa-users"
+      icon: "fa-solid fa-users"
     },
-    position: { width: 1000, height: 700 },
+    position: { width: 1020, height: 720 },
     actions: {
       selectMember: PartyAuditApp.#onSelectMember,
       switchTab: PartyAuditApp.#onSwitchTab,
       rerun: PartyAuditApp.#onRerun,
       exportChat: PartyAuditApp.#onExportChat,
       exportJournal: PartyAuditApp.#onExportJournal,
-      exportJson: PartyAuditApp.#onExportJson
+      exportJson: PartyAuditApp.#onExportJson,
+      filterSev: PartyAuditApp.#onFilterSev,
+      openItem: PartyAuditApp.#onOpenItem,
+      suppressIssue: PartyAuditApp.#onSuppress,
+      unsuppressAll: PartyAuditApp.#onUnsuppressAll
     }
   };
 
@@ -70,8 +90,9 @@ export class PartyAuditApp extends HandlebarsApplicationMixin(ApplicationV2) {
       this._selectedActorId = pr.party[0].actorId;
     }
     if (this._selectedActorId === "__cross__") this._activeTab = "cross";
+    const filter = this._severityFilter ?? "all";
     const rawSelected = pr.party.find((r) => r.actorId === this._selectedActorId);
-    const selected = localizeReport(rawSelected);
+    const selected = localizeReport(rawSelected, filter);
     return {
       partyReport: pr,
       members: pr.party.map((r) => ({
@@ -83,6 +104,7 @@ export class PartyAuditApp extends HandlebarsApplicationMixin(ApplicationV2) {
       })),
       selectedId: this._selectedActorId,
       selected,
+      severityFilter: filter,
       activeTab: this._activeTab,
       crossPartyPublication: pr.crossPartyPublication,
       tabs: [
@@ -97,7 +119,18 @@ export class PartyAuditApp extends HandlebarsApplicationMixin(ApplicationV2) {
         journal: t("Action.ExportJournal"),
         json: t("Action.CopyJson"),
         crossLabel: t("Tab.CrossParty"),
-        memberSection: t("Label.PartyMembers")
+        memberSection: t("Label.PartyMembers"),
+        noIssues: t("Label.NoIssues"),
+        passLabel: t("Label.Pass"),
+        failLabel: t("Label.Fail"),
+        unknownLabel: t("Label.Unknown"),
+        filterAll: t("Filter.All"),
+        filterError: t("Filter.Errors"),
+        filterWarn: t("Filter.Warnings"),
+        filterInfo: t("Filter.Infos"),
+        filterShow: t("Filter.Show"),
+        suppressLabel: t("Action.Suppress"),
+        unsuppressLabel: t("Action.UnsuppressAll")
       }
     };
   }
@@ -133,5 +166,47 @@ export class PartyAuditApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
   static #onExportJson() {
     if (this._partyReport) toJson(this._partyReport);
+  }
+
+  static #onFilterSev(event, target) {
+    const sev = target?.dataset?.sev ?? "all";
+    this._severityFilter = sev;
+    this.render();
+  }
+
+  static async #onOpenItem(event, target) {
+    const uuid = target?.dataset?.uuid;
+    if (!uuid) return;
+    try {
+      const doc = await fromUuid(uuid);
+      doc?.sheet?.render(true);
+    } catch (err) {
+      console.warn("[pf2e-character-audit] failed to open uuid", uuid, err);
+    }
+  }
+
+  static async #onSuppress(event, target) {
+    const code = target?.dataset?.code;
+    const actorId = this._selectedActorId;
+    if (!code || !actorId) return;
+    const actor = game.actors.get(actorId);
+    if (!actor) return;
+    const added = await suppressIssueCode(actor, code);
+    if (added) {
+      ui.notifications?.info(game.i18n.format(key("Action.SuppressedNotice"), { code }));
+      this._partyReport = null;
+      this.render();
+    }
+  }
+
+  static async #onUnsuppressAll(event, target) {
+    const actorId = this._selectedActorId;
+    if (!actorId) return;
+    const actor = game.actors.get(actorId);
+    if (!actor) return;
+    await unsuppressAll(actor);
+    ui.notifications?.info(game.i18n.localize(key("Action.UnsuppressNotice")));
+    this._partyReport = null;
+    this.render();
   }
 }

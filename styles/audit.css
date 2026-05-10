@@ -257,6 +257,7 @@ body.dark-theme .pf2e-character-audit.party-audit {
   font-weight: 600;
   margin-right: 0.2rem;
 }
+.pf2e-character-audit .audit-filter-bar .audit-filter-spacer { flex: 1; }
 .pf2e-character-audit .audit-filter-chip {
   background: transparent;
   border: 1px solid var(--ca-border);
@@ -266,6 +267,9 @@ body.dark-theme .pf2e-character-audit.party-audit {
   font-size: 0.78rem;
   cursor: pointer;
   font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
 }
 .pf2e-character-audit .audit-filter-chip.active {
   background: var(--ca-accent-bg);
@@ -273,6 +277,41 @@ body.dark-theme .pf2e-character-audit.party-audit {
   border-color: var(--ca-border-strong);
 }
 .pf2e-character-audit .audit-filter-chip:hover { color: var(--ca-text); }
+
+/* ─── Delta strip (history) ──────────────────────────────── */
+
+.pf2e-character-audit .audit-delta {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  margin: 0 0 0.7rem;
+  padding: 0.45rem 0.7rem;
+  background: var(--ca-surface-2);
+  border: 1px solid var(--ca-border);
+  border-radius: 4px;
+  font-size: 0.82rem;
+  color: var(--ca-text-muted);
+}
+.pf2e-character-audit .audit-delta .delta-label { font-weight: 600; color: var(--ca-text); }
+.pf2e-character-audit .audit-delta .delta-time {
+  font-family: var(--ca-mono);
+  font-size: 0.78rem;
+  color: var(--ca-text);
+}
+.pf2e-character-audit .audit-delta .delta-separator { color: var(--ca-text-faint); }
+.pf2e-character-audit .delta-chip {
+  display: inline-block;
+  padding: 0.05rem 0.4rem;
+  border-radius: 3px;
+  font-weight: 700;
+  font-size: 0.76rem;
+  border: 1px solid;
+  font-variant-numeric: tabular-nums;
+}
+.pf2e-character-audit .delta-chip.delta-up { color: var(--ca-error-text); background: var(--ca-error-bg); border-color: var(--ca-error-line); }
+.pf2e-character-audit .delta-chip.delta-down { color: var(--ca-ok-text); background: var(--ca-ok-bg); border-color: var(--ca-ok-line); }
+.pf2e-character-audit .delta-chip.delta-flat { color: var(--ca-text-muted); background: transparent; border-color: var(--ca-border); font-weight: 500; }
 
 /* ─── Overview ─────────────────────────────────────────────── */
 
@@ -574,9 +613,14 @@ body.dark-theme .pf2e-character-audit.party-audit {
   word-break: break-word;
 }
 
+.pf2e-character-audit .audit-issue-footer {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.35rem;
+}
 .pf2e-character-audit .audit-issue-code {
   display: inline-block;
-  margin-top: 0.3rem;
   padding: 0.05rem 0.35rem;
   font-size: 0.7rem;
   font-family: var(--ca-mono);
@@ -587,6 +631,18 @@ body.dark-theme .pf2e-character-audit.party-audit {
   opacity: 0.85;
   letter-spacing: 0.02em;
 }
+.pf2e-character-audit .audit-issue-suppress {
+  background: transparent;
+  border: 1px solid currentColor;
+  color: inherit;
+  opacity: 0.7;
+  border-radius: 2px;
+  padding: 0.05rem 0.4rem;
+  font-size: 0.72rem;
+  cursor: pointer;
+  font-family: inherit;
+}
+.pf2e-character-audit .audit-issue-suppress:hover { opacity: 1; }
 @media (prefers-color-scheme: dark) {
   .pf2e-character-audit .audit-issue-code { background: rgba(0, 0, 0, 0.35); }
 }

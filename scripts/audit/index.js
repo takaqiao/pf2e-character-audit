@@ -29,6 +29,56 @@ function runDetector(label, fn, report) {
   }
 }
 
+function readActorFlag(actor, key) {
+  try {
+    return actor.getFlag?.(MODULE_ID, key) ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function writeActorFlag(actor, key, value) {
+  // Fire-and-forget; don't block the synchronous audit on a permission error.
+  if (typeof actor.setFlag !== "function") return;
+  try {
+    Promise.resolve(actor.setFlag(MODULE_ID, key, value)).catch(() => {});
+  } catch {}
+}
+
+function snapshotFromReport(report) {
+  const c = report.completeness?.summary ?? {};
+  const p = report.prerequisites?.summary ?? {};
+  const pub = report.publication?.summary ?? {};
+  return {
+    timestamp: Date.now(),
+    moduleVersion: report.moduleVersion,
+    completeness: { errors: c.errors ?? 0, warnings: c.warnings ?? 0, infos: c.infos ?? 0 },
+    prerequisites: { fail: p.fail ?? 0, unknown: p.unknown ?? 0, pass: p.pass ?? 0 },
+    publication: { distinctTitles: pub.distinctTitles ?? 0, unknownCount: pub.unknownCount ?? 0 }
+  };
+}
+
+function applySuppression(report, suppressed) {
+  if (!suppressed || suppressed.length === 0) return;
+  const set = new Set(suppressed);
+  if (Array.isArray(report.completeness?.issues)) {
+    const before = report.completeness.issues.length;
+    report.completeness.issues = report.completeness.issues.filter((i) => !set.has(i.code));
+    const removed = before - report.completeness.issues.length;
+    if (removed > 0) {
+      // Recompute summary
+      const issues = report.completeness.issues;
+      report.completeness.summary = {
+        errors: issues.filter((i) => i.severity === SEVERITY.ERROR).length,
+        warnings: issues.filter((i) => i.severity === SEVERITY.WARN).length,
+        infos: issues.filter((i) => i.severity === SEVERITY.INFO).length,
+        total: issues.length
+      };
+      report.completeness.suppressedCount = removed;
+    }
+  }
+}
+
 export function auditActor(actor, opts = {}) {
   if (!actor) {
     throw new Error("auditActor: actor is required");
@@ -43,6 +93,12 @@ export function auditActor(actor, opts = {}) {
   const variants = detectVariants();
   const report = emptyReport(actor, variants);
 
+  // Snapshot from the previous run, before we recompute.
+  report.previousSnapshot = readActorFlag(actor, "lastSnapshot");
+  // List of issue codes the GM has marked as suppressed for this actor.
+  const suppressed = readActorFlag(actor, "suppressedCodes") ?? [];
+  report.suppressedCodes = Array.isArray(suppressed) ? suppressed : [];
+
   if (shouldRun("enablePublicationAudit")) {
     report.publication = runDetector("publication", () => auditPublication(actor), report);
   }
@@ -53,9 +109,31 @@ export function auditActor(actor, opts = {}) {
     report.prerequisites = runDetector("prerequisite", () => auditPrerequisites(actor), report);
   }
 
+  applySuppression(report, report.suppressedCodes);
+
   report.summary = summarizeReport(report);
   report.badge = buildBadge(report);
+
+  // Save snapshot for next run (fire-and-forget; permission errors silently ignored).
+  if (opts.saveSnapshot !== false) {
+    writeActorFlag(actor, "lastSnapshot", snapshotFromReport(report));
+  }
   return report;
+}
+
+export async function suppressIssueCode(actor, code) {
+  if (!actor || !code) return false;
+  const cur = (await actor.getFlag?.(MODULE_ID, "suppressedCodes")) ?? [];
+  const list = Array.isArray(cur) ? cur : [];
+  if (list.includes(code)) return false;
+  await actor.setFlag(MODULE_ID, "suppressedCodes", [...list, code]);
+  return true;
+}
+
+export async function unsuppressAll(actor) {
+  if (!actor) return false;
+  await actor.setFlag(MODULE_ID, "suppressedCodes", []);
+  return true;
 }
 
 export function auditParty(opts = {}) {

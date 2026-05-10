@@ -142,6 +142,7 @@ export function auditPrerequisites(actor) {
 
     issues.push({
       featId: feat.id,
+      featUuid: feat.uuid,
       featSlug: feat.slug ?? null,
       featName: feat.name,
       featLevel: feat.system?.level?.value ?? 1,

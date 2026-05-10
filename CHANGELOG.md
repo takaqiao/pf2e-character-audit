@@ -3,6 +3,18 @@
 User-facing release notes for PF2e Character Audit.
 For full engineering history see [CHANGELOG-detailed.zh.md](CHANGELOG-detailed.zh.md).
 
+## [0.1.9] - 2026-05-11
+
+### Added
+- **Severity filter chips** on the Completeness and Prerequisites tabs (All / Errors / Warnings / Info).
+- **Audit history strip** at the top of the Overview tab — shows relative time of the last run and per-severity delta (+/−).
+- **Suppress / ignore issues** per actor — click the eye-slash button on a completeness issue to silence that rule for this character. "Clear ignore list" in overview when any are active.
+- **`STARTING_WEALTH_EXCEEDED`** (info): flags level-1 characters with more than 15 gp of coin.
+- **`SPELL_PREPARATION_INCOMPLETE`** (warn): for prepared casters, counts un-prepared slots and notes the total.
+
+### Fixed
+- Prereq issue "open item" link now uses each feat's full UUID (works in both single-actor and party-audit views; previously broken in party view).
+
 ## [0.1.8] - 2026-05-11
 
 ### Changed

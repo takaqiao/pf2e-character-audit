@@ -1,13 +1,24 @@
 <div class="audit-completeness">
   {{#if completeness}}
-    {{#if (eq completeness.summary.total 0)}}
-      <p class="audit-empty ok"><i class="fa-solid fa-circle-check"></i> {{labels.noIssues}}</p>
+    <div class="audit-filter-bar">
+      <span class="filter-label">{{labels.filterShow}}:</span>
+      <button type="button" class="audit-filter-chip {{#if (eq severityFilter "all")}}active{{/if}}" data-action="filterSev" data-sev="all">{{labels.filterAll}}</button>
+      <button type="button" class="audit-filter-chip {{#if (eq severityFilter "error")}}active{{/if}}" data-action="filterSev" data-sev="error">{{labels.filterError}}</button>
+      <button type="button" class="audit-filter-chip {{#if (eq severityFilter "warn")}}active{{/if}}" data-action="filterSev" data-sev="warn">{{labels.filterWarn}}</button>
+      <button type="button" class="audit-filter-chip {{#if (eq severityFilter "info")}}active{{/if}}" data-action="filterSev" data-sev="info">{{labels.filterInfo}}</button>
+      {{#if suppressedCount}}
+        <span class="audit-filter-spacer"></span>
+        <button type="button" class="audit-filter-chip" data-action="unsuppressAll" title="{{labels.unsuppressLabel}}"><i class="fa-solid fa-eye"></i> {{labels.unsuppressLabel}} ({{suppressedCount}})</button>
+      {{/if}}
+    </div>
+
+    {{#if (eq completeness.issues.length 0)}}
+      {{#if completeness.allIssueCount}}
+        <p class="audit-empty">{{labels.noIssues}}</p>
+      {{else}}
+        <p class="audit-empty ok"><i class="fa-solid fa-circle-check"></i> {{labels.noIssues}}</p>
+      {{/if}}
     {{else}}
-      <div class="audit-summary-counts inline">
-        <span class="error"><i class="fa-solid fa-circle-exclamation"></i>{{completeness.summary.errors}} {{localize "PF2E-CA.Label.Errors"}}</span>
-        <span class="warn"><i class="fa-solid fa-triangle-exclamation"></i>{{completeness.summary.warnings}} {{localize "PF2E-CA.Label.Warnings"}}</span>
-        <span class="info"><i class="fa-solid fa-circle-info"></i>{{completeness.summary.infos}} {{localize "PF2E-CA.Label.Infos"}}</span>
-      </div>
       <ul class="audit-issue-list">
       {{#each completeness.issues}}
         <li class="audit-issue {{this.severity}}">
@@ -15,7 +26,10 @@
           <div class="audit-issue-body">
             <div class="audit-issue-title">{{this.titleText}}</div>
             <div class="audit-issue-hint">{{this.hintText}}</div>
-            <code class="audit-issue-code">{{this.code}}</code>
+            <div class="audit-issue-footer">
+              <code class="audit-issue-code">{{this.code}}</code>
+              <button type="button" class="audit-issue-suppress" data-action="suppressIssue" data-code="{{this.code}}" title="{{../labels.suppressLabel}}"><i class="fa-solid fa-eye-slash"></i></button>
+            </div>
           </div>
         </li>
       {{/each}}

@@ -26,7 +26,11 @@
       "SingleAuditName": "Audit",
       "JournalCreated": "Journal entry created.",
       "JsonCopied": "JSON copied to clipboard.",
-      "JsonInConsole": "Clipboard unavailable; JSON written to F12 console."
+      "JsonInConsole": "Clipboard unavailable; JSON written to F12 console.",
+      "Suppress": "Ignore this rule",
+      "UnsuppressAll": "Clear ignore list",
+      "SuppressedNotice": "Ignored: {code}",
+      "UnsuppressNotice": "Cleared ignore list."
     },
     "Field": {
       "Title": "Title",
@@ -47,7 +51,8 @@
       "NoPartyMembers": "No active party or no character members.",
       "Errors": "errors",
       "Warnings": "warnings",
-      "Infos": "infos"
+      "Infos": "infos",
+      "SuppressedNote": "Suppressed rules"
     },
     "Overview": {
       "SectionVariants": "Variant Rules",
@@ -183,6 +188,14 @@
         "LEVEL_UP_PENDING": {
           "Title": "Level-up pending",
           "Hint": "Character has {xp} XP (threshold {threshold}) but is still level {level}."
+        },
+        "STARTING_WEALTH_EXCEEDED": {
+          "Title": "Starting wealth exceeds 15 gp",
+          "Hint": "Level-1 characters start with at most 15 gp; this actor has {gp} gp. Ignore if starting at a higher level."
+        },
+        "SPELL_PREPARATION_INCOMPLETE": {
+          "Title": "Spells not fully prepared",
+          "Hint": "{entry} has {missing} unprepared slot(s)."
         }
       }
     },
@@ -264,6 +277,23 @@
         "Name": "Allow players to trigger audits",
         "Hint": "Off by default; only the GM can audit."
       }
+    },
+    "Filter": {
+      "Show": "Show",
+      "All": "All",
+      "Errors": "Errors",
+      "Warnings": "Warnings",
+      "Infos": "Info"
+    },
+    "Time": {
+      "JustNow": "just now",
+      "MinutesAgo": "{n} min ago",
+      "HoursAgo": "{n} h ago",
+      "DaysAgo": "{n} d ago"
+    },
+    "Delta": {
+      "LastAudit": "Last audit",
+      "NoChange": "no change"
     }
   }
 }
