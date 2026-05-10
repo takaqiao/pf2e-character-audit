@@ -67,7 +67,9 @@ const HANDLERS = {
   LEVEL_UP_PENDING: bumpLevel(),
   SPELL_LIST_INCOMPLETE: openActorSheet(),
   SPELL_PREPARATION_INCOMPLETE: openActorSheet(),
-  APEX_MISSING_AT_17: openPack("pf2e.equipment-srd")
+  APEX_MISSING_AT_17: openPack("pf2e.equipment-srd"),
+  CLASS_FEATURES_MISSING: openClassSheet(),
+  CLASS_FEATURES_MISSING_SPECIFIC: openClassSheet()
 };
 
 export function hasQuickFix(code) {

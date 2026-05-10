@@ -380,6 +380,51 @@ function checkSpellPreparation(actor, issues) {
   }
 }
 
+function checkClassFeatures(actor, issues) {
+  if (!actor.class) return;
+  const classFeatures = actor.itemTypes.feat.filter((f) => {
+    const cat = f.system?.category ?? f.system?.featType;
+    return cat === "classfeature";
+  });
+
+  if (classFeatures.length === 0) {
+    issues.push(makeIssue("CLASS_FEATURES_MISSING", SEVERITY.WARN, {}));
+    return;
+  }
+
+  // Deep check via class.system.items (PF2e populates this with each class's
+  // auto-granted features keyed by level). For every entry at or below the
+  // actor's level, verify a matching item exists on the actor (matched by
+  // compendium sourceId).
+  const items = actor.class.system?.items;
+  if (!items || typeof items !== "object") return;
+  const level = actor.system?.details?.level?.value ?? 1;
+  const ownedSources = new Set();
+  for (const item of actor.items ?? []) {
+    const src = item.flags?.core?.sourceId
+      ?? item._stats?.compendiumSource
+      ?? item.sourceId
+      ?? null;
+    if (src) ownedSources.add(src);
+  }
+  const missing = [];
+  for (const entry of Object.values(items)) {
+    if (!entry || typeof entry !== "object") continue;
+    if (!entry.uuid) continue;
+    if ((entry.level ?? 0) > level) continue;
+    if (!ownedSources.has(entry.uuid)) {
+      missing.push(entry.name || entry.uuid.split(".").pop());
+    }
+  }
+  if (missing.length > 0) {
+    const preview = missing.slice(0, 3).join(", ") + (missing.length > 3 ? ` (+${missing.length - 3})` : "");
+    issues.push(makeIssue("CLASS_FEATURES_MISSING_SPECIFIC", SEVERITY.WARN, {
+      count: missing.length,
+      names: preview
+    }));
+  }
+}
+
 function checkLevelXP(actor, issues) {
   const level = actor.system?.details?.level?.value ?? 1;
   if (level >= 20) return;
@@ -448,6 +493,7 @@ export function auditCompleteness(actor, variants) {
   checkSpellcasting(actor, issues);
   checkBackgroundSkill(actor, issues);
   checkSpellTraditions(actor, issues);
+  checkClassFeatures(actor, issues);
   checkHP(actor, issues);
   checkLevelXP(actor, issues);
   checkStartingWealth(actor, issues);

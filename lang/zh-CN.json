@@ -200,6 +200,14 @@
         "SPELL_PREPARATION_INCOMPLETE": {
           "Title": "法术准备未填满",
           "Hint": "{entry} 还有 {missing} 个法术位未准备。"
+        },
+        "CLASS_FEATURES_MISSING": {
+          "Title": "缺少职业特性",
+          "Hint": "角色没有任何 classfeature 类型的条目。把职业重新拖给角色，PF2e 系统会自动添加 1 级特性。"
+        },
+        "CLASS_FEATURES_MISSING_SPECIFIC": {
+          "Title": "缺少 {count} 项职业特性",
+          "Hint": "对照职业列表，缺少：{names}。把缺失项从 compendium 拖入即可。"
         }
       }
     },

@@ -200,6 +200,14 @@
         "SPELL_PREPARATION_INCOMPLETE": {
           "Title": "Spells not fully prepared",
           "Hint": "{entry} has {missing} unprepared slot(s)."
+        },
+        "CLASS_FEATURES_MISSING": {
+          "Title": "No class features",
+          "Hint": "Actor has no items of category 'classfeature'. Re-drag the class — PF2e auto-grants level-1 features."
+        },
+        "CLASS_FEATURES_MISSING_SPECIFIC": {
+          "Title": "Missing {count} class features",
+          "Hint": "Per the class definition: {names}. Drag them from the compendium."
         }
       }
     },

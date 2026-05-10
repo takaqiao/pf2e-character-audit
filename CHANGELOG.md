@@ -3,6 +3,14 @@
 User-facing release notes for PF2e Character Audit.
 For full engineering history see [CHANGELOG-detailed.zh.md](CHANGELOG-detailed.zh.md).
 
+## [0.1.12] - 2026-05-11
+
+### Added
+- **Class feature presence checks**:
+  - `CLASS_FEATURES_MISSING` (warn): actor has a class but zero class features.
+  - `CLASS_FEATURES_MISSING_SPECIFIC` (warn): cross-references the class's auto-grant list (`class.system.items`) with the actor's owned compendium sourceIds and lists the names of any missing entries.
+- Both have quick-fix buttons that open the class sheet.
+
 ## [0.1.11] - 2026-05-11
 
 ### Added
