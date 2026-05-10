@@ -64,7 +64,10 @@ const CLASS_SUBCLASS_REQUIREMENTS = {
   kineticist: { featureName: "kinetic gate", slugs: ["dual-gate", "single-gate", "elemental-gate-fire", "elemental-gate-air", "elemental-gate-earth", "elemental-gate-water", "elemental-gate-metal", "elemental-gate-wood"] },
   summoner: { featureName: "eidolon", slugs: ["angel", "anger-phantom", "beast", "construct", "demon", "devotion-phantom", "dragon", "dragon-tyrant", "elemental", "fey", "psychopomp", "undead-phantom"] },
   gunslinger: { featureName: "way", slugs: ["pistolero", "sniper", "drifter", "vanguard", "triggerbrand", "fortune", "drifter"] },
-  thaumaturge: { featureName: null, slugs: [] }, // selects implement instead, checked separately
+  thaumaturge: {
+    featureName: "implement",
+    slugs: ["amulet", "bell", "chalice", "lantern", "mirror", "regalia", "tome", "wand", "weapon"]
+  },
   animist: { featureName: "apparition", slugs: ["champion-of-the-fallen", "custodian-of-groves-and-gardens", "imposter-in-hidden-places", "lurker-in-devouring-dark", "monarch-who-bows-to-none", "musician-of-the-eternal-chord", "stalker-in-darkened-boughs", "steward-of-stone-and-fire", "witness-to-ancient-battles"] },
   commander: { featureName: "banner", slugs: ["assault-banner", "regimental-banner", "stoic-banner", "trickster-banner"] }
 };
@@ -305,6 +308,53 @@ function checkSpellcasting(actor, issues) {
   }
 }
 
+function checkBackgroundSkill(actor, issues) {
+  const bg = actor.background;
+  if (!bg) return;
+  const trained = bg.system?.trainedSkills?.value;
+  if (!Array.isArray(trained) || trained.length === 0) return;
+
+  for (const slug of trained) {
+    const rank = actor.skills?.[slug]?.rank ?? actor.system?.skills?.[slug]?.rank ?? 0;
+    if (rank < 1) {
+      issues.push(makeIssue("BACKGROUND_SKILL_NOT_TRAINED", SEVERITY.WARN, {
+        background: bg.name,
+        skill: slug
+      }));
+    }
+  }
+}
+
+function checkSpellTraditions(actor, issues) {
+  const entries = actor.itemTypes.spellcastingEntry ?? [];
+  const allSpells = actor.itemTypes.spell ?? [];
+  if (entries.length === 0 || allSpells.length === 0) return;
+
+  for (const entry of entries) {
+    const tradition = entry.system?.tradition?.value ?? entry.system?.tradition;
+    if (!tradition || tradition === "focus" || tradition === "") continue;
+
+    const entrySpells = allSpells.filter((s) => s.system?.location?.value === entry.id);
+    for (const spell of entrySpells) {
+      const traits = spell.system?.traits?.value ?? [];
+      const traditions = spell.system?.traits?.traditions ?? [];
+      const allTags = new Set([...(Array.isArray(traits) ? traits : []), ...(Array.isArray(traditions) ? traditions : [])]);
+      // Skip cantrips/rituals/focus mark
+      if (allTags.has("focus")) continue;
+      // If the spell explicitly lists ANY tradition and ours isn't one of them, flag it.
+      const hasTraditionTags = ["arcane", "divine", "occult", "primal"].some((t) => allTags.has(t));
+      if (!hasTraditionTags) continue;
+      if (!allTags.has(tradition)) {
+        issues.push(makeIssue("SPELL_TRADITION_MISMATCH", SEVERITY.INFO, {
+          spell: spell.name,
+          spellTraditions: [...allTags].filter((t) => ["arcane", "divine", "occult", "primal"].includes(t)).join("/") || "—",
+          entryTradition: tradition
+        }));
+      }
+    }
+  }
+}
+
 function checkLegacySource(actor, issues) {
   let count = 0;
   for (const item of actor.items) {
@@ -331,6 +381,8 @@ export function auditCompleteness(actor, variants) {
   checkDualClass(actor, variants, issues);
   checkStartingEquipment(actor, issues);
   checkSpellcasting(actor, issues);
+  checkBackgroundSkill(actor, issues);
+  checkSpellTraditions(actor, issues);
   checkLegacySource(actor, issues);
 
   const summary = {

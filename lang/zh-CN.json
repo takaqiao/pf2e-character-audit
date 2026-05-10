@@ -153,6 +153,14 @@
           "Title": "施法者法术列表为空",
           "Hint": "角色拥有施法栏 (spellcastingEntry) 但未学习/准备任何法术。"
         },
+        "BACKGROUND_SKILL_NOT_TRAINED": {
+          "Title": "背景授予的技能未受训",
+          "Hint": "{background} 应当让 {skill} 技能受训，但该角色未受训该技能。"
+        },
+        "SPELL_TRADITION_MISMATCH": {
+          "Title": "法术传统与施法栏不符",
+          "Hint": "{spell} 的传统为 {spellTraditions}，与施法栏的 {entryTradition} 不一致。可能是有意的（如精灵的超凡魔法）；若不是请核对。"
+        },
         "GRADUAL_BOOSTS_ENABLED": {
           "Title": "已启用渐进属性提升",
           "Hint": "本审计跳过严格的属性提升数量检测（每级 4 个）。请人工核对。"

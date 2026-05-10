@@ -90,6 +90,8 @@
         "DUAL_CLASS_DETECTED": { "Title": "Dual Class variant active", "Hint": "Shallow check only in v1; enable enableDualClassDeepCheck (v2 plan)." },
         "STARTING_EQUIPMENT_EMPTY": { "Title": "Starting equipment empty", "Hint": "Character has no weapons/armor/equipment." },
         "SPELL_LIST_INCOMPLETE": { "Title": "Caster has no spells", "Hint": "Character has a spellcasting entry but no spells." },
+        "BACKGROUND_SKILL_NOT_TRAINED": { "Title": "Background skill not trained", "Hint": "{background} grants trained {skill}, but the character is not trained in it." },
+        "SPELL_TRADITION_MISMATCH": { "Title": "Spell tradition mismatch", "Hint": "{spell} has tradition {spellTraditions}, which differs from the entry's {entryTradition}. This may be intentional (e.g. Elf Otherworldly Magic); review if not." },
         "GRADUAL_BOOSTS_ENABLED": { "Title": "Gradual Boosts enabled", "Hint": "Skipping strict 4-per-level boost check; review manually." },
         "LEGACY_SOURCE_FIELD": { "Title": "Legacy source field on {count} item(s)", "Hint": "Re-drag from compendium to populate publication.title." },
         "DETECTOR_CRASHED": { "Title": "Detector crashed: {detector}", "Hint": "{message}" }
