@@ -4,6 +4,36 @@ import { parseAllPrerequisiteNodes } from "../prereq/parsers.js";
 import { evaluateRequirementNode } from "../prereq/checker.js";
 import { hasCJK, normalizeFeatPrerequisites, normalizeRequirement } from "../prereq/cn-normalizer.js";
 
+// A feat is "auto-granted" by another item (class feature, heritage, etc.) and
+// shouldn't have its prereq re-checked when:
+//   (1) it carries `flags.pf2e.grantedBy.id`, OR
+//   (2) any other item on the actor lists it in `flags.pf2e.itemGrants`.
+// PF2e v8 normally sets (1), but older imports or manually-copied feats may
+// only show (2). Either is enough proof the system already vetted it.
+function isAutoGranted(actor, feat) {
+  const direct = feat.flags?.pf2e?.grantedBy;
+  if (direct && (direct.id || typeof direct === "string" || direct === true)) return true;
+  for (const other of actor.items ?? []) {
+    if (other === feat || other.id === feat.id) continue;
+    const grants = other.flags?.pf2e?.itemGrants;
+    if (!grants) continue;
+    const list = Array.isArray(grants) ? grants : Object.values(grants);
+    for (const g of list) {
+      if (g?.id === feat.id) return true;
+    }
+  }
+  return false;
+}
+
+// Prereqs that involve "your deity's favored weapon" / "神祇的偏好武器" / etc.
+// can't be verified without per-deity weapon-category data. When the parser
+// reports a fail on such a feat, downgrade to "unknown" so the GM gets an info
+// note instead of a hard error.
+function isDeityWeaponPrereq(text) {
+  if (!text) return false;
+  return /deity['’\s]*s?\s*favored\s*weapon|deity['’\s]*s?\s*preferred\s*weapon|神祇.*偏好武器|神祇.*喜爱武器/.test(text);
+}
+
 function unknownSeverity() {
   try {
     return game.settings.get(MODULE_ID, "prereqUnknownSeverity") ?? "warn";
@@ -53,11 +83,7 @@ export function auditPrerequisites(actor) {
   let unknown = 0;
 
   for (const feat of actor.itemTypes.feat) {
-    // Feats auto-granted by a class feature (e.g. Warpriest doctrine grants
-    // Deadly Simplicity + Shield Block) carry `flags.pf2e.grantedBy`. The
-    // system already vetted them — re-checking prereqs against the actor
-    // produces false-positive errors. Trust the grant.
-    if (feat.flags?.pf2e?.grantedBy) {
+    if (isAutoGranted(actor, feat)) {
       pass++;
       continue;
     }
@@ -136,7 +162,12 @@ export function auditPrerequisites(actor) {
       continue;
     }
 
-    const ev = evaluation.met === false ? EVALUATION.FAIL : EVALUATION.UNKNOWN;
+    let ev = evaluation.met === false ? EVALUATION.FAIL : EVALUATION.UNKNOWN;
+    // Demote deity-favored-weapon fails to unknown: too context-specific for
+    // the generic matcher to verify, almost always false-positive.
+    if (ev === EVALUATION.FAIL && isDeityWeaponPrereq(requirementText)) {
+      ev = EVALUATION.UNKNOWN;
+    }
     if (ev === EVALUATION.FAIL) fail++;
     else unknown++;
 

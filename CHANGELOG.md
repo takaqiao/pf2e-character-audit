@@ -3,6 +3,17 @@
 User-facing release notes for PF2e Character Audit.
 For full engineering history see [CHANGELOG-detailed.zh.md](CHANGELOG-detailed.zh.md).
 
+## [0.1.10] - 2026-05-11
+
+### Fixed
+- **Prereq title click did nothing**: replaced `<a>` with `<button>` so the action listener reliably fires.
+- **Deadly Simplicity (and similar) still flagged after 0.1.5**: the auto-grant detection now also does a reverse lookup — any actor item that lists a feat in its `flags.pf2e.itemGrants` counts as "system already vetted this", not just `flags.pf2e.grantedBy` on the feat itself. Older imports and manually-copied feats now skip prereq re-validation correctly.
+- **Deity favored-weapon prereqs**: when a feat's prerequisite is "your deity's favored weapon is …" or "在你神祇的偏好武器上 …", any parser-reported failure is downgraded to info (the matcher can't read deity weapon-category data; the false-positive isn't worth it).
+- **Removed ANCESTRY_FLAW_MISMATCH** entirely: mandatory ability flaws are gone in the Remaster era and the field is too unreliable across migrated/homebrew ancestries to be useful.
+
+### Notes
+- Module hot-reload only covers css/hbs/json. After updating the module zip, hit **F5** in Foundry to pick up new JavaScript.
+
 ## [0.1.9] - 2026-05-11
 
 ### Added

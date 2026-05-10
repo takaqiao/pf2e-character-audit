@@ -149,21 +149,9 @@ function checkBoosts(actor, expected, variants, issues) {
       );
     }
   }
-  // Mandatory ancestry flaws were removed in the PF2e Remaster (Orc, half-orc,
-  // half-elf, etc. no longer impose a flaw). Only flag a mismatch on legacy
-  // (non-Remaster) ancestries to avoid noise for users on Player Core.
-  const ancestryIsRemaster = actor.ancestry?.system?.publication?.remaster === true;
-  if (!ancestryIsRemaster) {
-    const flaws = actor.system?.build?.attributes?.flaws ?? {};
-    const ancestryFlaws = actor.ancestry?.system?.flaws ?? {};
-    const ancestryFlawCount = Object.values(ancestryFlaws).filter((v) => v?.value !== "free").length;
-    const flawTotal = Object.values(flaws).reduce((s, v) => s + (Array.isArray(v) ? v.length : 0), 0);
-    if (ancestryFlawCount > 0 && flawTotal === 0 && expected.level >= 1) {
-      issues.push(
-        makeIssue("ANCESTRY_FLAW_MISMATCH", SEVERITY.WARN, { expected: ancestryFlawCount, actual: flawTotal })
-      );
-    }
-  }
+  // Ancestry flaw check removed entirely. Mandatory ability flaws were phased
+  // out in the Remaster era and the field is unreliable across migrated /
+  // homebrew ancestries — produces too many false positives to be useful.
   if (expected.level >= 17 && !variants.abp) {
     if (!actor.system?.build?.attributes?.apex) {
       issues.push(makeIssue("APEX_MISSING_AT_17", SEVERITY.ERROR, { level: expected.level }));
