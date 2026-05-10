@@ -1,0 +1,33 @@
+<div class="audit-prereq">
+  {{#if prerequisites}}
+    <div class="audit-summary-counts inline">
+      <span class="pass">✅ {{prerequisites.summary.pass}} {{labels.passLabel}}</span>
+      <span class="error">🔴 {{prerequisites.summary.fail}} {{labels.failLabel}}</span>
+      <span class="warn">❓ {{prerequisites.summary.unknown}} {{labels.unknownLabel}}</span>
+    </div>
+    {{#if (eq prerequisites.issues.length 0)}}
+      <p class="audit-empty ok">✅ {{labels.noIssues}}</p>
+    {{else}}
+      <ul class="audit-issue-list">
+      {{#each prerequisites.issues}}
+        <li class="audit-issue {{this.severity}}">
+          <span class="audit-issue-icon">{{#if (eq this.evaluation "fail")}}🔴{{else}}❓{{/if}}</span>
+          <div class="audit-issue-body">
+            <div class="audit-issue-title"><b>{{this.featName}}</b> <small>(Lv {{this.featLevel}}, {{this.featSource}})</small></div>
+            <div class="audit-issue-hint"><b>{{localize "PF2E-CA.Field.Requirement"}}:</b> {{this.requirement}}</div>
+            {{#if this.reasons.length}}
+              <ul class="audit-reasons">
+                {{#each this.reasons}}
+                  <li>· {{this}}</li>
+                {{/each}}
+              </ul>
+            {{/if}}
+          </div>
+        </li>
+      {{/each}}
+      </ul>
+    {{/if}}
+  {{else}}
+    <p class="audit-empty">{{localize "PF2E-CA.Label.PrereqDisabled"}}</p>
+  {{/if}}
+</div>

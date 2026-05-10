@@ -1,0 +1,89 @@
+<div class="party-audit-app">
+  <aside class="audit-member-list">
+    <h3>{{labels.memberSection}}</h3>
+    <ul>
+      {{#each members}}
+        <li>
+          <button type="button" class="audit-member {{#if (eq this.id ../selectedId)}}active{{/if}}" data-action="selectMember" data-actor-id="{{this.id}}">
+            <span class="member-name">{{this.name}}</span>
+            <span class="member-level">Lv {{this.level}}</span>
+            <span class="member-badges">
+              {{#if this.summary.completeness.errors}}<span class="audit-badge error">{{this.summary.completeness.errors}}</span>{{/if}}
+              {{#if this.summary.prerequisites.fail}}<span class="audit-badge error">{{this.summary.prerequisites.fail}}</span>{{/if}}
+              {{#if this.summary.completeness.warnings}}<span class="audit-badge warn">{{this.summary.completeness.warnings}}</span>{{/if}}
+            </span>
+          </button>
+        </li>
+      {{/each}}
+      <li>
+        <button type="button" class="audit-member cross {{#if (eq selectedId "__cross__")}}active{{/if}}" data-action="selectMember" data-actor-id="__cross__">
+          <span class="member-name">📊 {{labels.crossLabel}}</span>
+        </button>
+      </li>
+    </ul>
+  </aside>
+
+  <main class="party-audit-main">
+    {{#if (eq selectedId "__cross__")}}
+      <h2>{{labels.crossLabel}}</h2>
+      <table class="audit-table">
+        <thead>
+          <tr>
+            <th>{{localize "PF2E-CA.Field.Title"}}</th>
+            <th>{{localize "PF2E-CA.Field.License"}}</th>
+            <th class="num">{{localize "PF2E-CA.Field.Count"}}</th>
+            <th>{{localize "PF2E-CA.Field.Actors"}}</th>
+          </tr>
+        </thead>
+        <tbody>
+        {{#each crossPartyPublication.byTitle}}
+          <tr class="{{#if this.isUnknown}}unknown{{/if}}">
+            <td>{{#if this.isUnknown}}⚠️ {{/if}}{{this.title}}</td>
+            <td>{{this.licenseDisplay}}</td>
+            <td class="num">{{this.count}}</td>
+            <td>
+              {{#each this.actorBreakdown}}
+                <span class="actor-tag">{{this.actor}}: {{this.count}}</span>
+              {{/each}}
+            </td>
+          </tr>
+        {{/each}}
+        </tbody>
+      </table>
+    {{else if selected}}
+      <header class="audit-header">
+        <h2>{{selected.actorName}} <span class="audit-level">Lv {{selected.actorLevel}}</span></h2>
+      </header>
+
+      <nav class="audit-tabs">
+        {{#each tabs}}
+          <button type="button" class="audit-tab {{#if (eq this.id ../activeTab)}}active{{/if}}" data-action="switchTab" data-tab="{{this.id}}">{{this.label}}</button>
+        {{/each}}
+      </nav>
+
+      <section class="audit-tab-content">
+        {{#if (eq activeTab "overview")}}
+          {{> "modules/pf2e-character-audit/templates/partials/overview-card.hbs" report=selected variants=selected.variants summary=selected.summary labels=labels}}
+        {{/if}}
+        {{#if (eq activeTab "publication")}}
+          {{> "modules/pf2e-character-audit/templates/partials/publication-table.hbs" publication=selected.publication labels=labels}}
+        {{/if}}
+        {{#if (eq activeTab "completeness")}}
+          {{> "modules/pf2e-character-audit/templates/partials/completeness-list.hbs" completeness=selected.completeness labels=labels}}
+        {{/if}}
+        {{#if (eq activeTab "prereq")}}
+          {{> "modules/pf2e-character-audit/templates/partials/prereq-list.hbs" prerequisites=selected.prerequisites labels=labels}}
+        {{/if}}
+      </section>
+    {{else}}
+      <p class="audit-empty">{{localize "PF2E-CA.Label.NoPartyMembers"}}</p>
+    {{/if}}
+  </main>
+
+  <footer class="audit-footer">
+    <button type="button" data-action="rerun"><i class="fas fa-redo"></i> {{labels.rerun}}</button>
+    <button type="button" data-action="exportChat"><i class="fas fa-comment"></i> {{labels.chat}}</button>
+    <button type="button" data-action="exportJournal"><i class="fas fa-book"></i> {{labels.journal}}</button>
+    <button type="button" data-action="exportJson"><i class="fas fa-code"></i> {{labels.json}}</button>
+  </footer>
+</div>

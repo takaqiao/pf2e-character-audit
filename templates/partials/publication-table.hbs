@@ -1,0 +1,51 @@
+<div class="audit-publication">
+  {{#if publication}}
+    <div class="audit-publication-summary">
+      <span>📚 {{publication.summary.distinctTitles}} {{localize "PF2E-CA.Overview.Titles"}}</span>
+      <span>📖 {{publication.summary.total}} {{localize "PF2E-CA.Overview.Items"}}</span>
+      <span>·R {{publication.summary.remasterCount}}</span>
+      <span>🆅 {{publication.summary.unknownCount}}</span>
+    </div>
+
+    <h3>{{localize "PF2E-CA.Publication.SectionByTitle"}}</h3>
+    <table class="audit-table">
+      <thead>
+        <tr>
+          <th>{{localize "PF2E-CA.Field.Title"}}</th>
+          <th>{{localize "PF2E-CA.Field.License"}}</th>
+          <th class="num">{{localize "PF2E-CA.Field.Count"}}</th>
+        </tr>
+      </thead>
+      <tbody>
+      {{#each publication.actorRollup}}
+        <tr class="{{#if this.isUnknown}}unknown{{/if}} {{#if this.whitelisted}}whitelisted{{/if}}">
+          <td>
+            {{#if this.isUnknown}}⚠️ {{/if}}
+            {{#if this.whitelisted}}✅ {{/if}}
+            {{this.title}}
+          </td>
+          <td>{{this.licenseDisplay}}</td>
+          <td class="num">{{this.count}}</td>
+        </tr>
+      {{/each}}
+      </tbody>
+    </table>
+
+    <h3>{{localize "PF2E-CA.Publication.SectionByCategory"}}</h3>
+    {{#each publication.byCategory as |entries cat|}}
+      <details>
+        <summary>{{cat}} ({{entries.length}})</summary>
+        <ul class="audit-item-list">
+        {{#each entries}}
+          <li>
+            <button type="button" class="audit-link" data-action="openItem" data-uuid="{{this.itemUuid}}">{{this.itemName}}</button>
+            <span class="audit-meta">— {{this.title}} {{#if this.licenseDisplay}}({{this.licenseDisplay}}){{/if}}</span>
+          </li>
+        {{/each}}
+        </ul>
+      </details>
+    {{/each}}
+  {{else}}
+    <p class="audit-empty">{{localize "PF2E-CA.Label.PublicationDisabled"}}</p>
+  {{/if}}
+</div>

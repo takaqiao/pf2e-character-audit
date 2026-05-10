@@ -1,0 +1,27 @@
+<div class="audit-completeness">
+  {{#if completeness}}
+    {{#if (eq completeness.summary.total 0)}}
+      <p class="audit-empty ok">✅ {{labels.noIssues}}</p>
+    {{else}}
+      <div class="audit-summary-counts inline">
+        <span class="error">🔴 {{completeness.summary.errors}}</span>
+        <span class="warn">🟡 {{completeness.summary.warnings}}</span>
+        <span class="info">🔵 {{completeness.summary.infos}}</span>
+      </div>
+      <ul class="audit-issue-list">
+      {{#each completeness.issues}}
+        <li class="audit-issue {{this.severity}}">
+          <span class="audit-issue-icon">{{this.icon}}</span>
+          <div class="audit-issue-body">
+            <div class="audit-issue-title">{{this.titleText}}</div>
+            <div class="audit-issue-hint">{{this.hintText}}</div>
+            <code class="audit-issue-code">{{this.code}}</code>
+          </div>
+        </li>
+      {{/each}}
+      </ul>
+    {{/if}}
+  {{else}}
+    <p class="audit-empty">{{localize "PF2E-CA.Label.CompletenessDisabled"}}</p>
+  {{/if}}
+</div>

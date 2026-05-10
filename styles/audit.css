@@ -1,0 +1,258 @@
+.pf2e-character-audit.audit-report,
+.pf2e-character-audit.party-audit {
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.pf2e-character-audit .audit-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--color-border-light-2, #888);
+}
+
+.pf2e-character-audit .audit-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.pf2e-character-audit .audit-level {
+  font-size: 0.85rem;
+  color: var(--color-text-dark-secondary, #666);
+  margin-left: 0.4rem;
+}
+
+.pf2e-character-audit .audit-actor-meta {
+  margin: 0.2rem 0 0;
+  color: var(--color-text-dark-secondary, #666);
+  font-size: 0.85rem;
+}
+
+.pf2e-character-audit .audit-summary-badges {
+  display: flex;
+  gap: 0.35rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.pf2e-character-audit .audit-badge {
+  display: inline-block;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  border: 1px solid currentColor;
+}
+.pf2e-character-audit .audit-badge.error { color: #b80000; background: #fde7e7; }
+.pf2e-character-audit .audit-badge.warn  { color: #8a6d00; background: #fff3c2; }
+.pf2e-character-audit .audit-badge.info  { color: #1a4f8b; background: #e1ecf9; }
+
+.pf2e-character-audit .audit-tabs {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.4rem 0.75rem 0;
+  border-bottom: 1px solid var(--color-border-light-2, #ccc);
+  flex-wrap: wrap;
+}
+
+.pf2e-character-audit .audit-tab {
+  background: transparent;
+  border: 1px solid transparent;
+  border-bottom: none;
+  padding: 0.3rem 0.7rem;
+  cursor: pointer;
+  border-radius: 4px 4px 0 0;
+}
+.pf2e-character-audit .audit-tab:hover { background: rgba(0,0,0,0.05); }
+.pf2e-character-audit .audit-tab.active {
+  background: var(--color-bg-option, #fff);
+  border-color: var(--color-border-light-2, #ccc);
+  font-weight: 600;
+}
+
+.pf2e-character-audit .audit-tab-content {
+  padding: 0.75rem;
+  flex: 1;
+  overflow: auto;
+}
+
+.pf2e-character-audit .audit-overview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.pf2e-character-audit .audit-overview-section {
+  border: 1px solid var(--color-border-light-2, #ddd);
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  background: rgba(255,255,255,0.5);
+}
+
+.pf2e-character-audit .audit-overview-section h3 {
+  margin: 0 0 0.4rem;
+  font-size: 0.95rem;
+  border-bottom: 1px solid var(--color-border-light-3, #eee);
+  padding-bottom: 0.2rem;
+}
+
+.pf2e-character-audit .audit-summary-counts {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+.pf2e-character-audit .audit-summary-counts.inline {
+  flex-direction: row;
+  gap: 0.6rem;
+  margin-bottom: 0.4rem;
+}
+
+.pf2e-character-audit .audit-callout {
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  margin-top: 0.5rem;
+  border-left: 4px solid;
+}
+.pf2e-character-audit .audit-callout.ok    { background: #e7f6ea; border-color: #2c7a3d; }
+.pf2e-character-audit .audit-callout.warn  { background: #fff3c2; border-color: #b88600; }
+.pf2e-character-audit .audit-callout.error { background: #fde7e7; border-color: #b80000; }
+
+.pf2e-character-audit .audit-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.5rem 0 1rem;
+}
+.pf2e-character-audit .audit-table th,
+.pf2e-character-audit .audit-table td {
+  border-bottom: 1px solid var(--color-border-light-3, #eee);
+  padding: 0.3rem 0.45rem;
+  text-align: left;
+}
+.pf2e-character-audit .audit-table th { background: rgba(0,0,0,0.04); font-weight: 600; }
+.pf2e-character-audit .audit-table td.num,
+.pf2e-character-audit .audit-table th.num { text-align: right; }
+.pf2e-character-audit .audit-table tr.unknown td { color: #b80000; }
+.pf2e-character-audit .audit-table tr.whitelisted td { color: #2c7a3d; }
+
+.pf2e-character-audit .audit-issue-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.pf2e-character-audit .audit-issue {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.4rem 0.6rem;
+  border-radius: 6px;
+  border: 1px solid var(--color-border-light-3, #eee);
+  background: var(--color-bg-option, #fff);
+}
+.pf2e-character-audit .audit-issue.error  { border-left: 4px solid #b80000; }
+.pf2e-character-audit .audit-issue.warn   { border-left: 4px solid #b88600; }
+.pf2e-character-audit .audit-issue.info   { border-left: 4px solid #1a4f8b; }
+.pf2e-character-audit .audit-issue-icon { font-size: 1.05rem; flex-shrink: 0; }
+.pf2e-character-audit .audit-issue-body { flex: 1; }
+.pf2e-character-audit .audit-issue-title { font-weight: 600; }
+.pf2e-character-audit .audit-issue-hint  { color: var(--color-text-dark-secondary, #555); font-size: 0.88rem; }
+.pf2e-character-audit .audit-issue-code  { font-size: 0.75rem; color: #666; }
+
+.pf2e-character-audit .audit-reasons {
+  margin: 0.2rem 0 0;
+  padding-left: 1rem;
+  font-size: 0.85rem;
+  color: var(--color-text-dark-secondary, #555);
+}
+
+.pf2e-character-audit .audit-link {
+  background: transparent;
+  border: none;
+  color: var(--color-text-hyperlink, #1a4f8b);
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+}
+
+.pf2e-character-audit .audit-meta {
+  color: var(--color-text-dark-secondary, #777);
+  font-size: 0.85rem;
+}
+
+.pf2e-character-audit .audit-footer {
+  display: flex;
+  gap: 0.4rem;
+  padding: 0.5rem 0.75rem;
+  border-top: 1px solid var(--color-border-light-2, #ddd);
+  background: rgba(0,0,0,0.02);
+}
+
+.pf2e-character-audit .audit-empty {
+  color: var(--color-text-dark-secondary, #777);
+  font-style: italic;
+  text-align: center;
+  padding: 1rem;
+}
+.pf2e-character-audit .audit-empty.ok { color: #2c7a3d; font-weight: 600; }
+
+.pf2e-character-audit.party-audit .party-audit-app {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  height: 100%;
+}
+
+.pf2e-character-audit .audit-member-list {
+  border-right: 1px solid var(--color-border-light-2, #ddd);
+  padding: 0.5rem;
+  overflow: auto;
+}
+.pf2e-character-audit .audit-member-list h3 { margin: 0 0 0.4rem; }
+.pf2e-character-audit .audit-member-list ul { list-style: none; margin: 0; padding: 0; }
+.pf2e-character-audit .audit-member {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid transparent;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 4px;
+  text-align: left;
+}
+.pf2e-character-audit .audit-member:hover { background: rgba(0,0,0,0.05); }
+.pf2e-character-audit .audit-member.active {
+  background: rgba(26,79,139,0.1);
+  border-color: rgba(26,79,139,0.3);
+}
+.pf2e-character-audit .member-level {
+  color: var(--color-text-dark-secondary, #777);
+  font-size: 0.8rem;
+}
+
+.pf2e-character-audit-btn,
+.pf2e-character-audit-party-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-size: 1rem;
+}
+.pf2e-character-audit-btn:hover,
+.pf2e-character-audit-party-btn:hover { color: #1a4f8b; }
+
+.pf2e-character-audit-directory-btn {
+  margin: 0.25rem 0;
+  padding: 0.25rem 0.6rem;
+  background: var(--color-bg-option, #fff);
+  border: 1px solid var(--color-border-light-2, #ccc);
+  border-radius: 4px;
+  cursor: pointer;
+}
+.pf2e-character-audit-directory-btn:hover { background: rgba(0,0,0,0.04); }

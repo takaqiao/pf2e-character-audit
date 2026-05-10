@@ -1,0 +1,133 @@
+{
+  "PF2E-CA": {
+    "App": {
+      "Title": {
+        "Single": "PF2e Character Audit",
+        "Party": "PF2e Party Audit"
+      }
+    },
+    "Tab": {
+      "Overview": "Overview",
+      "Publication": "Publication",
+      "Completeness": "Completeness",
+      "Prereq": "Prerequisites",
+      "CrossParty": "Cross-Party"
+    },
+    "Action": {
+      "AuditSheet": "Audit Sheet",
+      "AuditActor": "Audit Character",
+      "AuditParty": "Audit Party",
+      "Rerun": "Re-run",
+      "SendChat": "Whisper to Chat",
+      "ExportJournal": "Export Journal",
+      "CopyJson": "Copy JSON",
+      "AuditFlavor": "PF2e Character Audit",
+      "PartyAuditName": "Party Audit",
+      "SingleAuditName": "Audit",
+      "JournalCreated": "Journal entry created.",
+      "JsonCopied": "JSON copied to clipboard.",
+      "JsonInConsole": "Clipboard unavailable; JSON written to F12 console."
+    },
+    "Field": {
+      "Title": "Title",
+      "License": "License",
+      "Count": "Count",
+      "Actors": "Actors",
+      "Requirement": "Requirement"
+    },
+    "Label": {
+      "NoIssues": "No issues found",
+      "Pass": "Pass",
+      "Fail": "Fail",
+      "Unknown": "Unknown",
+      "PartyMembers": "Party Members",
+      "PublicationDisabled": "Publication audit disabled in settings.",
+      "CompletenessDisabled": "Completeness audit disabled in settings.",
+      "PrereqDisabled": "Prerequisite audit disabled in settings.",
+      "NoPartyMembers": "No active party or no character members."
+    },
+    "Overview": {
+      "SectionVariants": "Variant Rules",
+      "SectionCompleteness": "Completeness",
+      "SectionPrereq": "Prerequisites",
+      "SectionPublication": "Publication",
+      "Titles": "titles",
+      "Items": "items",
+      "Unknown": "unknown",
+      "CalloutOk": "✅ This character passes all enabled audits.",
+      "CalloutWarn": "🟡 Warnings or unknown prerequisites detected.",
+      "CalloutError": "🔴 Errors detected — review the list below."
+    },
+    "Publication": {
+      "Unknown": "(Unknown source / Homebrew)",
+      "CustomLore": "(Custom Lore)",
+      "SectionByTitle": "📚 By Publication",
+      "SectionByCategory": "🗂 By Item Category"
+    },
+    "Notice": {
+      "NotCharacter": "PF2e Character Audit only supports actors of type \"character\"."
+    },
+    "Audit": {
+      "Code": {
+        "MISSING_ANCESTRY": { "Title": "Missing Ancestry", "Hint": "Drag an Ancestry item onto this actor." },
+        "MISSING_HERITAGE": { "Title": "Missing Heritage", "Hint": "Choose a heritage for this actor." },
+        "MISSING_BACKGROUND": { "Title": "Missing Background", "Hint": "Drag a Background item onto this actor." },
+        "MISSING_CLASS": { "Title": "Missing Class", "Hint": "Drag a Class item onto this actor." },
+        "MISSING_KEY_ABILITY": { "Title": "Key Ability not selected", "Hint": "Select a Key Ability for the class." },
+        "BOOST_COUNT_MISMATCH": { "Title": "Boost count mismatch at level {level}", "Hint": "Expected 4 boosts, found {actual}." },
+        "ANCESTRY_FLAW_MISMATCH": { "Title": "Ancestry flaw mismatch", "Hint": "Ancestry has mandatory flaws but build.flaws is empty ({actual}/{expected})." },
+        "APEX_MISSING_AT_17": { "Title": "Missing Apex item at level {level}", "Hint": "17+ characters should have an apex item (unless ABP is on)." },
+        "LANGUAGE_OVER_LIMIT": { "Title": "Languages exceed limit", "Hint": "Selected {actual}, max {max}." },
+        "LANGUAGE_UNDER_LIMIT": { "Title": "Languages under limit", "Hint": "Selected {actual}, allowed {max}." },
+        "ANCESTRY_FEAT_MISSING": { "Title": "Ancestry feat missing through level {level}", "Hint": "Expected at least {expected}, found {actual}." },
+        "CLASS_FEAT_MISSING": { "Title": "Class feat missing through level {level}", "Hint": "Expected at least {expected}, found {actual}." },
+        "SKILL_FEAT_MISSING": { "Title": "Skill feat missing through level {level}", "Hint": "Expected at least {expected}, found {actual}." },
+        "GENERAL_FEAT_MISSING": { "Title": "General feat missing through level {level}", "Hint": "Expected at least {expected}, found {actual}." },
+        "ARCHETYPE_FEAT_MISSING": { "Title": "Free Archetype feat missing through level {level}", "Hint": "Expected at least {expected}, found {actual}." },
+        "SKILL_INCREASE_MISSING": { "Title": "Skill increases under-allocated", "Hint": "Expected at least {expected}, found {actual}." },
+        "DEDICATION_2_FEAT_RULE": { "Title": "Dedication rule unmet: {dedication}", "Hint": "After taking a dedication you must take 2 archetype feats before another dedication (have {actual})." },
+        "DUAL_CLASS_DETECTED": { "Title": "Dual Class variant active", "Hint": "Shallow check only in v1; enable enableDualClassDeepCheck (v2 plan)." },
+        "STARTING_EQUIPMENT_EMPTY": { "Title": "Starting equipment empty", "Hint": "Character has no weapons/armor/equipment." },
+        "SPELL_LIST_INCOMPLETE": { "Title": "Caster has no spells", "Hint": "Character has a spellcasting entry but no spells." },
+        "GRADUAL_BOOSTS_ENABLED": { "Title": "Gradual Boosts enabled", "Hint": "Skipping strict 4-per-level boost check; review manually." },
+        "LEGACY_SOURCE_FIELD": { "Title": "Legacy source field on {count} item(s)", "Hint": "Re-drag from compendium to populate publication.title." },
+        "DETECTOR_CRASHED": { "Title": "Detector crashed: {detector}", "Hint": "{message}" }
+      }
+    },
+    "Settings": {
+      "enablePublicationAudit": { "Name": "Enable Publication Audit", "Hint": "Scan every item for its publication source." },
+      "enablePrerequisiteAudit": { "Name": "Enable Prerequisite Audit", "Hint": "Verify each owned feat's prerequisites." },
+      "enableCompletenessAudit": { "Name": "Enable Completeness Audit", "Hint": "Check boosts, languages, feat slots, skill increases." },
+      "prereqUnknownSeverity": {
+        "Name": "Unknown Prerequisite Severity",
+        "Hint": "Severity for unparseable prereqs (homebrew etc.).",
+        "Choice": { "info": "ℹ️ Info only", "warn": "🟡 Warning", "error": "🔴 Error" }
+      },
+      "publicationWhitelist": { "Name": "Publication Whitelist (JSON array)", "Hint": "Titles to always treat as compliant, e.g. [\"My Homebrew\"]" },
+      "publicationLicenseFilter": {
+        "Name": "Publication License Filter",
+        "Hint": "Highlight-only; not a hard filter.",
+        "Choice": { "all": "All", "orc-only": "ORC only (Remaster)", "ogl-only": "OGL only" }
+      },
+      "treatLegacySourceAs": {
+        "Name": "Legacy source field handling",
+        "Hint": "Severity when an item only has system.source.value, not publication.title.",
+        "Choice": { "info": "ℹ️ Info", "warn": "🟡 Warning", "none": "🚫 Skip" }
+      },
+      "respectFreeArchetype": {
+        "Name": "Free Archetype detection",
+        "Hint": "auto follows PF2E system setting.",
+        "Choice": { "auto": "auto", "on": "force on", "off": "force off" }
+      },
+      "respectABP": {
+        "Name": "ABP detection",
+        "Hint": "When on, skip apex/item-bonus checks.",
+        "Choice": { "auto": "auto", "on": "force on", "off": "force off" }
+      },
+      "enableDualClassDeepCheck": { "Name": "Dual Class deep check (v2)", "Hint": "v1 only emits a warning; deep check planned for v2." },
+      "showDeadActors": { "Name": "Include dead actors in party audit", "Hint": "By default, HP=0 members are skipped." },
+      "auditButtonOnSheet": { "Name": "Show audit button on character sheet", "Hint": "Client-only; hide the header button per user." },
+      "allowPlayerAudit": { "Name": "Allow players to trigger audits", "Hint": "Off by default; only the GM can audit." }
+    }
+  }
+}

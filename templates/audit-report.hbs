@@ -1,0 +1,43 @@
+<div class="audit-report-app">
+  <header class="audit-header">
+    <div class="audit-actor-info">
+      <h2>{{labels.actorName}} <span class="audit-level">Lv {{labels.actorLevel}}</span></h2>
+      <p class="audit-actor-meta">{{labels.actorClass}} — {{labels.actorAncestry}}</p>
+    </div>
+    <div class="audit-summary-badges">
+      {{#if summary.completeness.errors}}<span class="audit-badge error">E {{summary.completeness.errors}}</span>{{/if}}
+      {{#if summary.completeness.warnings}}<span class="audit-badge warn">W {{summary.completeness.warnings}}</span>{{/if}}
+      {{#if summary.prerequisites.fail}}<span class="audit-badge error">F {{summary.prerequisites.fail}}</span>{{/if}}
+      {{#if summary.prerequisites.unknown}}<span class="audit-badge warn">? {{summary.prerequisites.unknown}}</span>{{/if}}
+      {{#if summary.publication.unknownCount}}<span class="audit-badge info">U {{summary.publication.unknownCount}}</span>{{/if}}
+    </div>
+  </header>
+
+  <nav class="audit-tabs">
+    {{#each tabs}}
+      <button type="button" class="audit-tab {{#if (eq this.id ../activeTab)}}active{{/if}}" data-action="switchTab" data-tab="{{this.id}}">{{this.label}}</button>
+    {{/each}}
+  </nav>
+
+  <section class="audit-tab-content">
+    {{#if (eq activeTab "overview")}}
+      {{> "modules/pf2e-character-audit/templates/partials/overview-card.hbs" report=report variants=variants summary=summary labels=labels}}
+    {{/if}}
+    {{#if (eq activeTab "publication")}}
+      {{> "modules/pf2e-character-audit/templates/partials/publication-table.hbs" publication=publication labels=labels}}
+    {{/if}}
+    {{#if (eq activeTab "completeness")}}
+      {{> "modules/pf2e-character-audit/templates/partials/completeness-list.hbs" completeness=completeness labels=labels}}
+    {{/if}}
+    {{#if (eq activeTab "prereq")}}
+      {{> "modules/pf2e-character-audit/templates/partials/prereq-list.hbs" prerequisites=prerequisites labels=labels}}
+    {{/if}}
+  </section>
+
+  <footer class="audit-footer">
+    <button type="button" data-action="rerun"><i class="fas fa-redo"></i> {{labels.rerun}}</button>
+    <button type="button" data-action="exportChat"><i class="fas fa-comment"></i> {{labels.chat}}</button>
+    <button type="button" data-action="exportJournal"><i class="fas fa-book"></i> {{labels.journal}}</button>
+    <button type="button" data-action="exportJson"><i class="fas fa-code"></i> {{labels.json}}</button>
+  </footer>
+</div>

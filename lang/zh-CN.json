@@ -1,0 +1,246 @@
+{
+  "PF2E-CA": {
+    "App": {
+      "Title": {
+        "Single": "PF2e 车卡审计",
+        "Party": "PF2e 全队车卡审计"
+      }
+    },
+    "Tab": {
+      "Overview": "总览",
+      "Publication": "出版物",
+      "Completeness": "完整性",
+      "Prereq": "前置条件",
+      "CrossParty": "跨队总览"
+    },
+    "Action": {
+      "AuditSheet": "审计角色卡",
+      "AuditActor": "审计该角色",
+      "AuditParty": "审计 Party",
+      "Rerun": "重新审计",
+      "SendChat": "发送到聊天（自语）",
+      "ExportJournal": "导出到 Journal",
+      "CopyJson": "复制 JSON",
+      "AuditFlavor": "PF2e 车卡审计",
+      "PartyAuditName": "全队审计",
+      "SingleAuditName": "审计",
+      "JournalCreated": "已创建 Journal 条目。",
+      "JsonCopied": "JSON 已复制到剪贴板。",
+      "JsonInConsole": "剪贴板不可用，已输出到 F12 控制台。"
+    },
+    "Field": {
+      "Title": "出版物",
+      "License": "许可证",
+      "Count": "数量",
+      "Actors": "角色",
+      "Requirement": "前置文本"
+    },
+    "Label": {
+      "NoIssues": "未发现问题",
+      "Pass": "通过",
+      "Fail": "失败",
+      "Unknown": "未知",
+      "PartyMembers": "队伍成员",
+      "PublicationDisabled": "出版物审计已关闭。",
+      "CompletenessDisabled": "完整性审计已关闭。",
+      "PrereqDisabled": "前置条件审计已关闭。",
+      "NoPartyMembers": "未找到激活的 Party 或队伍中没有玩家角色。"
+    },
+    "Overview": {
+      "SectionVariants": "变体规则",
+      "SectionCompleteness": "完整性",
+      "SectionPrereq": "前置条件",
+      "SectionPublication": "出版物",
+      "Titles": "本",
+      "Items": "条",
+      "Unknown": "未知",
+      "CalloutOk": "✅ 该角色已通过所有审计。",
+      "CalloutWarn": "🟡 存在警告或未知前置，建议复核。",
+      "CalloutError": "🔴 发现错误，请按列表逐项修正。"
+    },
+    "Publication": {
+      "Unknown": "(未知来源 / 自制)",
+      "CustomLore": "(自定义 Lore)",
+      "SectionByTitle": "📚 按出版物分组",
+      "SectionByCategory": "🗂 按条目类别分组"
+    },
+    "Notice": {
+      "NotCharacter": "PF2e 车卡审计仅支持 character 类型 actor。"
+    },
+    "Audit": {
+      "Code": {
+        "MISSING_ANCESTRY": {
+          "Title": "缺少祖先 (Ancestry)",
+          "Hint": "请把一个 Ancestry 条目拖到该角色上。"
+        },
+        "MISSING_HERITAGE": {
+          "Title": "缺少传承 (Heritage)",
+          "Hint": "请选择一个 Heritage（祖先确定后通常自动出现选项）。"
+        },
+        "MISSING_BACKGROUND": {
+          "Title": "缺少背景 (Background)",
+          "Hint": "请把一个 Background 条目拖到该角色上。"
+        },
+        "MISSING_CLASS": {
+          "Title": "缺少职业 (Class)",
+          "Hint": "请把一个 Class 条目拖到该角色上。"
+        },
+        "MISSING_KEY_ABILITY": {
+          "Title": "未选择关键属性 (Key Ability)",
+          "Hint": "在角色卡上为职业指定 Key Ability。"
+        },
+        "BOOST_COUNT_MISMATCH": {
+          "Title": "等级 {level} 属性提升数量不符",
+          "Hint": "应有 4 个属性提升，实际 {actual} 个。"
+        },
+        "ANCESTRY_FLAW_MISMATCH": {
+          "Title": "祖先属性贬值数量异常",
+          "Hint": "祖先有强制 flaw，但角色 build.flaws 中未记录（{actual}/{expected}）。"
+        },
+        "APEX_MISSING_AT_17": {
+          "Title": "等级 {level}：缺少 Apex 物品",
+          "Hint": "17 级及以上角色应配备一件 Apex 装备（除非启用了 ABP）。"
+        },
+        "LANGUAGE_OVER_LIMIT": {
+          "Title": "语言数量超过上限",
+          "Hint": "已选 {actual} 种，上限 {max} 种。"
+        },
+        "LANGUAGE_UNDER_LIMIT": {
+          "Title": "未用满语言名额",
+          "Hint": "已选 {actual} 种，可选 {max} 种。"
+        },
+        "ANCESTRY_FEAT_MISSING": {
+          "Title": "祖先专长缺失（截至等级 {level}）",
+          "Hint": "应至少有 {expected} 个祖先专长，实际 {actual} 个。"
+        },
+        "CLASS_FEAT_MISSING": {
+          "Title": "职业专长缺失（截至等级 {level}）",
+          "Hint": "应至少有 {expected} 个职业专长，实际 {actual} 个。"
+        },
+        "SKILL_FEAT_MISSING": {
+          "Title": "技能专长缺失（截至等级 {level}）",
+          "Hint": "应至少有 {expected} 个技能专长，实际 {actual} 个。"
+        },
+        "GENERAL_FEAT_MISSING": {
+          "Title": "通用专长缺失（截至等级 {level}）",
+          "Hint": "应至少有 {expected} 个通用专长，实际 {actual} 个。"
+        },
+        "ARCHETYPE_FEAT_MISSING": {
+          "Title": "Free Archetype 专长缺失（截至等级 {level}）",
+          "Hint": "启用 Free Archetype 时，应至少有 {expected} 个 archetype 专长，实际 {actual} 个。"
+        },
+        "SKILL_INCREASE_MISSING": {
+          "Title": "技能熟练度提升数量不足",
+          "Hint": "应至少有 {expected} 次技能提升，实际 {actual} 次。"
+        },
+        "DEDICATION_2_FEAT_RULE": {
+          "Title": "Dedication 规则未达成：{dedication}",
+          "Hint": "取了 dedication 后须再取 2 个该 archetype 的专长才能选另一个 dedication（已取 {actual}）。"
+        },
+        "DUAL_CLASS_DETECTED": {
+          "Title": "已启用 Dual Class 变体",
+          "Hint": "本审计目前仅作浅层检测；启用 enableDualClassDeepCheck 设置以进入深检（v2 计划）。"
+        },
+        "STARTING_EQUIPMENT_EMPTY": {
+          "Title": "起始装备为空",
+          "Hint": "角色没有任何武器/护甲/装备/消耗品；可能尚未完成购物。"
+        },
+        "SPELL_LIST_INCOMPLETE": {
+          "Title": "施法者法术列表为空",
+          "Hint": "角色拥有施法栏 (spellcastingEntry) 但未学习/准备任何法术。"
+        },
+        "GRADUAL_BOOSTS_ENABLED": {
+          "Title": "已启用渐进属性提升",
+          "Hint": "本审计跳过严格的属性提升数量检测（每级 4 个）。请人工核对。"
+        },
+        "LEGACY_SOURCE_FIELD": {
+          "Title": "存在使用 legacy source 字段的条目（{count} 项）",
+          "Hint": "建议把这些条目重新从 compendium 拖入，让 publication.title 字段被填充。"
+        },
+        "DETECTOR_CRASHED": {
+          "Title": "检测器崩溃：{detector}",
+          "Hint": "{message}"
+        }
+      }
+    },
+    "Settings": {
+      "enablePublicationAudit": {
+        "Name": "启用出版物审计",
+        "Hint": "扫描每个角色所有 item 的出版物来源，按 title/license 汇总。"
+      },
+      "enablePrerequisiteAudit": {
+        "Name": "启用前置条件审计",
+        "Hint": "对角色已学的每个专长检查其 prereq 是否被满足。"
+      },
+      "enableCompletenessAudit": {
+        "Name": "启用车卡完整性审计",
+        "Hint": "检测属性提升、语言数量、专长槽位、技能提升等是否齐全。"
+      },
+      "prereqUnknownSeverity": {
+        "Name": "未知前置的严重度",
+        "Hint": "前置条件无法解析（自然语言模糊或自制 feat）时的报告等级。",
+        "Choice": {
+          "info": "ℹ️ 仅信息",
+          "warn": "🟡 警告",
+          "error": "🔴 错误"
+        }
+      },
+      "publicationWhitelist": {
+        "Name": "出版物白名单 (JSON 数组)",
+        "Hint": "完全匹配该 title 的条目视为合规，例：[\"Custom Homebrew\",\"My Adventure Path\"]"
+      },
+      "publicationLicenseFilter": {
+        "Name": "出版物许可证过滤",
+        "Hint": "仅做高亮提示，不做硬过滤。",
+        "Choice": {
+          "all": "全部",
+          "orc-only": "仅 ORC（Remaster）",
+          "ogl-only": "仅 OGL"
+        }
+      },
+      "treatLegacySourceAs": {
+        "Name": "Legacy source 字段处理",
+        "Hint": "条目仅有 system.source.value 而无 publication.title 时的等级。",
+        "Choice": {
+          "info": "ℹ️ 仅信息",
+          "warn": "🟡 警告",
+          "none": "🚫 不报告"
+        }
+      },
+      "respectFreeArchetype": {
+        "Name": "Free Archetype 检测",
+        "Hint": "auto = 跟随 PF2E 系统设置；on/off 强制启用/禁用 archetype 槽位检测。",
+        "Choice": {
+          "auto": "auto",
+          "on": "强制启用",
+          "off": "强制禁用"
+        }
+      },
+      "respectABP": {
+        "Name": "ABP（自动加值）检测",
+        "Hint": "auto = 跟随 PF2E 系统设置；on 时跳过 Apex 与装备 item-bonus 类的检测。",
+        "Choice": {
+          "auto": "auto",
+          "on": "强制启用",
+          "off": "强制禁用"
+        }
+      },
+      "enableDualClassDeepCheck": {
+        "Name": "Dual Class 深度检测 (v2)",
+        "Hint": "v1 版本仅做警告提示。深检留待后续版本。"
+      },
+      "showDeadActors": {
+        "Name": "Party 审计中包含死亡角色",
+        "Hint": "默认跳过 HP=0 的成员。"
+      },
+      "auditButtonOnSheet": {
+        "Name": "在角色卡 header 显示审计按钮",
+        "Hint": "客户端设置；关闭后该用户角色卡上不再出现按钮。"
+      },
+      "allowPlayerAudit": {
+        "Name": "允许玩家触发审计",
+        "Hint": "默认仅 GM 能触发；启用后玩家也可在自己角色卡上点审计。"
+      }
+    }
+  }
+}

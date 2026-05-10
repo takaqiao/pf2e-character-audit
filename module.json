@@ -1,0 +1,57 @@
+{
+  "id": "pf2e-character-audit",
+  "title": "PF2e Character Audit",
+  "description": "Comprehensive PF2E character sheet validator: publication source audit, feat prerequisite verification, and build completeness checks (boosts, languages, feat slots, skill increases).",
+  "version": "0.1.0",
+  "compatibility": {
+    "minimum": "13",
+    "verified": "14",
+    "maximum": "14"
+  },
+  "authors": [
+    {
+      "name": "Taka",
+      "url": "https://github.com/takaqiao"
+    }
+  ],
+  "esmodules": [
+    "scripts/main.js"
+  ],
+  "styles": [
+    "styles/audit.css"
+  ],
+  "languages": [
+    {
+      "lang": "en",
+      "name": "English",
+      "path": "lang/en.json"
+    },
+    {
+      "lang": "zh-CN",
+      "name": "中文（简体）",
+      "path": "lang/zh-CN.json"
+    }
+  ],
+  "relationships": {
+    "systems": [
+      {
+        "id": "pf2e",
+        "type": "system",
+        "compatibility": {
+          "minimum": "7",
+          "verified": "8"
+        }
+      }
+    ]
+  },
+  "url": "https://github.com/takaqiao/pf2e-character-audit",
+  "manifest": "https://github.com/takaqiao/pf2e-character-audit/releases/latest/download/module.json",
+  "download": "https://github.com/takaqiao/pf2e-character-audit/releases/download/0.1.0/pf2e-character-audit-v0.1.0.zip",
+  "flags": {
+    "allowBugReporter": true,
+    "hotReload": {
+      "extensions": ["css", "hbs", "json"],
+      "paths": ["styles", "templates", "lang"]
+    }
+  }
+}
