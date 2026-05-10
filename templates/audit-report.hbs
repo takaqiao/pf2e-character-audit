@@ -2,14 +2,14 @@
   <header class="audit-header">
     <div class="audit-actor-info">
       <h2>{{labels.actorName}} <span class="audit-level">Lv {{labels.actorLevel}}</span></h2>
-      <p class="audit-actor-meta">{{labels.actorClass}} — {{labels.actorAncestry}}</p>
+      <p class="audit-actor-meta">{{labels.actorClass}} &middot; {{labels.actorAncestry}}</p>
     </div>
     <div class="audit-summary-badges">
-      {{#if summary.completeness.errors}}<span class="audit-badge error">E {{summary.completeness.errors}}</span>{{/if}}
-      {{#if summary.completeness.warnings}}<span class="audit-badge warn">W {{summary.completeness.warnings}}</span>{{/if}}
-      {{#if summary.prerequisites.fail}}<span class="audit-badge error">F {{summary.prerequisites.fail}}</span>{{/if}}
-      {{#if summary.prerequisites.unknown}}<span class="audit-badge warn">? {{summary.prerequisites.unknown}}</span>{{/if}}
-      {{#if summary.publication.unknownCount}}<span class="audit-badge info">U {{summary.publication.unknownCount}}</span>{{/if}}
+      {{#if summary.completeness.errors}}<span class="audit-badge error"><i class="fa-solid fa-circle-exclamation"></i>{{summary.completeness.errors}}</span>{{/if}}
+      {{#if summary.completeness.warnings}}<span class="audit-badge warn"><i class="fa-solid fa-triangle-exclamation"></i>{{summary.completeness.warnings}}</span>{{/if}}
+      {{#if summary.prerequisites.fail}}<span class="audit-badge error"><i class="fa-solid fa-circle-xmark"></i>{{summary.prerequisites.fail}}</span>{{/if}}
+      {{#if summary.prerequisites.unknown}}<span class="audit-badge info"><i class="fa-solid fa-circle-question"></i>{{summary.prerequisites.unknown}}</span>{{/if}}
+      {{#if summary.publication.unknownCount}}<span class="audit-badge info"><i class="fa-solid fa-book"></i>{{summary.publication.unknownCount}}</span>{{/if}}
     </div>
   </header>
 
@@ -35,9 +35,9 @@
   </section>
 
   <footer class="audit-footer">
-    <button type="button" data-action="rerun"><i class="fas fa-redo"></i> {{labels.rerun}}</button>
-    <button type="button" data-action="exportChat"><i class="fas fa-comment"></i> {{labels.chat}}</button>
-    <button type="button" data-action="exportJournal"><i class="fas fa-book"></i> {{labels.journal}}</button>
-    <button type="button" data-action="exportJson"><i class="fas fa-code"></i> {{labels.json}}</button>
+    <button type="button" data-action="rerun"><i class="fa-solid fa-rotate-right"></i>{{labels.rerun}}</button>
+    <button type="button" data-action="exportChat"><i class="fa-solid fa-comment"></i>{{labels.chat}}</button>
+    <button type="button" data-action="exportJournal"><i class="fa-solid fa-book"></i>{{labels.journal}}</button>
+    <button type="button" data-action="exportJson"><i class="fa-solid fa-code"></i>{{labels.json}}</button>
   </footer>
 </div>

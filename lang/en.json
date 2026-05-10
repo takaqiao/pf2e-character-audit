@@ -44,7 +44,10 @@
       "PublicationDisabled": "Publication audit disabled in settings.",
       "CompletenessDisabled": "Completeness audit disabled in settings.",
       "PrereqDisabled": "Prerequisite audit disabled in settings.",
-      "NoPartyMembers": "No active party or no character members."
+      "NoPartyMembers": "No active party or no character members.",
+      "Errors": "errors",
+      "Warnings": "warnings",
+      "Infos": "infos"
     },
     "Overview": {
       "SectionVariants": "Variant Rules",
@@ -54,83 +57,213 @@
       "Titles": "titles",
       "Items": "items",
       "Unknown": "unknown",
-      "CalloutOk": "✅ This character passes all enabled audits.",
-      "CalloutWarn": "🟡 Warnings or unknown prerequisites detected.",
-      "CalloutError": "🔴 Errors detected — review the list below."
+      "CalloutOk": "This character passes all enabled audits.",
+      "CalloutWarn": "Warnings or unknown prerequisites detected.",
+      "CalloutError": "Errors detected — review the list below."
     },
     "Publication": {
       "Unknown": "(Unknown source / Homebrew)",
       "CustomLore": "(Custom Lore)",
-      "SectionByTitle": "📚 By Publication",
-      "SectionByCategory": "🗂 By Item Category"
+      "SectionByTitle": "By Publication",
+      "SectionByCategory": "By Item Category"
     },
     "Notice": {
       "NotCharacter": "PF2e Character Audit only supports actors of type \"character\"."
     },
     "Audit": {
       "Code": {
-        "MISSING_ANCESTRY": { "Title": "Missing Ancestry", "Hint": "Drag an Ancestry item onto this actor." },
-        "MISSING_HERITAGE": { "Title": "Missing Heritage", "Hint": "Choose a heritage for this actor." },
-        "MISSING_BACKGROUND": { "Title": "Missing Background", "Hint": "Drag a Background item onto this actor." },
-        "MISSING_CLASS": { "Title": "Missing Class", "Hint": "Drag a Class item onto this actor." },
-        "MISSING_KEY_ABILITY": { "Title": "Key Ability not selected", "Hint": "Select a Key Ability for the class." },
-        "CLASS_SUBCLASS_MISSING": { "Title": "{className} missing {feature}", "Hint": "This class requires a subclass selection at level 1 (e.g. a Bard's muse, a Cleric's doctrine, a Barbarian's instinct). Drag the corresponding subclass feat onto the actor." },
-        "BOOST_COUNT_MISMATCH": { "Title": "Boost count mismatch at level {level}", "Hint": "Expected 4 boosts, found {actual}." },
-        "ANCESTRY_FLAW_MISMATCH": { "Title": "Ancestry flaw mismatch", "Hint": "Ancestry has mandatory flaws but build.flaws is empty ({actual}/{expected})." },
-        "APEX_MISSING_AT_17": { "Title": "Missing Apex item at level {level}", "Hint": "17+ characters should have an apex item (unless ABP is on)." },
-        "LANGUAGE_OVER_LIMIT": { "Title": "Extra languages exceed limit", "Hint": "Beyond ancestry-granted languages, at most {max} extra are allowed; {actual} extra are selected (total {total})." },
-        "LANGUAGE_UNDER_LIMIT": { "Title": "Extra language slots unused", "Hint": "Beyond ancestry-granted languages, {max} extra can be picked; {actual} are selected (total {total})." },
-        "ANCESTRY_FEAT_MISSING": { "Title": "Ancestry feat missing through level {level}", "Hint": "Expected at least {expected}, found {actual}." },
-        "CLASS_FEAT_MISSING": { "Title": "Class feat missing through level {level}", "Hint": "Expected at least {expected}, found {actual}." },
-        "SKILL_FEAT_MISSING": { "Title": "Skill feat missing through level {level}", "Hint": "Expected at least {expected}, found {actual}." },
-        "GENERAL_FEAT_MISSING": { "Title": "General feat missing through level {level}", "Hint": "Expected at least {expected}, found {actual}." },
-        "ARCHETYPE_FEAT_MISSING": { "Title": "Free Archetype feat missing through level {level}", "Hint": "Expected at least {expected}, found {actual}." },
-        "SKILL_INCREASE_MISSING": { "Title": "Skill increases under-allocated", "Hint": "Expected at least {expected}, found {actual}." },
-        "DEDICATION_2_FEAT_RULE": { "Title": "Dedication rule unmet: {dedication}", "Hint": "After taking a dedication you must take 2 archetype feats before another dedication (have {actual})." },
-        "DUAL_CLASS_DETECTED": { "Title": "Dual Class variant active", "Hint": "Shallow check only in v1; enable enableDualClassDeepCheck (v2 plan)." },
-        "STARTING_EQUIPMENT_EMPTY": { "Title": "Starting equipment empty", "Hint": "Character has no weapons/armor/equipment." },
-        "SPELL_LIST_INCOMPLETE": { "Title": "Caster has no spells", "Hint": "Character has a spellcasting entry but no spells." },
-        "BACKGROUND_SKILL_NOT_TRAINED": { "Title": "Background skill not trained", "Hint": "{background} grants trained {skill}, but the character is not trained in it." },
-        "SPELL_TRADITION_MISMATCH": { "Title": "Spell tradition mismatch", "Hint": "{spell} has tradition {spellTraditions}, which differs from the entry's {entryTradition}. This may be intentional (e.g. Elf Otherworldly Magic); review if not." },
-        "GRADUAL_BOOSTS_ENABLED": { "Title": "Gradual Boosts enabled", "Hint": "Skipping strict 4-per-level boost check; review manually." },
-        "LEGACY_SOURCE_FIELD": { "Title": "Legacy source field on {count} item(s)", "Hint": "Re-drag from compendium to populate publication.title." },
-        "DETECTOR_CRASHED": { "Title": "Detector crashed: {detector}", "Hint": "{message}" }
+        "MISSING_ANCESTRY": {
+          "Title": "Missing Ancestry",
+          "Hint": "Drag an Ancestry item onto this actor."
+        },
+        "MISSING_HERITAGE": {
+          "Title": "Missing Heritage",
+          "Hint": "Choose a heritage for this actor."
+        },
+        "MISSING_BACKGROUND": {
+          "Title": "Missing Background",
+          "Hint": "Drag a Background item onto this actor."
+        },
+        "MISSING_CLASS": {
+          "Title": "Missing Class",
+          "Hint": "Drag a Class item onto this actor."
+        },
+        "MISSING_KEY_ABILITY": {
+          "Title": "Key Ability not selected",
+          "Hint": "Select a Key Ability for the class."
+        },
+        "CLASS_SUBCLASS_MISSING": {
+          "Title": "{className} missing {feature}",
+          "Hint": "This class requires a subclass selection at level 1 (e.g. a Bard's muse, a Cleric's doctrine, a Barbarian's instinct). Drag the corresponding subclass feat onto the actor."
+        },
+        "BOOST_COUNT_MISMATCH": {
+          "Title": "Boost count mismatch at level {level}",
+          "Hint": "Expected 4 boosts, found {actual}."
+        },
+        "ANCESTRY_FLAW_MISMATCH": {
+          "Title": "Ancestry flaw mismatch",
+          "Hint": "Ancestry has mandatory flaws but build.flaws is empty ({actual}/{expected})."
+        },
+        "APEX_MISSING_AT_17": {
+          "Title": "Missing Apex item at level {level}",
+          "Hint": "17+ characters should have an apex item (unless ABP is on)."
+        },
+        "LANGUAGE_OVER_LIMIT": {
+          "Title": "Extra languages exceed limit",
+          "Hint": "Beyond ancestry-granted languages, at most {max} extra are allowed; {actual} extra are selected (total {total})."
+        },
+        "LANGUAGE_UNDER_LIMIT": {
+          "Title": "Extra language slots unused",
+          "Hint": "Beyond ancestry-granted languages, {max} extra can be picked; {actual} are selected (total {total})."
+        },
+        "ANCESTRY_FEAT_MISSING": {
+          "Title": "Ancestry feat missing through level {level}",
+          "Hint": "Expected at least {expected}, found {actual}."
+        },
+        "CLASS_FEAT_MISSING": {
+          "Title": "Class feat missing through level {level}",
+          "Hint": "Expected at least {expected}, found {actual}."
+        },
+        "SKILL_FEAT_MISSING": {
+          "Title": "Skill feat missing through level {level}",
+          "Hint": "Expected at least {expected}, found {actual}."
+        },
+        "GENERAL_FEAT_MISSING": {
+          "Title": "General feat missing through level {level}",
+          "Hint": "Expected at least {expected}, found {actual}."
+        },
+        "ARCHETYPE_FEAT_MISSING": {
+          "Title": "Free Archetype feat missing through level {level}",
+          "Hint": "Expected at least {expected}, found {actual}."
+        },
+        "SKILL_INCREASE_MISSING": {
+          "Title": "Skill increases under-allocated",
+          "Hint": "Expected at least {expected}, found {actual}."
+        },
+        "DEDICATION_2_FEAT_RULE": {
+          "Title": "Dedication rule unmet: {dedication}",
+          "Hint": "After taking a dedication you must take 2 archetype feats before another dedication (have {actual})."
+        },
+        "DUAL_CLASS_DETECTED": {
+          "Title": "Dual Class variant active",
+          "Hint": "Shallow check only in v1; enable enableDualClassDeepCheck (v2 plan)."
+        },
+        "STARTING_EQUIPMENT_EMPTY": {
+          "Title": "Starting equipment empty",
+          "Hint": "Character has no weapons/armor/equipment."
+        },
+        "SPELL_LIST_INCOMPLETE": {
+          "Title": "Caster has no spells",
+          "Hint": "Character has a spellcasting entry but no spells."
+        },
+        "BACKGROUND_SKILL_NOT_TRAINED": {
+          "Title": "Background skill not trained",
+          "Hint": "{background} grants trained {skill}, but the character is not trained in it."
+        },
+        "SPELL_TRADITION_MISMATCH": {
+          "Title": "Spell tradition mismatch",
+          "Hint": "{spell} has tradition {spellTraditions}, which differs from the entry's {entryTradition}. This may be intentional (e.g. Elf Otherworldly Magic); review if not."
+        },
+        "GRADUAL_BOOSTS_ENABLED": {
+          "Title": "Gradual Boosts enabled",
+          "Hint": "Skipping strict 4-per-level boost check; review manually."
+        },
+        "LEGACY_SOURCE_FIELD": {
+          "Title": "Legacy source field on {count} item(s)",
+          "Hint": "Re-drag from compendium to populate publication.title."
+        },
+        "DETECTOR_CRASHED": {
+          "Title": "Detector crashed: {detector}",
+          "Hint": "{message}"
+        },
+        "HP_UNDER_EXPECTED": {
+          "Title": "Max HP below baseline",
+          "Hint": "Computed max HP {actual} is below the baseline ancestry + (class + CON) × level = {baseline}. Maybe a level-up was skipped."
+        },
+        "LEVEL_UP_PENDING": {
+          "Title": "Level-up pending",
+          "Hint": "Character has {xp} XP (threshold {threshold}) but is still level {level}."
+        }
       }
     },
     "Settings": {
-      "enablePublicationAudit": { "Name": "Enable Publication Audit", "Hint": "Scan every item for its publication source." },
-      "enablePrerequisiteAudit": { "Name": "Enable Prerequisite Audit", "Hint": "Verify each owned feat's prerequisites." },
-      "enableCompletenessAudit": { "Name": "Enable Completeness Audit", "Hint": "Check boosts, languages, feat slots, skill increases." },
+      "enablePublicationAudit": {
+        "Name": "Enable Publication Audit",
+        "Hint": "Scan every item for its publication source."
+      },
+      "enablePrerequisiteAudit": {
+        "Name": "Enable Prerequisite Audit",
+        "Hint": "Verify each owned feat's prerequisites."
+      },
+      "enableCompletenessAudit": {
+        "Name": "Enable Completeness Audit",
+        "Hint": "Check boosts, languages, feat slots, skill increases."
+      },
       "prereqUnknownSeverity": {
         "Name": "Unknown Prerequisite Severity",
         "Hint": "Severity for unparseable prereqs (homebrew etc.).",
-        "Choice": { "info": "ℹ️ Info only", "warn": "🟡 Warning", "error": "🔴 Error" }
+        "Choice": {
+          "info": "Info only",
+          "warn": "Warning",
+          "error": "Error"
+        }
       },
-      "publicationWhitelist": { "Name": "Publication Whitelist (JSON array)", "Hint": "Titles to always treat as compliant, e.g. [\"My Homebrew\"]" },
+      "publicationWhitelist": {
+        "Name": "Publication Whitelist (JSON array)",
+        "Hint": "Titles to always treat as compliant, e.g. [\"My Homebrew\"]"
+      },
       "publicationLicenseFilter": {
         "Name": "Publication License Filter",
         "Hint": "Highlight-only; not a hard filter.",
-        "Choice": { "all": "All", "orc-only": "ORC only (Remaster)", "ogl-only": "OGL only" }
+        "Choice": {
+          "all": "All",
+          "orc-only": "ORC only (Remaster)",
+          "ogl-only": "OGL only"
+        }
       },
       "treatLegacySourceAs": {
         "Name": "Legacy source field handling",
         "Hint": "Severity when an item only has system.source.value, not publication.title.",
-        "Choice": { "info": "ℹ️ Info", "warn": "🟡 Warning", "none": "🚫 Skip" }
+        "Choice": {
+          "info": "Info",
+          "warn": "Warning",
+          "none": "Skip"
+        }
       },
       "respectFreeArchetype": {
         "Name": "Free Archetype detection",
         "Hint": "auto follows PF2E system setting.",
-        "Choice": { "auto": "auto", "on": "force on", "off": "force off" }
+        "Choice": {
+          "auto": "auto",
+          "on": "force on",
+          "off": "force off"
+        }
       },
       "respectABP": {
         "Name": "ABP detection",
         "Hint": "When on, skip apex/item-bonus checks.",
-        "Choice": { "auto": "auto", "on": "force on", "off": "force off" }
+        "Choice": {
+          "auto": "auto",
+          "on": "force on",
+          "off": "force off"
+        }
       },
-      "enableDualClassDeepCheck": { "Name": "Dual Class deep check (v2)", "Hint": "v1 only emits a warning; deep check planned for v2." },
-      "showDeadActors": { "Name": "Include dead actors in party audit", "Hint": "By default, HP=0 members are skipped." },
-      "auditButtonOnSheet": { "Name": "Show audit button on character sheet", "Hint": "Client-only; hide the header button per user." },
-      "allowPlayerAudit": { "Name": "Allow players to trigger audits", "Hint": "Off by default; only the GM can audit." }
+      "enableDualClassDeepCheck": {
+        "Name": "Dual Class deep check (v2)",
+        "Hint": "v1 only emits a warning; deep check planned for v2."
+      },
+      "showDeadActors": {
+        "Name": "Include dead actors in party audit",
+        "Hint": "By default, HP=0 members are skipped."
+      },
+      "auditButtonOnSheet": {
+        "Name": "Show audit button on character sheet",
+        "Hint": "Client-only; hide the header button per user."
+      },
+      "allowPlayerAudit": {
+        "Name": "Allow players to trigger audits",
+        "Hint": "Off by default; only the GM can audit."
+      }
     }
   }
 }

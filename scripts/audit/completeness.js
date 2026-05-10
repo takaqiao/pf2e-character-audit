@@ -325,6 +325,32 @@ function checkBackgroundSkill(actor, issues) {
   }
 }
 
+function checkHP(actor, issues) {
+  const max = actor.system?.attributes?.hp?.max;
+  if (typeof max !== "number") return;
+  const ancestryHp = actor.ancestry?.system?.hp ?? 0;
+  const classHp = actor.class?.system?.hp ?? 0;
+  if (ancestryHp <= 0 || classHp <= 0) return;
+  const conMod = actor.system?.abilities?.con?.mod ?? 0;
+  const level = actor.system?.details?.level?.value ?? 1;
+  const baseline = ancestryHp + (classHp + conMod) * level;
+  // Many feats / class features ADD hp; flag only when actor's max is below the
+  // unmodified baseline by more than 2 (typo / forgotten leveling).
+  if (max + 2 < baseline) {
+    issues.push(makeIssue("HP_UNDER_EXPECTED", SEVERITY.WARN, { actual: max, baseline }));
+  }
+}
+
+function checkLevelXP(actor, issues) {
+  const level = actor.system?.details?.level?.value ?? 1;
+  if (level >= 20) return;
+  const xpVal = actor.system?.details?.xp?.value ?? 0;
+  const xpMax = actor.system?.details?.xp?.max ?? 1000;
+  if (xpMax > 0 && xpVal >= xpMax) {
+    issues.push(makeIssue("LEVEL_UP_PENDING", SEVERITY.INFO, { xp: xpVal, threshold: xpMax, level }));
+  }
+}
+
 function checkSpellTraditions(actor, issues) {
   const entries = actor.itemTypes.spellcastingEntry ?? [];
   const allSpells = actor.itemTypes.spell ?? [];
@@ -383,6 +409,8 @@ export function auditCompleteness(actor, variants) {
   checkSpellcasting(actor, issues);
   checkBackgroundSkill(actor, issues);
   checkSpellTraditions(actor, issues);
+  checkHP(actor, issues);
+  checkLevelXP(actor, issues);
   checkLegacySource(actor, issues);
 
   const summary = {

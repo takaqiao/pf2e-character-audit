@@ -6,9 +6,9 @@ import { toChat, toJournal, toJson } from "./exporters.js";
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
 function severityIcon(sev) {
-  if (sev === SEVERITY.ERROR) return "🔴";
-  if (sev === SEVERITY.WARN) return "🟡";
-  if (sev === SEVERITY.INFO) return "🔵";
+  if (sev === SEVERITY.ERROR) return '<i class="fa-solid fa-circle-exclamation"></i>';
+  if (sev === SEVERITY.WARN) return '<i class="fa-solid fa-triangle-exclamation"></i>';
+  if (sev === SEVERITY.INFO) return '<i class="fa-solid fa-circle-info"></i>';
   return "";
 }
 

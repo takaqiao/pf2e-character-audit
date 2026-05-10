@@ -3,49 +3,49 @@
     <div class="audit-overview-section">
       <h3>{{localize "PF2E-CA.Overview.SectionVariants"}}</h3>
       <ul class="audit-variant-list">
-        <li class="{{#if variants.abp}}on{{else}}off{{/if}}">ABP: {{#if variants.abp}}✓{{else}}—{{/if}}</li>
-        <li class="{{#if variants.freeArchetype}}on{{else}}off{{/if}}">Free Archetype: {{#if variants.freeArchetype}}✓{{else}}—{{/if}}</li>
-        <li class="{{#if variants.dualClass}}on{{else}}off{{/if}}">Dual Class: {{#if variants.dualClass}}✓{{else}}—{{/if}}</li>
-        <li class="{{#if variants.gradualBoosts}}on{{else}}off{{/if}}">Gradual Boosts: {{#if variants.gradualBoosts}}✓{{else}}—{{/if}}</li>
-        <li class="{{#if variants.stamina}}on{{else}}off{{/if}}">Stamina: {{#if variants.stamina}}✓{{else}}—{{/if}}</li>
-        <li class="{{#if variants.proficiencyWithoutLevel}}on{{else}}off{{/if}}">PWoL: {{#if variants.proficiencyWithoutLevel}}✓{{else}}—{{/if}}</li>
+        <li class="{{#if variants.abp}}on{{else}}off{{/if}}"><span class="variant-key">ABP</span><span>{{#if variants.abp}}on{{else}}—{{/if}}</span></li>
+        <li class="{{#if variants.freeArchetype}}on{{else}}off{{/if}}"><span class="variant-key">Free Archetype</span><span>{{#if variants.freeArchetype}}on{{else}}—{{/if}}</span></li>
+        <li class="{{#if variants.dualClass}}on{{else}}off{{/if}}"><span class="variant-key">Dual Class</span><span>{{#if variants.dualClass}}on{{else}}—{{/if}}</span></li>
+        <li class="{{#if variants.gradualBoosts}}on{{else}}off{{/if}}"><span class="variant-key">Gradual Boosts</span><span>{{#if variants.gradualBoosts}}on{{else}}—{{/if}}</span></li>
+        <li class="{{#if variants.stamina}}on{{else}}off{{/if}}"><span class="variant-key">Stamina</span><span>{{#if variants.stamina}}on{{else}}—{{/if}}</span></li>
+        <li class="{{#if variants.proficiencyWithoutLevel}}on{{else}}off{{/if}}"><span class="variant-key">PWoL</span><span>{{#if variants.proficiencyWithoutLevel}}on{{else}}—{{/if}}</span></li>
       </ul>
     </div>
 
     <div class="audit-overview-section">
       <h3>{{localize "PF2E-CA.Overview.SectionCompleteness"}}</h3>
       <ul class="audit-summary-counts">
-        <li class="error">🔴 {{summary.completeness.errors}}</li>
-        <li class="warn">🟡 {{summary.completeness.warnings}}</li>
-        <li class="info">🔵 {{summary.completeness.infos}}</li>
+        <li class="error"><i class="fa-solid fa-circle-exclamation"></i>{{summary.completeness.errors}} {{localize "PF2E-CA.Label.Errors"}}</li>
+        <li class="warn"><i class="fa-solid fa-triangle-exclamation"></i>{{summary.completeness.warnings}} {{localize "PF2E-CA.Label.Warnings"}}</li>
+        <li class="info"><i class="fa-solid fa-circle-info"></i>{{summary.completeness.infos}} {{localize "PF2E-CA.Label.Infos"}}</li>
       </ul>
     </div>
 
     <div class="audit-overview-section">
       <h3>{{localize "PF2E-CA.Overview.SectionPrereq"}}</h3>
       <ul class="audit-summary-counts">
-        <li class="pass">✅ {{summary.prerequisites.pass}}</li>
-        <li class="error">🔴 {{summary.prerequisites.fail}}</li>
-        <li class="warn">❓ {{summary.prerequisites.unknown}}</li>
+        <li class="pass"><i class="fa-solid fa-check"></i>{{summary.prerequisites.pass}} {{localize "PF2E-CA.Label.Pass"}}</li>
+        <li class="error"><i class="fa-solid fa-circle-xmark"></i>{{summary.prerequisites.fail}} {{localize "PF2E-CA.Label.Fail"}}</li>
+        <li class="info"><i class="fa-solid fa-circle-question"></i>{{summary.prerequisites.unknown}} {{localize "PF2E-CA.Label.Unknown"}}</li>
       </ul>
     </div>
 
     <div class="audit-overview-section">
       <h3>{{localize "PF2E-CA.Overview.SectionPublication"}}</h3>
       <ul class="audit-summary-counts">
-        <li>📚 {{summary.publication.distinctTitles}} {{localize "PF2E-CA.Overview.Titles"}}</li>
-        <li>📖 {{report.publication.summary.total}} {{localize "PF2E-CA.Overview.Items"}}</li>
-        <li>🆅 {{summary.publication.unknownCount}} {{localize "PF2E-CA.Overview.Unknown"}}</li>
-        <li>·R {{report.publication.summary.remasterCount}}</li>
+        <li><i class="fa-solid fa-book"></i>{{summary.publication.distinctTitles}} {{localize "PF2E-CA.Overview.Titles"}}</li>
+        <li><i class="fa-solid fa-list"></i>{{report.publication.summary.total}} {{localize "PF2E-CA.Overview.Items"}}</li>
+        <li><i class="fa-solid fa-circle-question"></i>{{summary.publication.unknownCount}} {{localize "PF2E-CA.Overview.Unknown"}}</li>
+        <li><i class="fa-solid fa-star"></i>{{report.publication.summary.remasterCount}} R</li>
       </ul>
     </div>
   </div>
 
   {{#if (or summary.completeness.errors summary.prerequisites.fail)}}
-    <div class="audit-callout error">{{localize "PF2E-CA.Overview.CalloutError"}}</div>
+    <div class="audit-callout error"><i class="fa-solid fa-circle-exclamation"></i><div>{{localize "PF2E-CA.Overview.CalloutError"}}</div></div>
   {{else if (or summary.completeness.warnings summary.prerequisites.unknown)}}
-    <div class="audit-callout warn">{{localize "PF2E-CA.Overview.CalloutWarn"}}</div>
+    <div class="audit-callout warn"><i class="fa-solid fa-triangle-exclamation"></i><div>{{localize "PF2E-CA.Overview.CalloutWarn"}}</div></div>
   {{else}}
-    <div class="audit-callout ok">{{localize "PF2E-CA.Overview.CalloutOk"}}</div>
+    <div class="audit-callout ok"><i class="fa-solid fa-circle-check"></i><div>{{localize "PF2E-CA.Overview.CalloutOk"}}</div></div>
   {{/if}}
 </div>

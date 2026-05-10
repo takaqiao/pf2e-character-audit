@@ -3,6 +3,18 @@
 User-facing release notes for PF2e Character Audit.
 For full engineering history see [CHANGELOG-detailed.zh.md](CHANGELOG-detailed.zh.md).
 
+## [0.1.8] - 2026-05-11
+
+### Changed
+- UI overhaul: switched to a paper-and-ink palette that fits alongside PF2e's own document chrome. Serif headings, sepia accents, hardcoded hex colours with explicit dark-mode tokens (no theme variable inheritance).
+- All emoji removed from UI text, settings labels, and exports — Font Awesome icons used instead for consistent typography.
+- Prereq issue titles are now clickable links that open the offending feat.
+- Tighter spacing throughout; cleaner tab strip; subtle accent ring on active party member.
+
+### Added
+- `HP_UNDER_EXPECTED` check: warns when an actor's max HP is below the baseline ancestry + (class + CON) × level — catches forgotten level-ups.
+- `LEVEL_UP_PENDING` check: info-level note when XP has reached the threshold but the level hasn't been bumped.
+
 ## [0.1.7] - 2026-05-11
 
 ### Added

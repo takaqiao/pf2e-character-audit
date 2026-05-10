@@ -44,7 +44,10 @@
       "PublicationDisabled": "出版物审计已关闭。",
       "CompletenessDisabled": "完整性审计已关闭。",
       "PrereqDisabled": "前置条件审计已关闭。",
-      "NoPartyMembers": "未找到激活的 Party 或队伍中没有玩家角色。"
+      "NoPartyMembers": "未找到激活的 Party 或队伍中没有玩家角色。",
+      "Errors": "错误",
+      "Warnings": "警告",
+      "Infos": "信息"
     },
     "Overview": {
       "SectionVariants": "变体规则",
@@ -54,15 +57,15 @@
       "Titles": "本",
       "Items": "条",
       "Unknown": "未知",
-      "CalloutOk": "✅ 该角色已通过所有审计。",
-      "CalloutWarn": "🟡 存在警告或未知前置，建议复核。",
-      "CalloutError": "🔴 发现错误，请按列表逐项修正。"
+      "CalloutOk": "该角色已通过所有审计。",
+      "CalloutWarn": "存在警告或未知前置，建议复核。",
+      "CalloutError": "发现错误，请按列表逐项修正。"
     },
     "Publication": {
       "Unknown": "(未知来源 / 自制)",
       "CustomLore": "(自定义 Lore)",
-      "SectionByTitle": "📚 按出版物分组",
-      "SectionByCategory": "🗂 按条目类别分组"
+      "SectionByTitle": "按出版物分组",
+      "SectionByCategory": "按条目类别分组"
     },
     "Notice": {
       "NotCharacter": "PF2e 车卡审计仅支持 character 类型 actor。"
@@ -172,6 +175,14 @@
         "DETECTOR_CRASHED": {
           "Title": "检测器崩溃：{detector}",
           "Hint": "{message}"
+        },
+        "HP_UNDER_EXPECTED": {
+          "Title": "最大生命值低于基准",
+          "Hint": "当前最大 HP {actual} 低于基准 (ancestry + (class + CON) × level) = {baseline}。可能漏了升级。"
+        },
+        "LEVEL_UP_PENDING": {
+          "Title": "可以升级了",
+          "Hint": "角色 XP {xp} 已达阈值 {threshold}，但仍是 {level} 级。"
         }
       }
     },
@@ -192,9 +203,9 @@
         "Name": "未知前置的严重度",
         "Hint": "前置条件无法解析（自然语言模糊或自制 feat）时的报告等级。",
         "Choice": {
-          "info": "ℹ️ 仅信息",
-          "warn": "🟡 警告",
-          "error": "🔴 错误"
+          "info": "仅信息",
+          "warn": "警告",
+          "error": "错误"
         }
       },
       "publicationWhitelist": {
@@ -214,9 +225,9 @@
         "Name": "Legacy source 字段处理",
         "Hint": "条目仅有 system.source.value 而无 publication.title 时的等级。",
         "Choice": {
-          "info": "ℹ️ 仅信息",
-          "warn": "🟡 警告",
-          "none": "🚫 不报告"
+          "info": "仅信息",
+          "warn": "警告",
+          "none": "不报告"
         }
       },
       "respectFreeArchetype": {

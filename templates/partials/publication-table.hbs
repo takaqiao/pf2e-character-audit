@@ -1,10 +1,10 @@
 <div class="audit-publication">
   {{#if publication}}
     <div class="audit-publication-summary">
-      <span>📚 {{publication.summary.distinctTitles}} {{localize "PF2E-CA.Overview.Titles"}}</span>
-      <span>📖 {{publication.summary.total}} {{localize "PF2E-CA.Overview.Items"}}</span>
-      <span>·R {{publication.summary.remasterCount}}</span>
-      <span>🆅 {{publication.summary.unknownCount}}</span>
+      <span><i class="fa-solid fa-book"></i>{{publication.summary.distinctTitles}} {{localize "PF2E-CA.Overview.Titles"}}</span>
+      <span><i class="fa-solid fa-list"></i>{{publication.summary.total}} {{localize "PF2E-CA.Overview.Items"}}</span>
+      <span><i class="fa-solid fa-star"></i>{{publication.summary.remasterCount}} R</span>
+      {{#if publication.summary.unknownCount}}<span><i class="fa-solid fa-circle-question"></i>{{publication.summary.unknownCount}} {{localize "PF2E-CA.Overview.Unknown"}}</span>{{/if}}
     </div>
 
     <h3>{{localize "PF2E-CA.Publication.SectionByTitle"}}</h3>
@@ -20,8 +20,8 @@
       {{#each publication.actorRollup}}
         <tr class="{{#if this.isUnknown}}unknown{{/if}} {{#if this.whitelisted}}whitelisted{{/if}}">
           <td>
-            {{#if this.isUnknown}}⚠️ {{/if}}
-            {{#if this.whitelisted}}✅ {{/if}}
+            {{#if this.isUnknown}}<i class="fa-solid fa-triangle-exclamation"></i> {{/if}}
+            {{#if this.whitelisted}}<i class="fa-solid fa-circle-check"></i> {{/if}}
             {{this.title}}
           </td>
           <td>{{this.licenseDisplay}}</td>
@@ -39,7 +39,7 @@
         {{#each entries}}
           <li>
             <button type="button" class="audit-link" data-action="openItem" data-uuid="{{this.itemUuid}}">{{this.itemName}}</button>
-            <span class="audit-meta">— {{this.title}} {{#if this.licenseDisplay}}({{this.licenseDisplay}}){{/if}}</span>
+            <span class="audit-meta">{{this.title}}{{#if this.licenseDisplay}} &middot; {{this.licenseDisplay}}{{/if}}</span>
           </li>
         {{/each}}
         </ul>

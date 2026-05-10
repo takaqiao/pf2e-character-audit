@@ -9,10 +9,10 @@
             <div class="member-row member-row-meta">
               <span class="member-level">Lv {{this.level}}</span>
               <span class="member-badges">
-                {{#if this.summary.completeness.errors}}<span class="audit-badge error">E {{this.summary.completeness.errors}}</span>{{/if}}
-                {{#if this.summary.prerequisites.fail}}<span class="audit-badge error">F {{this.summary.prerequisites.fail}}</span>{{/if}}
-                {{#if this.summary.completeness.warnings}}<span class="audit-badge warn">W {{this.summary.completeness.warnings}}</span>{{/if}}
-                {{#if this.summary.prerequisites.unknown}}<span class="audit-badge info">? {{this.summary.prerequisites.unknown}}</span>{{/if}}
+                {{#if this.summary.completeness.errors}}<span class="audit-badge error"><i class="fa-solid fa-circle-exclamation"></i>{{this.summary.completeness.errors}}</span>{{/if}}
+                {{#if this.summary.prerequisites.fail}}<span class="audit-badge error"><i class="fa-solid fa-circle-xmark"></i>{{this.summary.prerequisites.fail}}</span>{{/if}}
+                {{#if this.summary.completeness.warnings}}<span class="audit-badge warn"><i class="fa-solid fa-triangle-exclamation"></i>{{this.summary.completeness.warnings}}</span>{{/if}}
+                {{#if this.summary.prerequisites.unknown}}<span class="audit-badge info"><i class="fa-solid fa-circle-question"></i>{{this.summary.prerequisites.unknown}}</span>{{/if}}
               </span>
             </div>
           </div>
@@ -20,7 +20,7 @@
       {{/each}}
       <li>
         <div class="audit-member cross {{#if (eq selectedId "__cross__")}}active{{/if}}" role="button" tabindex="0" data-action="selectMember" data-actor-id="__cross__">
-          <div class="member-row member-row-name">📊 {{labels.crossLabel}}</div>
+          <div class="member-row member-row-name"><i class="fa-solid fa-chart-column"></i> {{labels.crossLabel}}</div>
         </div>
       </li>
     </ul>
@@ -41,12 +41,12 @@
         <tbody>
         {{#each crossPartyPublication.byTitle}}
           <tr class="{{#if this.isUnknown}}unknown{{/if}}">
-            <td>{{#if this.isUnknown}}⚠️ {{/if}}{{this.title}}</td>
+            <td>{{#if this.isUnknown}}<i class="fa-solid fa-triangle-exclamation"></i> {{/if}}{{this.title}}</td>
             <td>{{this.licenseDisplay}}</td>
             <td class="num">{{this.count}}</td>
             <td>
               {{#each this.actorBreakdown}}
-                <span class="actor-tag">{{this.actor}}: {{this.count}}</span>
+                <span class="actor-tag">{{this.actor}} &middot; {{this.count}}</span>
               {{/each}}
             </td>
           </tr>
@@ -75,7 +75,7 @@
           {{> "modules/pf2e-character-audit/templates/partials/completeness-list.hbs" completeness=selected.completeness labels=labels}}
         {{/if}}
         {{#if (eq activeTab "prereq")}}
-          {{> "modules/pf2e-character-audit/templates/partials/prereq-list.hbs" prerequisites=selected.prerequisites labels=labels}}
+          {{> "modules/pf2e-character-audit/templates/partials/prereq-list.hbs" prerequisites=selected.prerequisites labels=labels report=selected}}
         {{/if}}
       </section>
     {{else}}
@@ -84,9 +84,9 @@
   </main>
 
   <footer class="audit-footer">
-    <button type="button" data-action="rerun"><i class="fas fa-redo"></i> {{labels.rerun}}</button>
-    <button type="button" data-action="exportChat"><i class="fas fa-comment"></i> {{labels.chat}}</button>
-    <button type="button" data-action="exportJournal"><i class="fas fa-book"></i> {{labels.journal}}</button>
-    <button type="button" data-action="exportJson"><i class="fas fa-code"></i> {{labels.json}}</button>
+    <button type="button" data-action="rerun"><i class="fa-solid fa-rotate-right"></i>{{labels.rerun}}</button>
+    <button type="button" data-action="exportChat"><i class="fa-solid fa-comment"></i>{{labels.chat}}</button>
+    <button type="button" data-action="exportJournal"><i class="fa-solid fa-book"></i>{{labels.journal}}</button>
+    <button type="button" data-action="exportJson"><i class="fa-solid fa-code"></i>{{labels.json}}</button>
   </footer>
 </div>
