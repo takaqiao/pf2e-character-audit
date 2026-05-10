@@ -15,6 +15,15 @@
         <span class="delta-separator">·</span>
         <span class="delta-chip delta-flat">{{localize "PF2E-CA.Delta.NoChange"}}</span>
       {{/if}}
+      {{#if historyBars}}
+        <span class="delta-separator">·</span>
+        <span class="audit-history-label">{{labels.historyTitle}}:</span>
+        <span class="audit-history-bars" title="{{labels.historyTitle}}">
+          {{#each historyBars}}
+            <span class="history-bar {{#if this.isCurrent}}history-bar-current{{/if}}" style="height: {{this.heightPct}}%" data-tooltip="{{this.timestampLabel}}: {{this.total}}"></span>
+          {{/each}}
+        </span>
+      {{/if}}
     </div>
   {{/if}}
 

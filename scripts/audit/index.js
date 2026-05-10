@@ -45,38 +45,53 @@ function writeActorFlag(actor, key, value) {
   } catch {}
 }
 
+const HISTORY_LIMIT = 5;
+
 function snapshotFromReport(report) {
   const c = report.completeness?.summary ?? {};
   const p = report.prerequisites?.summary ?? {};
   const pub = report.publication?.summary ?? {};
+  const total = (c.errors ?? 0) + (c.warnings ?? 0) + (c.infos ?? 0)
+    + (p.fail ?? 0) + (p.unknown ?? 0);
   return {
     timestamp: Date.now(),
     moduleVersion: report.moduleVersion,
+    total,
     completeness: { errors: c.errors ?? 0, warnings: c.warnings ?? 0, infos: c.infos ?? 0 },
     prerequisites: { fail: p.fail ?? 0, unknown: p.unknown ?? 0, pass: p.pass ?? 0 },
     publication: { distinctTitles: pub.distinctTitles ?? 0, unknownCount: pub.unknownCount ?? 0 }
   };
 }
 
-function applySuppression(report, suppressed) {
-  if (!suppressed || suppressed.length === 0) return;
-  const set = new Set(suppressed);
-  if (Array.isArray(report.completeness?.issues)) {
+function applySuppression(report, suppressedCodes, suppressedFeats) {
+  const codeSet = new Set(suppressedCodes ?? []);
+  const featSet = new Set((suppressedFeats ?? []).map((s) => (typeof s === "string" ? s : s?.slug)).filter(Boolean));
+  let suppressed = 0;
+  if (codeSet.size > 0 && Array.isArray(report.completeness?.issues)) {
     const before = report.completeness.issues.length;
-    report.completeness.issues = report.completeness.issues.filter((i) => !set.has(i.code));
-    const removed = before - report.completeness.issues.length;
-    if (removed > 0) {
-      // Recompute summary
-      const issues = report.completeness.issues;
-      report.completeness.summary = {
-        errors: issues.filter((i) => i.severity === SEVERITY.ERROR).length,
-        warnings: issues.filter((i) => i.severity === SEVERITY.WARN).length,
-        infos: issues.filter((i) => i.severity === SEVERITY.INFO).length,
-        total: issues.length
-      };
-      report.completeness.suppressedCount = removed;
-    }
+    report.completeness.issues = report.completeness.issues.filter((i) => !codeSet.has(i.code));
+    suppressed += before - report.completeness.issues.length;
+    const issues = report.completeness.issues;
+    report.completeness.summary = {
+      errors: issues.filter((i) => i.severity === SEVERITY.ERROR).length,
+      warnings: issues.filter((i) => i.severity === SEVERITY.WARN).length,
+      infos: issues.filter((i) => i.severity === SEVERITY.INFO).length,
+      total: issues.length
+    };
   }
+  if (featSet.size > 0 && Array.isArray(report.prerequisites?.issues)) {
+    const before = report.prerequisites.issues.length;
+    report.prerequisites.issues = report.prerequisites.issues.filter((i) => !featSet.has(i.featSlug));
+    suppressed += before - report.prerequisites.issues.length;
+    const issues = report.prerequisites.issues;
+    report.prerequisites.summary = {
+      total: (report.prerequisites.summary?.total ?? 0),
+      pass: report.prerequisites.summary?.pass ?? 0,
+      fail: issues.filter((i) => i.evaluation === "fail").length,
+      unknown: issues.filter((i) => i.evaluation === "unknown").length
+    };
+  }
+  if (suppressed > 0) report.suppressedCount = suppressed;
 }
 
 export function auditActor(actor, opts = {}) {
@@ -93,11 +108,17 @@ export function auditActor(actor, opts = {}) {
   const variants = detectVariants();
   const report = emptyReport(actor, variants);
 
-  // Snapshot from the previous run, before we recompute.
-  report.previousSnapshot = readActorFlag(actor, "lastSnapshot");
-  // List of issue codes the GM has marked as suppressed for this actor.
-  const suppressed = readActorFlag(actor, "suppressedCodes") ?? [];
-  report.suppressedCodes = Array.isArray(suppressed) ? suppressed : [];
+  // Read prior history (up to HISTORY_LIMIT entries) and suppression lists.
+  const history = readActorFlag(actor, "history");
+  report.history = Array.isArray(history) ? history.slice(-HISTORY_LIMIT) : [];
+  report.previousSnapshot = report.history.length > 0
+    ? report.history[report.history.length - 1]
+    : readActorFlag(actor, "lastSnapshot"); // legacy single-snapshot flag
+
+  const suppressedCodes = readActorFlag(actor, "suppressedCodes") ?? [];
+  const suppressedFeats = readActorFlag(actor, "suppressedFeats") ?? [];
+  report.suppressedCodes = Array.isArray(suppressedCodes) ? suppressedCodes : [];
+  report.suppressedFeats = Array.isArray(suppressedFeats) ? suppressedFeats : [];
 
   if (shouldRun("enablePublicationAudit")) {
     report.publication = runDetector("publication", () => auditPublication(actor), report);
@@ -109,14 +130,17 @@ export function auditActor(actor, opts = {}) {
     report.prerequisites = runDetector("prerequisite", () => auditPrerequisites(actor), report);
   }
 
-  applySuppression(report, report.suppressedCodes);
+  applySuppression(report, report.suppressedCodes, report.suppressedFeats);
 
   report.summary = summarizeReport(report);
   report.badge = buildBadge(report);
 
-  // Save snapshot for next run (fire-and-forget; permission errors silently ignored).
+  // Append to rolling history (fire-and-forget; permission errors ignored).
   if (opts.saveSnapshot !== false) {
-    writeActorFlag(actor, "lastSnapshot", snapshotFromReport(report));
+    const snapshot = snapshotFromReport(report);
+    const newHistory = [...report.history, snapshot].slice(-HISTORY_LIMIT);
+    writeActorFlag(actor, "history", newHistory);
+    writeActorFlag(actor, "lastSnapshot", snapshot); // back-compat
   }
   return report;
 }
@@ -130,9 +154,19 @@ export async function suppressIssueCode(actor, code) {
   return true;
 }
 
+export async function suppressFeatPrereq(actor, featSlug, featName) {
+  if (!actor || !featSlug) return false;
+  const cur = (await actor.getFlag?.(MODULE_ID, "suppressedFeats")) ?? [];
+  const list = Array.isArray(cur) ? cur : [];
+  if (list.some((e) => (typeof e === "string" ? e : e?.slug) === featSlug)) return false;
+  await actor.setFlag(MODULE_ID, "suppressedFeats", [...list, { slug: featSlug, name: featName ?? featSlug }]);
+  return true;
+}
+
 export async function unsuppressAll(actor) {
   if (!actor) return false;
   await actor.setFlag(MODULE_ID, "suppressedCodes", []);
+  await actor.setFlag(MODULE_ID, "suppressedFeats", []);
   return true;
 }
 

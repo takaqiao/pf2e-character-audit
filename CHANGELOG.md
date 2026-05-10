@@ -3,6 +3,19 @@
 User-facing release notes for PF2e Character Audit.
 For full engineering history see [CHANGELOG-detailed.zh.md](CHANGELOG-detailed.zh.md).
 
+## [0.1.11] - 2026-05-11
+
+### Added
+- **Per-feat prereq suppress**: each prereq issue now has its own "Ignore" button. Stored in `flags.pf2e-character-audit.suppressedFeats` per actor; the rule code suppress (existing) is independent.
+- **History sparkline**: actor flag now keeps the last 5 audit snapshots. Overview's Δ strip renders a tiny inline bar chart so you can see whether issues are trending up or down.
+- **Quick-fix buttons** on common completeness issues:
+  - `MISSING_ANCESTRY/HERITAGE/BACKGROUND/CLASS` → opens the relevant compendium so you can drag from it.
+  - `CLASS_SUBCLASS_MISSING` → opens the classes compendium.
+  - `MISSING_KEY_ABILITY` → opens the class item sheet.
+  - `LANGUAGE_OVER/UNDER_LIMIT`, `BACKGROUND_SKILL_NOT_TRAINED`, `HP_UNDER_EXPECTED`, `STARTING_WEALTH_EXCEEDED`, `SPELL_LIST_INCOMPLETE`, `SPELL_PREPARATION_INCOMPLETE` → opens the actor sheet.
+  - `LEVEL_UP_PENDING` → if pf2e-leveler is installed, opens its level planner; otherwise bumps `system.details.level.value` by 1.
+  - `STARTING_EQUIPMENT_EMPTY`, `APEX_MISSING_AT_17` → opens the equipment compendium.
+
 ## [0.1.10] - 2026-05-11
 
 ### Fixed

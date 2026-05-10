@@ -1,7 +1,8 @@
 import { MODULE_ID, SEVERITY } from "../constants.js";
-import { auditActor, suppressIssueCode, unsuppressAll } from "../audit/index.js";
+import { auditActor, suppressIssueCode, suppressFeatPrereq, unsuppressAll } from "../audit/index.js";
 import { t, key } from "../i18n.js";
 import { toChat, toJournal, toJson } from "./exporters.js";
+import { hasQuickFix, runQuickFix } from "./quick-fix.js";
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
@@ -17,8 +18,24 @@ function localizeIssue(issue) {
     ...issue,
     icon: severityIcon(issue.severity),
     titleText: game.i18n.format(`${issue.i18nKey}.Title`, issue.params ?? {}),
-    hintText: game.i18n.format(`${issue.i18nKey}.Hint`, issue.params ?? {})
+    hintText: game.i18n.format(`${issue.i18nKey}.Hint`, issue.params ?? {}),
+    quickFix: hasQuickFix(issue.code)
   };
+}
+
+function buildHistoryBars(history) {
+  if (!Array.isArray(history) || history.length < 2) return null;
+  const max = Math.max(1, ...history.map((h) => h.total ?? 0));
+  return history.map((h, i) => {
+    const ratio = (h.total ?? 0) / max;
+    const heightPct = Math.max(8, Math.round(ratio * 100));
+    return {
+      heightPct,
+      total: h.total ?? 0,
+      isCurrent: i === history.length - 1,
+      timestampLabel: new Date(h.timestamp ?? 0).toLocaleString()
+    };
+  });
 }
 
 function applySeverityFilter(issues, filter) {
@@ -82,6 +99,8 @@ export class AuditReportApp extends HandlebarsApplicationMixin(ApplicationV2) {
       openItem: AuditReportApp.#onOpenItem,
       filterSev: AuditReportApp.#onFilterSev,
       suppressIssue: AuditReportApp.#onSuppress,
+      suppressFeat: AuditReportApp.#onSuppressFeat,
+      quickFix: AuditReportApp.#onQuickFix,
       unsuppressAll: AuditReportApp.#onUnsuppressAll
     }
   };
@@ -118,7 +137,8 @@ export class AuditReportApp extends HandlebarsApplicationMixin(ApplicationV2) {
       activeTab: this._activeTab,
       severityFilter: filter,
       delta: deltaFromSnapshot(r, r.previousSnapshot),
-      suppressedCount: (r.suppressedCodes ?? []).length,
+      historyBars: buildHistoryBars(r.history),
+      suppressedCount: (r.suppressedCodes ?? []).length + (r.suppressedFeats ?? []).length,
       tabs: [
         { id: "overview", label: t("Tab.Overview") },
         { id: "publication", label: t("Tab.Publication") },
@@ -151,8 +171,11 @@ export class AuditReportApp extends HandlebarsApplicationMixin(ApplicationV2) {
         filterInfo: t("Filter.Infos"),
         filterShow: t("Filter.Show"),
         suppressLabel: t("Action.Suppress"),
+        suppressFeatLabel: t("Action.SuppressFeat"),
         unsuppressLabel: t("Action.UnsuppressAll"),
-        suppressedNote: t("Label.SuppressedNote")
+        suppressedNote: t("Label.SuppressedNote"),
+        quickFixLabel: t("Action.QuickFix"),
+        historyTitle: t("Label.History")
       }
     };
   }
@@ -215,5 +238,27 @@ export class AuditReportApp extends HandlebarsApplicationMixin(ApplicationV2) {
     ui.notifications?.info(game.i18n.localize(key("Action.UnsuppressNotice")));
     this._report = null;
     this.render();
+  }
+
+  static async #onSuppressFeat(event, target) {
+    const slug = target?.dataset?.slug;
+    const name = target?.dataset?.name;
+    if (!slug || !this.actor) return;
+    const added = await suppressFeatPrereq(this.actor, slug, name);
+    if (added) {
+      ui.notifications?.info(game.i18n.format(key("Action.SuppressedFeatNotice"), { name: name || slug }));
+      this._report = null;
+      this.render();
+    }
+  }
+
+  static async #onQuickFix(event, target) {
+    const code = target?.dataset?.code;
+    if (!code) return;
+    const ok = await runQuickFix(code, this.actor);
+    if (ok) {
+      // Re-render after a short delay so the user sees post-action state.
+      setTimeout(() => { this._report = null; this.render(); }, 250);
+    }
   }
 }

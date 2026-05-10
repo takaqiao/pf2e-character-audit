@@ -28,6 +28,9 @@
             <div class="audit-issue-hint">{{this.hintText}}</div>
             <div class="audit-issue-footer">
               <code class="audit-issue-code">{{this.code}}</code>
+              {{#if this.quickFix}}
+                <button type="button" class="audit-issue-action" data-action="quickFix" data-code="{{this.code}}" title="{{../labels.quickFixLabel}}"><i class="fa-solid fa-wrench"></i> {{../labels.quickFixLabel}}</button>
+              {{/if}}
               <button type="button" class="audit-issue-suppress" data-action="suppressIssue" data-code="{{this.code}}" title="{{../labels.suppressLabel}}"><i class="fa-solid fa-eye-slash"></i></button>
             </div>
           </div>

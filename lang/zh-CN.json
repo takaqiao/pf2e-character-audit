@@ -30,7 +30,10 @@
       "Suppress": "忽略此规则",
       "UnsuppressAll": "取消所有忽略",
       "SuppressedNotice": "已忽略：{code}",
-      "UnsuppressNotice": "已清空忽略列表"
+      "UnsuppressNotice": "已清空忽略列表",
+      "SuppressFeat": "忽略此专长前置",
+      "SuppressedFeatNotice": "已忽略 {name} 的前置检查",
+      "QuickFix": "修复"
     },
     "Field": {
       "Title": "出版物",
@@ -52,7 +55,8 @@
       "Errors": "错误",
       "Warnings": "警告",
       "Infos": "信息",
-      "SuppressedNote": "已隐藏的规则"
+      "SuppressedNote": "已隐藏的规则",
+      "History": "趋势"
     },
     "Overview": {
       "SectionVariants": "变体规则",

@@ -38,6 +38,9 @@
                 {{/each}}
               </ul>
             {{/if}}
+            <div class="audit-issue-footer">
+              <button type="button" class="audit-issue-suppress" data-action="suppressFeat" data-slug="{{this.featSlug}}" data-name="{{this.featName}}" title="{{../labels.suppressFeatLabel}}"><i class="fa-solid fa-eye-slash"></i> {{../labels.suppressFeatLabel}}</button>
+            </div>
           </div>
         </li>
       {{/each}}

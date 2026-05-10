@@ -1,7 +1,8 @@
 import { MODULE_ID, SEVERITY } from "../constants.js";
-import { auditParty, suppressIssueCode, unsuppressAll } from "../audit/index.js";
+import { auditParty, suppressIssueCode, suppressFeatPrereq, unsuppressAll } from "../audit/index.js";
 import { t, key } from "../i18n.js";
 import { toChat, toJournal, toJson } from "./exporters.js";
+import { hasQuickFix, runQuickFix } from "./quick-fix.js";
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
@@ -17,13 +18,46 @@ function localizeIssue(issue) {
     ...issue,
     icon: severityIcon(issue.severity),
     titleText: game.i18n.format(`${issue.i18nKey}.Title`, issue.params ?? {}),
-    hintText: game.i18n.format(`${issue.i18nKey}.Hint`, issue.params ?? {})
+    hintText: game.i18n.format(`${issue.i18nKey}.Hint`, issue.params ?? {}),
+    quickFix: hasQuickFix(issue.code)
   };
 }
 
 function applySeverityFilter(issues, filter) {
   if (!filter || filter === "all" || !Array.isArray(issues)) return issues ?? [];
   return issues.filter((i) => i.severity === filter || i.evaluation === filter);
+}
+
+function buildHistoryBars(history) {
+  if (!Array.isArray(history) || history.length < 2) return null;
+  const max = Math.max(1, ...history.map((h) => h.total ?? 0));
+  return history.map((h, i) => ({
+    heightPct: Math.max(8, Math.round(((h.total ?? 0) / max) * 100)),
+    total: h.total ?? 0,
+    isCurrent: i === history.length - 1,
+    timestampLabel: new Date(h.timestamp ?? 0).toLocaleString()
+  }));
+}
+
+function deltaFromSnapshot(report, previous) {
+  if (!previous) return null;
+  const cur = report.summary ?? {};
+  const c = cur.completeness ?? {};
+  const p = cur.prerequisites ?? {};
+  const diff = Date.now() - (previous.timestamp ?? 0);
+  let rt = "";
+  if (diff < 60_000) rt = game.i18n.localize("PF2E-CA.Time.JustNow");
+  else if (diff < 3_600_000) rt = game.i18n.format("PF2E-CA.Time.MinutesAgo", { n: Math.floor(diff / 60_000) });
+  else if (diff < 86_400_000) rt = game.i18n.format("PF2E-CA.Time.HoursAgo", { n: Math.floor(diff / 3_600_000) });
+  else rt = game.i18n.format("PF2E-CA.Time.DaysAgo", { n: Math.floor(diff / 86_400_000) });
+  return {
+    relativeTime: rt,
+    errors: (c.errors ?? 0) - (previous.completeness?.errors ?? 0),
+    warnings: (c.warnings ?? 0) - (previous.completeness?.warnings ?? 0),
+    infos: (c.infos ?? 0) - (previous.completeness?.infos ?? 0),
+    fail: (p.fail ?? 0) - (previous.prerequisites?.fail ?? 0),
+    unknown: (p.unknown ?? 0) - (previous.prerequisites?.unknown ?? 0)
+  };
 }
 
 function localizeReport(report, filter) {
@@ -75,6 +109,8 @@ export class PartyAuditApp extends HandlebarsApplicationMixin(ApplicationV2) {
       filterSev: PartyAuditApp.#onFilterSev,
       openItem: PartyAuditApp.#onOpenItem,
       suppressIssue: PartyAuditApp.#onSuppress,
+      suppressFeat: PartyAuditApp.#onSuppressFeat,
+      quickFix: PartyAuditApp.#onQuickFix,
       unsuppressAll: PartyAuditApp.#onUnsuppressAll
     }
   };
@@ -93,8 +129,16 @@ export class PartyAuditApp extends HandlebarsApplicationMixin(ApplicationV2) {
     const filter = this._severityFilter ?? "all";
     const rawSelected = pr.party.find((r) => r.actorId === this._selectedActorId);
     const selected = localizeReport(rawSelected, filter);
+    const delta = rawSelected ? deltaFromSnapshot(rawSelected, rawSelected.previousSnapshot) : null;
+    const historyBars = rawSelected ? buildHistoryBars(rawSelected.history) : null;
+    const suppressedCount = rawSelected
+      ? (rawSelected.suppressedCodes?.length ?? 0) + (rawSelected.suppressedFeats?.length ?? 0)
+      : 0;
     return {
       partyReport: pr,
+      delta,
+      historyBars,
+      suppressedCount,
       members: pr.party.map((r) => ({
         id: r.actorId,
         name: r.actorName,
@@ -130,7 +174,11 @@ export class PartyAuditApp extends HandlebarsApplicationMixin(ApplicationV2) {
         filterInfo: t("Filter.Infos"),
         filterShow: t("Filter.Show"),
         suppressLabel: t("Action.Suppress"),
-        unsuppressLabel: t("Action.UnsuppressAll")
+        suppressFeatLabel: t("Action.SuppressFeat"),
+        unsuppressLabel: t("Action.UnsuppressAll"),
+        suppressedNote: t("Label.SuppressedNote"),
+        quickFixLabel: t("Action.QuickFix"),
+        historyTitle: t("Label.History")
       }
     };
   }
@@ -208,5 +256,32 @@ export class PartyAuditApp extends HandlebarsApplicationMixin(ApplicationV2) {
     ui.notifications?.info(game.i18n.localize(key("Action.UnsuppressNotice")));
     this._partyReport = null;
     this.render();
+  }
+
+  static async #onSuppressFeat(event, target) {
+    const slug = target?.dataset?.slug;
+    const name = target?.dataset?.name;
+    const actorId = this._selectedActorId;
+    if (!slug || !actorId) return;
+    const actor = game.actors.get(actorId);
+    if (!actor) return;
+    const added = await suppressFeatPrereq(actor, slug, name);
+    if (added) {
+      ui.notifications?.info(game.i18n.format(key("Action.SuppressedFeatNotice"), { name: name || slug }));
+      this._partyReport = null;
+      this.render();
+    }
+  }
+
+  static async #onQuickFix(event, target) {
+    const code = target?.dataset?.code;
+    const actorId = this._selectedActorId;
+    if (!code || !actorId) return;
+    const actor = game.actors.get(actorId);
+    if (!actor) return;
+    const ok = await runQuickFix(code, actor);
+    if (ok) {
+      setTimeout(() => { this._partyReport = null; this.render(); }, 250);
+    }
   }
 }

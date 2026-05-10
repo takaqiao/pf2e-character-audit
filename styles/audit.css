@@ -639,18 +639,56 @@ body.dark-theme .pf2e-character-audit.party-audit {
   opacity: 0.85;
   letter-spacing: 0.02em;
 }
-.pf2e-character-audit .audit-issue-suppress {
+.pf2e-character-audit .audit-issue-suppress,
+.pf2e-character-audit .audit-issue-action {
   background: transparent;
   border: 1px solid currentColor;
   color: inherit;
-  opacity: 0.7;
+  opacity: 0.75;
   border-radius: 2px;
-  padding: 0.05rem 0.4rem;
+  padding: 0.1rem 0.5rem;
   font-size: 0.72rem;
   cursor: pointer;
   font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-weight: 600;
 }
-.pf2e-character-audit .audit-issue-suppress:hover { opacity: 1; }
+.pf2e-character-audit .audit-issue-suppress:hover,
+.pf2e-character-audit .audit-issue-action:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.25);
+}
+@media (prefers-color-scheme: dark) {
+  .pf2e-character-audit .audit-issue-suppress:hover,
+  .pf2e-character-audit .audit-issue-action:hover { background: rgba(0, 0, 0, 0.25); }
+}
+
+/* History bars (sparkline) */
+.pf2e-character-audit .audit-history-label {
+  font-weight: 600;
+  color: var(--ca-text);
+  margin-right: 0.2rem;
+}
+.pf2e-character-audit .audit-history-bars {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 18px;
+  padding: 0 2px;
+  background: var(--ca-card);
+  border: 1px solid var(--ca-border);
+  border-radius: 3px;
+}
+.pf2e-character-audit .history-bar {
+  display: inline-block;
+  width: 4px;
+  background: var(--ca-text-muted);
+  border-radius: 1px;
+  align-self: flex-end;
+}
+.pf2e-character-audit .history-bar.history-bar-current { background: var(--ca-accent); }
 @media (prefers-color-scheme: dark) {
   .pf2e-character-audit .audit-issue-code { background: rgba(0, 0, 0, 0.35); }
 }

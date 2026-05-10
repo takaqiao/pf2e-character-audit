@@ -30,7 +30,10 @@
       "Suppress": "Ignore this rule",
       "UnsuppressAll": "Clear ignore list",
       "SuppressedNotice": "Ignored: {code}",
-      "UnsuppressNotice": "Cleared ignore list."
+      "UnsuppressNotice": "Cleared ignore list.",
+      "SuppressFeat": "Ignore this feat",
+      "SuppressedFeatNotice": "Ignoring {name}'s prereq",
+      "QuickFix": "Fix"
     },
     "Field": {
       "Title": "Title",
@@ -52,7 +55,8 @@
       "Errors": "errors",
       "Warnings": "warnings",
       "Infos": "infos",
-      "SuppressedNote": "Suppressed rules"
+      "SuppressedNote": "Suppressed rules",
+      "History": "Trend"
     },
     "Overview": {
       "SectionVariants": "Variant Rules",
