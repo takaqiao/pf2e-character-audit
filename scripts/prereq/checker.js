@@ -42,7 +42,7 @@ export function checkPrerequisites(feat, buildState) {
   return { met, results: evaluation.results, tree: evaluation.tree };
 }
 
-function evaluateRequirementNode(node, buildState) {
+export function evaluateRequirementNode(node, buildState) {
   if (!node || typeof node !== 'object') {
     const result = matchUnknown({ type: 'unknown', text: '' });
     return {

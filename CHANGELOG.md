@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.1] - 2026-05-10
+
+### Fixed
+- `checker.js` did not export `evaluateRequirementNode`, causing the module to fail to load with `SyntaxError: The requested module '../prereq/checker.js' does not provide an export named 'evaluateRequirementNode'`.
+
+[0.1.1]: https://github.com/takaqiao/pf2e-character-audit/releases/tag/0.1.1
+
 ## [0.1.0] - 2026-05-10
 
 ### Added
