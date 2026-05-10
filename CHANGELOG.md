@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.5] - 2026-05-11
+
+### Fixed
+- **Auto-granted feats误报为不达成 prereq**: 由 class feature 自动授予的 feat（如 Warpriest 信条自动给的"简单致命 Deadly Simplicity"和"盾牌格挡 Shield Block"）现在跳过 prereq 校验。这些 feat 的存在本身就是系统的保证，重新校验只会得到假阳性（例如 Acavna 的偏好武器是简易武器但我的 matcher 不会解析）。检测方式：`feat.flags.pf2e.grantedBy` 存在即跳过。
+- **Remaster 祖先误报 ANCESTRY_FLAW_MISMATCH**: 重铸后兽人/半兽人/半精灵等不再有强制属性贬值，但旧的检查逻辑仍按 legacy 规则要求 flaw。现在通过 `actor.ancestry.system.publication.remaster === true` 检测 Remaster 祖先并跳过 flaw 检查，避免对 Player Core 时代的用户产生噪音。
+
+[0.1.5]: https://github.com/takaqiao/pf2e-character-audit/releases/tag/0.1.5
+
 ## [0.1.4] - 2026-05-11
 
 ### Fixed

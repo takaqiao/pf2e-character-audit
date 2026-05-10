@@ -53,6 +53,15 @@ export function auditPrerequisites(actor) {
   let unknown = 0;
 
   for (const feat of actor.itemTypes.feat) {
+    // Feats auto-granted by a class feature (e.g. Warpriest doctrine grants
+    // Deadly Simplicity + Shield Block) carry `flags.pf2e.grantedBy`. The
+    // system already vetted them — re-checking prereqs against the actor
+    // produces false-positive errors. Trust the grant.
+    if (feat.flags?.pf2e?.grantedBy) {
+      pass++;
+      continue;
+    }
+
     const prereqEntries = feat.system?.prerequisites?.value ?? [];
     const requirementText = prereqEntries.map((p) => p?.value ?? "").filter(Boolean).join("; ");
     if (!requirementText) {
