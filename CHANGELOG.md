@@ -3,6 +3,20 @@
 User-facing release notes for PF2e Character Audit.
 For full engineering history see [CHANGELOG-detailed.zh.md](CHANGELOG-detailed.zh.md).
 
+## [0.1.16] - 2026-05-12
+
+### Fixed
+- **`DEDICATION_2_FEAT_RULE` still firing 0/2 on community-content archetypes** (e.g. Ulfen Guard from *Lost Omens: Shining Kingdoms*). Follow-up detection now uses four parallel methods:
+  1. Trait equals the archetype slug.
+  2. Feat slug starts with the archetype name.
+  3. Shares any distinctive (non-generic) trait with the dedication.
+  4. Same compendium pack as the dedication. Catches modules that don't tag follow-ups with the archetype slug as a trait.
+- **Babele reverse-lookup empty / Chinese references not resolving** (`乌尔芬卫士入门` → "乌尔芬卫士 Dedication" instead of "Ulfen Guard Dedication"). Probe list expanded to 9 API paths covering newer Babele layouts. If the map ends up empty the module now logs a warning to the console pointing to a diagnostic helper.
+- **Healing Font / 治疗源泉 prereq stuck on "unknown"**: `deriveDivineFont` now checks the Divine Font feat's `flags.pf2e.rulesSelections.font`, falls back to a name-based heuristic (`heal|治疗` / `harm|伤害` in the feat name), and finally the deity's declared font(s).
+
+### Added
+- `game.modules.get("pf2e-character-audit").api.debugBabele()` — prints Babele's exposed objects and the size of the reverse-lookup map. Run it from the console if Chinese feat names aren't resolving.
+
 ## [0.1.15] - 2026-05-12
 
 ### Changed

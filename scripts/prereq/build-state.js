@@ -170,10 +170,38 @@ function deriveDeityState(actor) {
 }
 
 function deriveDivineFont(actor) {
-  const flag = actor.class?.flags?.pf2e?.divineFont ?? actor.flags?.pf2e?.divineFont ?? null;
+  // Try several known storage paths for the divine font choice.
+  const flag = actor.class?.flags?.pf2e?.divineFont
+    ?? actor.flags?.pf2e?.divineFont
+    ?? actor.flags?.pf2e?.clericFont
+    ?? actor.class?.system?.font?.value
+    ?? null;
   if (flag) return flag;
+
+  // Inspect the Divine Font feat itself: PF2e stores the player's choice on
+  // the feat's rulesSelections, or it's encoded into the feat's name (e.g.
+  // "Divine Font (Healing Font)" / "神力源泉 (治疗源泉)").
+  const fontFeat = (actor.itemTypes.feat ?? []).find((f) => {
+    const s = f.slug ?? f.system?.slug ?? "";
+    return s === "divine-font"
+      || s === "healing-font" || s === "harmful-font"
+      || /divine[- ]?font|神力源泉/i.test(f.name ?? "");
+  });
+  if (fontFeat) {
+    const choice = fontFeat.flags?.pf2e?.rulesSelections?.font
+      ?? fontFeat.flags?.pf2e?.rulesSelections?.choice
+      ?? fontFeat.system?.font
+      ?? null;
+    if (choice) return choice;
+    const name = fontFeat.name ?? "";
+    if (/heal|治疗/i.test(name)) return "healing";
+    if (/harm|伤害/i.test(name)) return "harmful";
+  }
+
+  // Deity declares a single font (no choice) — use that.
   const fonts = actor.deity?.system?.font ?? [];
   if (Array.isArray(fonts) && fonts.length === 1) return fonts[0];
+
   return null;
 }
 

@@ -7,6 +7,7 @@ import { buildBuildStateFromActor } from "./prereq/build-state.js";
 import { parseAllPrerequisiteNodes } from "./prereq/parsers.js";
 import { evaluateRequirementNode } from "./prereq/checker.js";
 import { detectVariants } from "./utils/pf2e-api.js";
+import { debugBabele } from "./utils/babele-bridge.js";
 import { openAuditApp, openPartyApp } from "./ui/injectors.js";
 import { toChat, toJournal, toJson, toJsonVerbose } from "./ui/exporters.js";
 
@@ -27,6 +28,7 @@ export function createApi() {
     parsePrerequisites: (feat) => parseAllPrerequisiteNodes(feat),
     evaluatePrerequisite: evaluateRequirementNode,
     detectVariants,
+    debugBabele,
     exporters: { toChat, toJournal, toJson, toJsonVerbose }
   };
 }

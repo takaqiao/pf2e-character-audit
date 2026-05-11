@@ -298,6 +298,42 @@ function checkSkillIncreases(actor, expected, issues) {
   }
 }
 
+const GENERIC_TRAITS = new Set(["archetype", "dedication", "uncommon", "rare", "unique", "common", "multiclass"]);
+
+function findArchetypeFollowups(actor, ded) {
+  const slug = ded.slug ?? ded.system?.slug ?? "";
+  const archName = slug.replace(/-dedication$/, "");
+  const dedTraits = ded.system?.traits?.value ?? [];
+  const dedDistinctive = dedTraits.filter((t) => !GENERIC_TRAITS.has(t));
+  const dedSource = ded.flags?.core?.sourceId ?? "";
+  const dedPackKey = dedSource ? dedSource.split(".").slice(0, 3).join(".") : "";
+
+  return (actor.itemTypes.feat ?? []).filter((f) => {
+    if (f.id === ded.id) return false;
+    const traits = f.system?.traits?.value ?? [];
+    if (traits.includes("dedication")) return false;
+    if (!traits.includes("archetype")) return false;
+
+    // M1 — trait equals the archetype slug ("ulfen-guard")
+    if (archName && traits.includes(archName)) return true;
+
+    // M2 — feat slug starts with the archetype name
+    const fSlug = f.slug ?? f.system?.slug ?? "";
+    if (archName && fSlug.startsWith(archName + "-")) return true;
+
+    // M3 — feat shares a distinctive (non-generic) trait with the dedication.
+    // Catches archetypes whose follow-ups don't use the slug-style trait.
+    if (dedDistinctive.some((t) => traits.includes(t))) return true;
+
+    // M4 — same compendium pack as the dedication. Community-content
+    // archetypes usually keep their dedication and follow-ups in one pack.
+    const fSource = f.flags?.core?.sourceId ?? "";
+    if (dedPackKey && fSource.startsWith(dedPackKey + ".")) return true;
+
+    return false;
+  });
+}
+
 function checkDedications(actor, issues) {
   const dedications = actor.itemTypes.feat.filter((f) => {
     const traits = f.system?.traits?.value ?? [];
@@ -308,16 +344,7 @@ function checkDedications(actor, issues) {
   for (const ded of dedications) {
     const slug = ded.slug ?? ded.system?.slug;
     if (!slug) continue;
-    const archName = slug.replace(/-dedication$/, "");
-    // PF2e tags archetype follow-up feats with the archetype-name trait, not
-    // by slug prefix (e.g. "Guarded Mind" has trait "ulfen-guard" but slug
-    // doesn't start with "ulfen-guard"). Match by trait.
-    const followups = actor.itemTypes.feat.filter((f) => {
-      if (f.id === ded.id) return false;
-      const traits = f.system?.traits?.value ?? [];
-      if (traits.includes("dedication")) return false; // exclude other dedications
-      return traits.includes(archName);
-    });
+    const followups = findArchetypeFollowups(actor, ded);
     if (followups.length < 2) {
       issues.push(makeIssue("DEDICATION_2_FEAT_RULE", SEVERITY.WARN, {
         dedication: ded.name ?? slug,
