@@ -54,8 +54,18 @@ function splitBilingual(rawName) {
   return { cn: null, en: name };
 }
 
+// Strip suffixes like "(Archetype)", "（变体）", " - Archetype" from journal
+// page names before bilingual splitting.
+function stripPageSuffix(rawName) {
+  let n = String(rawName ?? "").trim();
+  n = n.replace(/\s*[\(（][^\)）]*[\)）]\s*$/g, "").trim();
+  n = n.replace(/\s*[-—–]\s*Archetype\s*$/i, "").trim();
+  return n;
+}
+
 function registerArchetype(map, pageName, data) {
-  const parts = splitBilingual(pageName);
+  const cleaned = stripPageSuffix(pageName);
+  const parts = splitBilingual(cleaned);
   const keys = [];
   if (parts.en) keys.push(parts.en.toLowerCase());
   if (parts.cn) keys.push(parts.cn.toLowerCase());
@@ -93,7 +103,10 @@ async function buildAFMap() {
 
 export function ensureAFMap() {
   if (cachedMap !== null) return Promise.resolve(cachedMap);
-  if (buildPromise !== null) return buildPromise;
+  if (buildPromise !== null) {
+    console.warn("[pf2e-character-audit] Additional Feats map still building — audit will await it.");
+    return buildPromise;
+  }
   buildPromise = buildAFMap()
     .then((m) => {
       cachedMap = m;
@@ -132,6 +145,24 @@ function archetypeBaseName(dedicationItem) {
   };
 }
 
+// Accept an item as a dedication when ANY of the following indicators is
+// present. Community-content / translation-pack items sometimes drop the
+// literal "dedication" trait, so we look at slug, name suffix, and category.
+function isDedicationLike(item) {
+  const traits = item?.system?.traits?.value ?? [];
+  if (Array.isArray(traits) && traits.includes("dedication")) return true;
+  const slug = String(item?.system?.slug ?? item?.slug ?? "").toLowerCase();
+  if (/-dedication$/.test(slug)) return true;
+  const name = String(item?.name ?? "");
+  const parts = splitBilingual(name);
+  if (parts.en && /\bdedication$/i.test(parts.en)) return true;
+  if (parts.cn && /入门$/.test(parts.cn)) return true;
+  if (/\bdedication$/i.test(name) || /入门$/.test(name)) return true;
+  const category = String(item?.system?.category ?? "").toLowerCase();
+  if (category === "class" && (/dedication/i.test(name) || /入门/.test(name))) return true;
+  return false;
+}
+
 export function isFeatInArchetypeAFList(actor, currentFeat) {
   if (!cachedMap || cachedMap.size === 0) return null;
   const featUuid = getFeatSourceUuid(currentFeat);
@@ -140,8 +171,7 @@ export function isFeatInArchetypeAFList(actor, currentFeat) {
 
   for (const item of actor.items ?? []) {
     if (item === currentFeat || item.id === currentFeat.id) continue;
-    const traits = item.system?.traits?.value ?? [];
-    if (!traits.includes("dedication")) continue;
+    if (!isDedicationLike(item)) continue;
 
     const arch = archetypeBaseName(item);
     let afSet = null;
@@ -153,4 +183,44 @@ export function isFeatInArchetypeAFList(actor, currentFeat) {
     if (featEn && afSet.names.has(featEn)) return item.name;
   }
   return null;
+}
+
+// Console diagnostic. Usage: game.modules.get("pf2e-character-audit").api.debugAF(actor)
+export function debugAFMap(actor) {
+  const tag = "[pf2e-character-audit][debugAF]";
+  if (!cachedMap) {
+    console.warn(`${tag} map not yet built (cachedMap=null). buildPromise=${buildPromise ? "pending" : "null"}`);
+    return { built: false };
+  }
+  console.info(`${tag} map size: ${cachedMap.size}`);
+  const keys = [...cachedMap.keys()];
+  console.info(`${tag} first 10 keys:`, keys.slice(0, 10));
+
+  if (!actor) return { built: true, size: cachedMap.size, keys: keys.slice(0, 10) };
+
+  console.info(`${tag} === actor: ${actor.name} ===`);
+  for (const item of actor.items ?? []) {
+    if (!isDedicationLike(item)) continue;
+    const arch = archetypeBaseName(item);
+    const enHit = arch.en ? cachedMap.has(arch.en) : false;
+    const cnHit = arch.cn ? cachedMap.has(arch.cn) : false;
+    const bucket = (arch.en && cachedMap.get(arch.en)) || (arch.cn && cachedMap.get(arch.cn)) || null;
+    console.info(`${tag} dedication "${item.name}": archetypeBaseName en="${arch.en}" cn="${arch.cn}" enHit=${enHit} cnHit=${cnHit}`);
+    if (bucket) {
+      console.info(`${tag}   uuids:`, [...bucket.uuids]);
+      console.info(`${tag}   names:`, [...bucket.names]);
+    }
+  }
+
+  const dedicationRe = /^(.+?)\s+Dedication$|^(.+?)入门$/i;
+  for (const feat of actor.itemTypes?.feat ?? []) {
+    const prereqEntries = feat.system?.prerequisites?.value ?? [];
+    const txt = prereqEntries.map((p) => p?.value ?? "").filter(Boolean).join("; ");
+    if (!txt) continue;
+    if (!dedicationRe.test(txt.trim())) continue;
+    const lookup = isFeatInArchetypeAFList(actor, feat);
+    const uuid = getFeatSourceUuid(feat);
+    console.info(`${tag} feat "${feat.name}" prereq="${txt}" sourceUuid=${uuid} → AFList match: ${lookup ?? "none"}`);
+  }
+  return { built: true, size: cachedMap.size };
 }

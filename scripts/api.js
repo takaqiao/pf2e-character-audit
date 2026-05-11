@@ -1,6 +1,7 @@
 import { MODULE_ID, MODULE_VERSION } from "./constants.js";
 import { auditActor, auditParty } from "./audit/index.js";
 import { auditNpcOrCompanion } from "./audit/npc-companion.js";
+import { debugAFMap } from "./audit/additional-feats.js";
 import { auditEquipmentProficiency } from "./audit/equipment-proficiency.js";
 import { auditSpellDetail } from "./audit/spell-detail.js";
 import { auditVoluntaryFlaws } from "./audit/voluntary-flaws.js";
@@ -62,6 +63,7 @@ export function createApi() {
       customRules: auditCustomRules
     },
     aon: { getUrl: getAonUrl, getLinkHtml: getAonLinkHtml },
+    debugAF: debugAFMap,
     diff: { computeSnapshotDiff, formatChatSummary },
     buildBuildStateFromActor,
     parsePrerequisites: (feat) => parseAllPrerequisiteNodes(feat),

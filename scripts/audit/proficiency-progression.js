@@ -245,6 +245,21 @@ function compareRank(stat, actualRank, expectedRank, level, issues) {
   }
 }
 
+function getEntryEffectiveRank(entry) {
+  // Preferred: PF2e v8 statistic — rule-element-aware (Expert Spellcaster etc.)
+  if (typeof entry?.statistic?.rank === "number") return entry.statistic.rank;
+  // Fallback: the raw proficiency value
+  if (typeof entry?.system?.proficiency?.value === "number") return entry.system.proficiency.value;
+  return null;
+}
+
+function isRitualEntry(entry) {
+  return entry?.system?.prepared?.value === "ritual"
+    || entry?.system?.category === "ritual"
+    || entry?.system?.category?.value === "ritual"
+    || entry?.isRitual === true;
+}
+
 function getClassSlug(actor) {
   const slug = actor.class?.slug ?? actor.class?.system?.slug ?? null;
   if (!slug) return null;
@@ -290,11 +305,12 @@ function checkClassProgression(actor, issues) {
     const expectedSpell = expectedRankAtLevel(table.spellDC, level);
     const entries = actor.spellcasting?.contents ?? [];
     for (const entry of entries) {
-      if (entry?.system?.prepared?.value === "items" || entry?.isRitual) continue;
-      const profValue = entry?.system?.proficiency?.value;
-      if (typeof profValue !== "number") continue;
+      if (entry?.system?.prepared?.value === "items") continue;
+      if (isRitualEntry(entry)) continue;
+      const effectiveRank = getEntryEffectiveRank(entry);
+      if (typeof effectiveRank !== "number") continue;
       const entryName = entry.name ?? entry.tradition ?? "Spellcasting";
-      compareRank(`Spell DC (${entryName})`, profValue, expectedSpell, level, issues);
+      compareRank(`Spell DC (${entryName})`, effectiveRank, expectedSpell, level, issues);
     }
   }
 }

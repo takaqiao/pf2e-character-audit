@@ -1,21 +1,18 @@
 // Per-class per-level required class-feature presence checks.
 //
-// PF2e characters auto-receive specific class features at specific levels (e.g.
-// Fighter L1: Reactive Strike, Shield Block). The bulk-presence detector in
-// completeness.js (CLASS_FEATURES_MISSING / CLASS_FEATURES_MISSING_SPECIFIC)
-// works off `class.system.items`, but that depends on the class compendium
-// entry being up to date. This module hardcodes the canonical set of core /
-// distinctive features per class as a fallback safety net.
+// Primary strategy: derive expected features from the actor's class item
+// itself (`actor.class.system.items`). This is what the PF2e system uses to
+// auto-grant features at each level, so it is authoritative for the active
+// world (correct slugs, correct names, localized properly).
 //
-// Returns the standard `{ issues, summary }` shape. Issues:
+// Fallback strategy: if `class.system.items` is empty / missing (homebrew or
+// unmigrated data), fall back to a slim hardcoded `REQUIRED_FEATURES` table
+// that explicitly OMITS profile-level concepts (Anathema, Deity, Edicts) and
+// uses bilingual EN/CN substring matching against owned item names.
+//
+// Returns `{ issues, summary }`. Issues:
 //   CLASS_FEATURE_NOT_PRESENT  warn   { feature, level, classSlug }
-//   KEY_ABILITY_NOT_SET        error  { classSlug }                  (alias of MISSING_KEY_ABILITY)
-//
-// Tolerant of homebrew: if `actor.class.slug` isn't in the table we emit
-// nothing (other than the key-ability check, which still runs).
-//
-// Slugs follow PF2e core compendium IDs (lower-kebab). Class Feat slots are
-// skipped here — they are slot-based and audited elsewhere.
+//   KEY_ABILITY_NOT_SET        error  { classSlug }
 
 import { SEVERITY } from "../constants.js";
 
@@ -34,8 +31,6 @@ const REQUIRED_FEATURES = {
     { level: 19, slug: "versatile-legend", name: "Versatile Legend" }
   ],
   cleric: [
-    { level: 1, slug: "anathema", name: "Anathema" },
-    { level: 1, slug: "deity", name: "Deity" },
     { level: 1, slug: "divine-font", name: "Divine Font" },
     { level: 1, slug: "doctrine", name: "Doctrine" },
     { level: 3, slug: "second-doctrine", name: "Second Doctrine" },
@@ -84,7 +79,6 @@ const REQUIRED_FEATURES = {
     { level: 19, slug: "master-strike", name: "Master Strike" }
   ],
   barbarian: [
-    { level: 1, slug: "anathema", name: "Anathema" },
     { level: 1, slug: "instinct", name: "Instinct" },
     { level: 1, slug: "rage", name: "Rage" },
     { level: 3, slug: "deny-advantage", name: "Deny Advantage" },
@@ -122,12 +116,10 @@ const REQUIRED_FEATURES = {
     { level: 19, slug: "magnum-opus", name: "Magnum Opus" }
   ],
   champion: [
-    { level: 1, slug: "anathema", name: "Anathema" },
     { level: 1, slug: "cause", name: "Cause" },
     { level: 1, slug: "champions-code", name: "Champion's Code" },
     { level: 1, slug: "champions-reaction", name: "Champion's Reaction" },
     { level: 1, slug: "deific-weapon", name: "Deific Weapon" },
-    { level: 1, slug: "deity", name: "Deity" },
     { level: 1, slug: "devotion-spells", name: "Devotion Spells" },
     { level: 3, slug: "divine-ally", name: "Divine Ally" },
     { level: 5, slug: "weapon-expertise", name: "Weapon Expertise" },
@@ -148,7 +140,6 @@ const REQUIRED_FEATURES = {
     { level: 19, slug: "hero-of-the-faith", name: "Hero of the Faith" }
   ],
   druid: [
-    { level: 1, slug: "anathema", name: "Anathema" },
     { level: 1, slug: "druidic-language", name: "Druidic Language" },
     { level: 1, slug: "druidic-order", name: "Druidic Order" },
     { level: 1, slug: "primal-spellcasting", name: "Primal Spellcasting" },
@@ -447,6 +438,79 @@ const REQUIRED_FEATURES = {
   ]
 };
 
+// Profile-level / non-item concepts that must never trigger a missing-feature
+// warning. These are stored on the actor as profile fields (actor.deity,
+// actor.system.details.deity, edicts/anathema text), not as feat items.
+const PROFILE_LEVEL_SLUGS = new Set([
+  "anathema", "deity", "edicts", "edicts-and-anathema",
+  "edicts-anathema", "tenets", "code", "champions-code"
+]);
+
+// Bilingual aliases for fallback name-substring matching. Keyed by canonical
+// slug; value is an array of acceptable substrings (case-insensitive). The
+// English feature name is implicitly included by the matcher.
+const CN_FEATURE_ALIAS = {
+  "anathema": ["禁忌"],
+  "deity": ["神祇", "神祗", "神明"],
+  "resolve": ["聚能", "铁心", "决心"],
+  "alertness": ["警觉", "警戒"],
+  "bravery": ["英勇", "勇气"],
+  "evasion": ["闪避"],
+  "improved-evasion": ["精进闪避", "高级闪避"],
+  "great-fortitude": ["顽强", "强健"],
+  "lightning-reflexes": ["闪电反射", "迅捷反射"],
+  "iron-will": ["钢铁意志", "坚毅意志"],
+  "juggernaut": ["神勇", "金刚不坏"],
+  "greater-juggernaut": ["高等神勇"],
+  "magical-fortitude": ["魔法强韧"],
+  "vigilant-senses": ["警觉感官", "敏锐感官"],
+  "incredible-senses": ["敏锐感知", "卓越感官"],
+  "heightened-senses": ["敏锐感官"],
+  "weapon-specialization": ["武器专攻"],
+  "greater-weapon-specialization": ["高等武器专攻", "进阶武器专攻"],
+  "weapon-expertise": ["武器娴熟"],
+  "weapon-mastery": ["武器精通"],
+  "weapon-legend": ["武器传奇"],
+  "armor-expertise": ["护甲娴熟"],
+  "armor-mastery": ["护甲精通"],
+  "medium-armor-expertise": ["中甲娴熟"],
+  "medium-armor-mastery": ["中甲精通"],
+  "light-armor-expertise": ["轻甲娴熟"],
+  "light-armor-mastery": ["轻甲精通"],
+  "legendary-armor": ["传奇护甲"],
+  "shield-block": ["盾牌格挡", "格挡"],
+  "rage": ["狂怒", "暴怒"],
+  "mighty-rage": ["强力狂怒"],
+  "quick-rage": ["迅捷狂怒"],
+  "instinct": ["本能"],
+  "deny-advantage": ["拒绝优势"],
+  "expert-spellcaster": ["专家施法者", "娴熟施法者"],
+  "master-spellcaster": ["大师施法者"],
+  "legendary-spellcaster": ["传奇施法者"],
+  "signature-spells": ["招牌法术"],
+  "divine-font": ["神圣涌泉", "神圣源泉"],
+  "doctrine": ["教义"],
+  "second-doctrine": ["第二教义"],
+  "third-doctrine": ["第三教义"],
+  "fourth-doctrine": ["第四教义"],
+  "fifth-doctrine": ["第五教义"],
+  "divine-defense": ["神圣防御"],
+  "miraculous-spell": ["神迹法术"],
+  "sneak-attack": ["偷袭"],
+  "surprise-attack": ["奇袭"],
+  "rogues-racket": ["游荡者派系", "游荡者门派"],
+  "flurry-of-blows": ["疾风连击", "连击"],
+  "powerful-fist": ["强力拳"],
+  "familiar": ["魔宠", "魔仆"],
+  "bloodline": ["血脉"],
+  "patron": ["守护神", "庇护者"],
+  "muses": ["缪斯"],
+  "bardic-lore": ["游唱诗人学识", "诗人学识"],
+  "composition-spells": ["谱写法术", "吟唱法术"],
+  "hunt-prey": ["狩猎宿敌"],
+  "hunters-edge": ["游侠优势", "猎人优势"]
+};
+
 function makeIssue(code, severity, params = {}) {
   return {
     code,
@@ -464,10 +528,10 @@ function getCharacterLevel(actor) {
   return actor?.system?.details?.level?.value ?? 1;
 }
 
-function getOwnedClassFeatureSlugs(actor) {
+// Public helper: returns a Set of every slug the actor owns across both
+// `itemTypes.feat` (any category) and `itemTypes.classFeature` if present.
+export function getActorFeatureSlugs(actor) {
   const slugs = new Set();
-
-  // Newer PF2e v8: dedicated itemType `classFeature`.
   const cfList = actor?.itemTypes?.classFeature;
   if (Array.isArray(cfList)) {
     for (const it of cfList) {
@@ -475,24 +539,64 @@ function getOwnedClassFeatureSlugs(actor) {
       if (s) slugs.add(s);
     }
   }
-
-  // Standard PF2e v8: `feat` items with category === "classfeature".
   const feats = actor?.itemTypes?.feat;
   if (Array.isArray(feats)) {
     for (const it of feats) {
-      const cat = it?.system?.category ?? it?.system?.featType;
-      if (cat !== "classfeature") continue;
       const s = it?.slug ?? it?.system?.slug;
       if (s) slugs.add(s);
     }
   }
+  return slugs;
+}
 
-  // Generic fallback: any item with slug attached. Cheap and harmless.
+function getOwnedItemSlugs(actor) {
+  const slugs = new Set();
   for (const it of actor?.items ?? []) {
     const s = it?.slug ?? it?.system?.slug;
     if (s) slugs.add(s);
   }
+  for (const s of getActorFeatureSlugs(actor)) slugs.add(s);
   return slugs;
+}
+
+function getOwnedItemUUIDs(actor) {
+  const uuids = new Set();
+  for (const it of actor?.items ?? []) {
+    const src = it?.flags?.core?.sourceId
+      ?? it?._stats?.compendiumSource
+      ?? it?.sourceId
+      ?? null;
+    if (typeof src === "string" && src.length) uuids.add(src);
+  }
+  return uuids;
+}
+
+function getOwnedItemNames(actor) {
+  const names = [];
+  for (const it of actor?.items ?? []) {
+    const n = typeof it?.name === "string" ? it.name : null;
+    if (n) names.push(n.toLowerCase());
+  }
+  return names;
+}
+
+function slugFromUUID(uuid) {
+  if (typeof uuid !== "string" || !uuid.length) return null;
+  const last = uuid.split(".").pop();
+  if (!last) return null;
+  return last;
+}
+
+function prettifyUUIDTerminal(terminal) {
+  if (!terminal) return null;
+  // Compendium IDs are usually 16-char alphanumerics; if so, we have no good
+  // human name to show — return null and let the caller fall back.
+  if (/^[A-Za-z0-9]{16}$/.test(terminal)) return null;
+  return terminal
+    .split(/[-_\s]+/)
+    .filter(Boolean)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
 }
 
 function checkKeyAbility(actor, issues) {
@@ -500,7 +604,7 @@ function checkKeyAbility(actor, issues) {
   const choices = actor.class?.system?.keyAbility?.value;
   const selected = actor.class?.system?.keyAbility?.selected;
   const hasChoice = Array.isArray(choices) && choices.length > 1;
-  if (!hasChoice) return; // class with a fixed key ability — nothing to pick.
+  if (!hasChoice) return;
   const isUnset = !selected
     || (Array.isArray(selected) && selected.length === 0)
     || (typeof selected === "string" && selected.trim() === "");
@@ -511,25 +615,90 @@ function checkKeyAbility(actor, issues) {
   }
 }
 
-function checkRequiredFeatures(actor, issues) {
+// Primary detector: walk `actor.class.system.items` and emit a warning for
+// each entry (whose level <= actor level) that does not correspond to an
+// owned item by either UUID-or-slug match.
+function checkFromClassItems(actor, issues) {
+  const classSlug = getClassSlug(actor) ?? "unknown";
+  const classItems = actor?.class?.system?.items;
+  if (!classItems || typeof classItems !== "object") return false;
+  const entries = Object.values(classItems);
+  if (!entries.length) return false;
+
+  const level = getCharacterLevel(actor);
+  const ownedSlugs = getOwnedItemSlugs(actor);
+  const ownedUUIDs = getOwnedItemUUIDs(actor);
+
+  for (const entry of entries) {
+    if (!entry || typeof entry !== "object") continue;
+    const entryLevel = Number(entry.level ?? 1);
+    if (Number.isFinite(entryLevel) && entryLevel > level) continue;
+
+    const uuid = typeof entry.uuid === "string" ? entry.uuid : null;
+    if (!uuid) continue;
+    const terminal = slugFromUUID(uuid);
+    if (terminal && PROFILE_LEVEL_SLUGS.has(terminal)) continue;
+
+    let owned = false;
+    if (uuid && ownedUUIDs.has(uuid)) owned = true;
+    if (!owned && terminal && ownedSlugs.has(terminal)) owned = true;
+    if (owned) continue;
+
+    const featureName = prettifyUUIDTerminal(terminal) ?? terminal ?? uuid;
+    issues.push(makeIssue("CLASS_FEATURE_NOT_PRESENT", SEVERITY.WARN, {
+      feature: featureName,
+      level: Number.isFinite(entryLevel) ? entryLevel : 1,
+      classSlug
+    }));
+  }
+  return true;
+}
+
+function nameMatches(ownedNames, candidates) {
+  for (const c of candidates) {
+    if (!c) continue;
+    const needle = String(c).toLowerCase();
+    if (!needle) continue;
+    for (const n of ownedNames) {
+      if (n.includes(needle)) return true;
+    }
+  }
+  return false;
+}
+
+// Fallback detector: hardcoded REQUIRED_FEATURES table with bilingual
+// substring matching against owned item names.
+function checkFromFallbackTable(actor, issues) {
   const classSlug = getClassSlug(actor);
   if (!classSlug) return;
   const table = REQUIRED_FEATURES[classSlug];
-  if (!Array.isArray(table)) return; // homebrew / unsupported class — skip.
+  if (!Array.isArray(table)) return;
 
   const level = getCharacterLevel(actor);
-  const ownedSlugs = getOwnedClassFeatureSlugs(actor);
+  const ownedSlugs = getOwnedItemSlugs(actor);
+  const ownedNames = getOwnedItemNames(actor);
 
   for (const entry of table) {
     if (!entry || typeof entry !== "object") continue;
+    if (PROFILE_LEVEL_SLUGS.has(entry.slug)) continue;
     if ((entry.level ?? 1) > level) continue;
     if (ownedSlugs.has(entry.slug)) continue;
+
+    const aliases = CN_FEATURE_ALIAS[entry.slug] ?? [];
+    const candidates = [entry.name, ...aliases];
+    if (nameMatches(ownedNames, candidates)) continue;
+
     issues.push(makeIssue("CLASS_FEATURE_NOT_PRESENT", SEVERITY.WARN, {
       feature: entry.name ?? entry.slug,
       level: entry.level,
       classSlug
     }));
   }
+}
+
+function checkRequiredFeatures(actor, issues) {
+  const usedPrimary = checkFromClassItems(actor, issues);
+  if (!usedPrimary) checkFromFallbackTable(actor, issues);
 }
 
 export function auditClassFeatureDetail(actor) {
@@ -551,4 +720,4 @@ export function auditClassFeatureDetail(actor) {
   return { issues, summary };
 }
 
-export { REQUIRED_FEATURES };
+export { REQUIRED_FEATURES, PROFILE_LEVEL_SLUGS, CN_FEATURE_ALIAS };

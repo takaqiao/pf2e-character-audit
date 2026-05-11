@@ -1,4 +1,5 @@
 import { SEVERITY } from "../constants.js";
+import { isDeityGrantedSpell } from "../utils/pf2e-api.js";
 
 /**
  * Granular spell-related checks. Best-effort: PF2e slot tables are complex and
@@ -126,6 +127,24 @@ function isCantrip(spell) {
   return false;
 }
 
+function isRitualEntry(entry) {
+  return entry?.system?.prepared?.value === "ritual"
+    || entry?.system?.category === "ritual"
+    || entry?.system?.category?.value === "ritual"
+    || entry?.isRitual === true;
+}
+
+function isInnateEntry(entry) {
+  return entry?.system?.prepared?.value === "innate"
+    || entry?.isInnate === true;
+}
+
+function isFocusEntry(entry) {
+  return entry?.system?.prepared?.value === "focus"
+    || entry?.system?.tradition?.value === "focus"
+    || entry?.isFocusPool === true;
+}
+
 function spellTraditionTags(spell) {
   try {
     const traits = spell?.system?.traits?.value ?? [];
@@ -153,15 +172,13 @@ function checkSlotsPerRank(actor, issues) {
     const entries = actor.spellcasting?.contents ?? actor.itemTypes?.spellcastingEntry ?? [];
     for (const entry of entries) {
       try {
-        // Only judge primary class entry. Skip focus pools, innate, scrolls, items.
+        // Only judge primary class entry. Skip ritual, focus pools, innate, scrolls, items.
+        if (isRitualEntry(entry)) continue;
         const category =
           entry?.system?.category?.value ?? entry?.system?.category ?? entry?.category;
         if (category && !["spellcasting", "charges"].includes(category)) continue;
-        const isFocusEntry = entry?.system?.prepared?.value === "focus"
-          || entry?.system?.tradition?.value === "focus";
-        if (isFocusEntry) continue;
-        const isInnate = entry?.system?.prepared?.value === "innate";
-        if (isInnate) continue;
+        if (isFocusEntry(entry)) continue;
+        if (isInnateEntry(entry)) continue;
 
         const actualSlots = readEntrySlots(entry);
         for (const rankStr of Object.keys(expected)) {
@@ -193,11 +210,9 @@ function checkCantripCount(actor, issues) {
     const entries = actor.spellcasting?.contents ?? actor.itemTypes?.spellcastingEntry ?? [];
     for (const entry of entries) {
       try {
-        const isFocusEntry = entry?.system?.prepared?.value === "focus"
-          || entry?.system?.tradition?.value === "focus";
-        if (isFocusEntry) continue;
-        const isInnate = entry?.system?.prepared?.value === "innate";
-        if (isInnate) continue;
+        if (isRitualEntry(entry)) continue;
+        if (isFocusEntry(entry)) continue;
+        if (isInnateEntry(entry)) continue;
 
         const spells = getEntrySpells(actor, entry);
         const cantrips = spells.filter(isCantrip);
@@ -245,20 +260,29 @@ function checkSpellTraditionTrait(actor, issues) {
     const entries = actor.spellcasting?.contents ?? actor.itemTypes?.spellcastingEntry ?? [];
     for (const entry of entries) {
       try {
+        if (isRitualEntry(entry)) continue;
         const entryTradition = entry?.system?.tradition?.value ?? entry?.system?.tradition;
         if (!entryTradition || entryTradition === "focus" || entryTradition === "") continue;
         if (!["arcane", "divine", "occult", "primal"].includes(entryTradition)) continue;
-        const isInnate = entry?.system?.prepared?.value === "innate";
-        if (isInnate) continue;
 
         const spells = getEntrySpells(actor, entry);
         for (const spell of spells) {
           try {
+            const traitsArr = spell?.system?.traits?.value ?? [];
+            // Skip focus spells (domain initiate, blood magic, etc.).
+            if (Array.isArray(traitsArr) && traitsArr.includes("focus")) continue;
+            // Skip rituals (different tradition semantics).
+            if (spell?.type === "ritual" || spell?.system?.ritual
+              || (Array.isArray(traitsArr) && traitsArr.includes("ritual"))) continue;
+
             const tags = spellTraditionTags(spell);
             if (tags.length === 0) continue;
             // Skip cantrips with multiple traditions (often universal/shared).
             if (isCantrip(spell) && tags.length > 1) continue;
             if (!tags.includes(entryTradition)) {
+              // Deity-granted spells (cleric bonus / domain) are legitimate even
+              // if their native tradition differs from the entry's.
+              if (isDeityGrantedSpell(actor, spell)) continue;
               issues.push(makeIssue("SPELL_TRADITION_TRAIT_MISMATCH", SEVERITY.WARN, {
                 spell: spell?.name ?? "(spell)",
                 entryName: entry?.name ?? "(spellcasting)",

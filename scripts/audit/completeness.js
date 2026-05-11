@@ -1,5 +1,6 @@
 import { SEVERITY } from "../constants.js";
 import { expectedSlots } from "./slot-tables.js";
+import { isDeityGrantedSpell } from "../utils/pf2e-api.js";
 
 // Required subclass selectors per class. Keys are class slugs; each entry has
 // `featureName` (i18n hint suffix) and `slugs` (any of these feat/feature slugs
@@ -559,12 +560,17 @@ function checkSpellTraditions(actor, issues) {
       const traits = spell.system?.traits?.value ?? [];
       const traditions = spell.system?.traits?.traditions ?? [];
       const allTags = new Set([...(Array.isArray(traits) ? traits : []), ...(Array.isArray(traditions) ? traditions : [])]);
-      // Skip cantrips/rituals/focus mark
+      // Skip focus spells (domain initiate, blood magic, etc. don't need to match entry tradition).
       if (allTags.has("focus")) continue;
+      // Skip rituals (no tradition in the same sense).
+      if (spell.type === "ritual" || allTags.has("ritual") || spell.system?.ritual) continue;
       // If the spell explicitly lists ANY tradition and ours isn't one of them, flag it.
       const hasTraditionTags = ["arcane", "divine", "occult", "primal"].some((t) => allTags.has(t));
       if (!hasTraditionTags) continue;
       if (!allTags.has(tradition)) {
+        // Deity-granted spells (cleric bonus / domain spells) are legitimate
+        // regardless of their original tradition — cleric casts them as divine.
+        if (isDeityGrantedSpell(actor, spell)) continue;
         issues.push(makeIssue("SPELL_TRADITION_MISMATCH", SEVERITY.INFO, {
           spell: spell.name,
           spellTraditions: [...allTags].filter((t) => ["arcane", "divine", "occult", "primal"].includes(t)).join("/") || "—",

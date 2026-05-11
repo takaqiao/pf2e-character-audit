@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.25] - 2026-05-12
+- **Reactive Striker regression fixed**: Additional Feats lookup now also accepts dedications by `-dedication` slug / name suffix / class category, not only by literal `dedication` trait. Translation-pack items that lose the trait now resolve correctly. `api.debugAF(actor)` exposed for diagnostics.
+- **Spell DC reads effective rank**: now uses `entry.statistic.rank` (post-rule-element) instead of base `system.proficiency.value`. Eliminates false `RANK_BEHIND_PROGRESSION` warnings when system has already advanced via `Expert Spellcaster` etc.
+- **Ritual / Innate / Focus entries skipped** from cantrip / slot-rank checks. Fixes `CANTRIP_COUNT_LOW: 仪式 = 0`.
+- **Deity-granted spells exempt** from `SPELL_TRADITION_MISMATCH` / `SPELL_TRADITION_TRAIT_MISMATCH`: reads `deity.system.clericSpells` + domain spell lists. Focus + ritual spells also skipped from tradition checks.
+- **Class-feature detection rewritten**: primary path derives expected features from `actor.class.system.items` (UUID-based); fallback table drops profile-level entries (Anathema/Deity/Edicts/Tenets) and adds bilingual name matching (Resolve↔聚能/铁心/决心, Alertness↔警觉/警戒). Eliminates the false positives on Cleric Anathema/Deity/Resolve/Alertness.
+
 ## [0.1.24] - 2026-05-12
 - **NPC + companion audit** — `api.auditAny(actor)` dispatches by actor.type. New codes: `NPC_LEVEL_OUT_OF_RANGE`, `NPC_MISSING_TRAITS`, `NPC_AC_HP_OUT_OF_BAND`, `COMPANION_NO_MASTER`, `COMPANION_LEVEL_MISMATCH`.
 - **Sheet header badge** — small colored pill on character sheet showing audit issue count (reads cached snapshot, no on-render audit).
