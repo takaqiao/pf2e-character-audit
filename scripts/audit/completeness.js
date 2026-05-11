@@ -312,7 +312,11 @@ function findArchetypeFollowups(actor, ded) {
     if (f.id === ded.id) return false;
     const traits = f.system?.traits?.value ?? [];
     if (traits.includes("dedication")) return false;
-    if (!traits.includes("archetype")) return false;
+
+    // Note: we do NOT require traits.includes("archetype") — some community
+    // modules omit that tag entirely (e.g. Lost Omens Shining Kingdoms Ulfen
+    // Guard archetype feats don't have it). The four methods below provide
+    // enough specificity on their own.
 
     // M1 — trait equals the archetype slug ("ulfen-guard")
     if (archName && traits.includes(archName)) return true;
@@ -322,13 +326,17 @@ function findArchetypeFollowups(actor, ded) {
     if (archName && fSlug.startsWith(archName + "-")) return true;
 
     // M3 — feat shares a distinctive (non-generic) trait with the dedication.
-    // Catches archetypes whose follow-ups don't use the slug-style trait.
     if (dedDistinctive.some((t) => traits.includes(t))) return true;
 
     // M4 — same compendium pack as the dedication. Community-content
     // archetypes usually keep their dedication and follow-ups in one pack.
+    // Restrict to feats that don't look like dedications themselves and that
+    // are class/archetype-category feats.
     const fSource = f.flags?.core?.sourceId ?? "";
-    if (dedPackKey && fSource.startsWith(dedPackKey + ".")) return true;
+    if (dedPackKey && fSource.startsWith(dedPackKey + ".")) {
+      const fCat = f.system?.category ?? f.system?.featType ?? "";
+      if (fCat === "class" || fCat === "archetype") return true;
+    }
 
     return false;
   });

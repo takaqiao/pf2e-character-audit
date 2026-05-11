@@ -84,50 +84,82 @@ export function debugBabele() {
   console.groupEnd();
 }
 
+// Parse a bilingual document name like "乌尔芬卫士入门 Ulfen Guard Dedication"
+// or "光亮术 Light" → { cn, en }. Returns null when the pattern doesn't match.
+function splitBilingual(name) {
+  if (typeof name !== "string") return null;
+  const trimmed = name.trim();
+  // Skip "(自定义 Lore)" / "(Custom Lore)" style synthetic names
+  if (trimmed.startsWith("(")) return null;
+  // CJK run followed by space then ASCII run (letters / numbers / parens / hyphens)
+  const m = trimmed.match(/^([一-鿿][^A-Za-z]*?)\s+([A-Za-z][A-Za-z0-9'\(\) :,\-]+?)$/);
+  if (!m) return null;
+  const cn = m[1].trim();
+  const en = m[2].trim();
+  if (!cn || !en) return null;
+  if (!/[一-鿿]/.test(cn)) return null;
+  return { cn, en };
+}
+
+// Scan every loaded compendium pack's pre-built index. Foundry pre-loads
+// index metadata (name + id + a few fields) at world start, so this is
+// fast and synchronous. Many Babele translation packs apply translations
+// to compendium documents as bilingual names ("CN EN"), so the index alone
+// is enough to build a CN→EN map without poking Babele's runtime APIs.
+function buildReverseMapFromCompendiums(map) {
+  let added = 0;
+  for (const pack of game?.packs ?? []) {
+    const index = pack.index;
+    if (!index) continue;
+    for (const entry of index) {
+      const parts = splitBilingual(entry?.name);
+      if (parts && !map.has(parts.cn)) {
+        map.set(parts.cn, parts.en);
+        added++;
+      }
+    }
+  }
+  return added;
+}
+
 function buildReverseMap() {
   const map = new Map();
+
+  // Path 1: ask Babele directly (older or differently-loaded modules)
   const translations = tryReadBabeleTranslations();
-  if (!translations) {
-    console.warn("[pf2e-character-audit] no Babele translations found. " +
-      "Run `game.modules.get('pf2e-character-audit').api.debugBabele()` to diagnose.");
-    return map;
-  }
-
-  const iter = translations instanceof Map
-    ? translations.values()
-    : (Array.isArray(translations) ? translations : Object.values(translations));
-
-  for (const trans of iter) {
-    if (!trans || typeof trans !== "object") continue;
-    // Different shapes seen across Babele versions/source modules:
-    //  - { entries: { EnName: { name: "CnName EnName", ... }, ... } }
-    //  - { translations: { entries: {...} } }
-    //  - { entries: Map<EnName, {...}> }
-    //  - { mapping: {...}, label: ..., entries: {...} }
-    processEntries(trans.entries, map);
-    processEntries(trans.translations?.entries, map);
-    if (trans.entries instanceof Map) {
-      for (const [k, v] of trans.entries) {
-        const cnName = bilingualToCN(v?.name);
-        if (cnName && !map.has(cnName)) map.set(cnName, k);
+  if (translations) {
+    const iter = translations instanceof Map
+      ? translations.values()
+      : (Array.isArray(translations) ? translations : Object.values(translations));
+    for (const trans of iter) {
+      if (!trans || typeof trans !== "object") continue;
+      processEntries(trans.entries, map);
+      processEntries(trans.translations?.entries, map);
+      if (trans.entries instanceof Map) {
+        for (const [k, v] of trans.entries) {
+          const cnName = bilingualToCN(v?.name);
+          if (cnName && !map.has(cnName)) map.set(cnName, k);
+        }
       }
-    }
-    // Newer Babele: trans may BE the entries dict directly
-    if (!trans.entries && !trans.translations) {
-      for (const [k, v] of Object.entries(trans)) {
-        if (typeof v !== "object" || v === null) continue;
-        const cnName = bilingualToCN(v?.name);
-        if (cnName && !map.has(cnName)) map.set(cnName, k);
+      if (!trans.entries && !trans.translations) {
+        for (const [k, v] of Object.entries(trans)) {
+          if (typeof v !== "object" || v === null) continue;
+          const cnName = bilingualToCN(v?.name);
+          if (cnName && !map.has(cnName)) map.set(cnName, k);
+        }
       }
     }
   }
 
-  if (map.size > 0) {
-    console.info(`[pf2e-character-audit] Babele reverse map built: ${map.size} entries.`);
-  } else {
-    console.warn("[pf2e-character-audit] Babele reverse map is empty. " +
-      "Run `game.modules.get('pf2e-character-audit').api.debugBabele()` to diagnose.");
-  }
+  // Path 2 (always run): scan compendium pack indexes for bilingual names.
+  // This is the reliable fallback — works regardless of Babele version because
+  // by the time we audit, the indexes already contain the translated names.
+  const fromIndex = buildReverseMapFromCompendiums(map);
+
+  console.info(
+    `[pf2e-character-audit] reverse map: ${map.size} entries ` +
+    `(${fromIndex} from compendium index, rest from Babele API).`
+  );
   return map;
 }
 

@@ -3,6 +3,14 @@
 User-facing release notes for PF2e Character Audit.
 For full engineering history see [CHANGELOG-detailed.zh.md](CHANGELOG-detailed.zh.md).
 
+## [0.1.18] - 2026-05-12
+
+### Fixed
+- **`DEDICATION_2_FEAT_RULE` still 0/2 after 0.1.16**: the previous fix required follow-up feats to carry the `archetype` trait, but community-content modules (e.g. *Lost Omens: Shining Kingdoms* Ulfen Guard) don't tag their archetype feats with it. The gate is dropped; the four specificity methods (trait, slug-prefix, shared distinctive trait, same compendium pack) are enough on their own.
+- **Babele reverse-lookup empty**: added a second source for the CN→EN map — every compendium pack's pre-loaded index is scanned for bilingual document names (`乌尔芬卫士入门 Ulfen Guard Dedication`). Always runs, works regardless of Babele's runtime API shape. The console log now reports how many entries came from each source.
+- **"审计 Party" toolbar button wrapping awkwardly**: added `white-space: nowrap` and gave it the proper inline-flex layout so the icon + label stay on one line.
+- **Eye-slash suppress button not centered**: switched to `align-items: center` (was `baseline`) with min-height so a single icon sits properly inside the button.
+
 ## [0.1.17] - 2026-05-12
 
 ### Changed

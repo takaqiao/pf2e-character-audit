@@ -330,18 +330,22 @@
 .audit-issue-suppress {
   font: inherit;
   font-size: 0.78em;
-  padding: 0.05rem 0.4rem;
+  line-height: 1.4;
+  padding: 0.15rem 0.45rem;
   cursor: pointer;
   background: transparent;
   border: 1px solid var(--color-border-light-tertiary, #c9c7b8);
   border-radius: 2px;
   opacity: 0.7;
   display: inline-flex;
-  align-items: baseline;
-  gap: 0.25rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  min-height: 1.6em;
 }
 .audit-issue-action:hover,
 .audit-issue-suppress:hover { opacity: 1; }
+.audit-issue-suppress { min-width: 1.8em; }
 
 /* ─── Publication tab ───────────────────────────────────── */
 
@@ -540,8 +544,14 @@ details > summary {
 
 .pf2e-character-audit-directory-btn {
   font: inherit;
-  padding: 0.3rem 0.55rem;
+  padding: 0.3rem 0.6rem;
   margin: 0.25rem 0;
   font-size: 0.85rem;
   cursor: pointer;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  line-height: 1.4;
 }
+.pf2e-character-audit-directory-btn i { font-size: 0.95em; }
