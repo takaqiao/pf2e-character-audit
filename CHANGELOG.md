@@ -3,6 +3,20 @@
 User-facing release notes for PF2e Character Audit.
 For full engineering history see [CHANGELOG-detailed.zh.md](CHANGELOG-detailed.zh.md).
 
+## [0.1.15] - 2026-05-12
+
+### Changed
+- **"Copy JSON" now exports a compact report** stripped of fields that bloat shared debug pastes:
+  - `publication.byCategory` (every owned item listed per category) — removed
+  - `publication.titles` (duplicate of `actorRollup`) — removed
+  - `prerequisites.issues[].tree` (parser internal state) — removed
+  - `prerequisites.issues[].featUuid` (duplicate of `featId`) — removed
+  - `completeness.slots` (expected slot table) — removed
+  - `history` (kept only `previousSnapshot`)
+  - `crossPartyPublication.byTitle[].actorBreakdown` — removed
+- Typical 11-level character: full report ~140 KB → compact ~12 KB.
+- The full verbose report is still available via `game.modules.get("pf2e-character-audit").api.exporters.toJsonVerbose(report)` for parser-level debugging.
+
 ## [0.1.14] - 2026-05-12
 
 ### Fixed

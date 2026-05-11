@@ -8,7 +8,7 @@ import { parseAllPrerequisiteNodes } from "./prereq/parsers.js";
 import { evaluateRequirementNode } from "./prereq/checker.js";
 import { detectVariants } from "./utils/pf2e-api.js";
 import { openAuditApp, openPartyApp } from "./ui/injectors.js";
-import { toChat, toJournal, toJson } from "./ui/exporters.js";
+import { toChat, toJournal, toJson, toJsonVerbose } from "./ui/exporters.js";
 
 export function createApi() {
   return {
@@ -27,6 +27,6 @@ export function createApi() {
     parsePrerequisites: (feat) => parseAllPrerequisiteNodes(feat),
     evaluatePrerequisite: evaluateRequirementNode,
     detectVariants,
-    exporters: { toChat, toJournal, toJson }
+    exporters: { toChat, toJournal, toJson, toJsonVerbose }
   };
 }

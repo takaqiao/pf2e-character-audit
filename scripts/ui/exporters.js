@@ -84,8 +84,100 @@ export async function toJournal(report, partyReport = null) {
   return journal;
 }
 
+// Strip fields that are heavy and rarely needed for shared debugging:
+//   - publication.byCategory: per-item listing of every item, can be 100+ rows
+//   - publication.titles: duplicate of actorRollup
+//   - prereq tree: parser internal state, only useful for engine-level debug
+//   - prereq featUuid: duplicates featId
+//   - completeness.slots: expected-slot table, rarely useful
+//   - history: redundant with previousSnapshot for most debug
+// Keeps everything an issue-triage conversation actually needs.
+function compactReport(report) {
+  if (!report) return report;
+  const out = {
+    actorName: report.actorName,
+    actorLevel: report.actorLevel,
+    actorClass: report.actorClass,
+    actorAncestry: report.actorAncestry,
+    actorId: report.actorId,
+    generatedAt: report.generatedAt,
+    moduleVersion: report.moduleVersion,
+    variants: report.variants,
+    summary: report.summary,
+    badge: report.badge
+  };
+  if (report.publication) {
+    out.publication = {
+      summary: report.publication.summary,
+      actorRollup: report.publication.actorRollup
+    };
+  }
+  if (report.completeness) {
+    out.completeness = {
+      issues: report.completeness.issues,
+      summary: report.completeness.summary
+    };
+  }
+  if (report.prerequisites) {
+    out.prerequisites = {
+      summary: report.prerequisites.summary,
+      issues: (report.prerequisites.issues ?? []).map((i) => {
+        const cleaned = {
+          featId: i.featId,
+          featSlug: i.featSlug,
+          featName: i.featName,
+          featLevel: i.featLevel,
+          featSource: i.featSource,
+          requirement: i.requirement,
+          evaluation: i.evaluation,
+          severity: i.severity
+        };
+        if (i.normalizedRequirement && i.normalizedRequirement !== i.requirement) {
+          cleaned.normalizedRequirement = i.normalizedRequirement;
+        }
+        if (Array.isArray(i.reasons) && i.reasons.length > 0) cleaned.reasons = i.reasons;
+        return cleaned;
+      })
+    };
+  }
+  if (report.previousSnapshot) out.previousSnapshot = report.previousSnapshot;
+  if (report.errors?.length > 0) out.errors = report.errors;
+  if (report.suppressedCodes?.length > 0) out.suppressedCodes = report.suppressedCodes;
+  if (report.suppressedFeats?.length > 0) out.suppressedFeats = report.suppressedFeats;
+  return out;
+}
+
+function compactPartyReport(pr) {
+  if (!pr) return pr;
+  const out = {
+    generatedAt: pr.generatedAt,
+    moduleVersion: pr.moduleVersion,
+    variants: pr.variants,
+    members: pr.members,
+    party: (pr.party ?? []).map(compactReport)
+  };
+  if (pr.crossPartyPublication) {
+    out.crossPartyPublication = {
+      summary: pr.crossPartyPublication.summary,
+      byTitle: (pr.crossPartyPublication.byTitle ?? []).map((t) => ({
+        title: t.title,
+        license: t.license,
+        licenseDisplay: t.licenseDisplay,
+        remaster: t.remaster,
+        count: t.count
+      }))
+    };
+  }
+  return out;
+}
+
+function isPartyReport(r) {
+  return r && Array.isArray(r.party) && !r.actorId;
+}
+
 export function toJson(report) {
-  const json = JSON.stringify(report, jsonReplacer, 2);
+  const compact = isPartyReport(report) ? compactPartyReport(report) : compactReport(report);
+  const json = JSON.stringify(compact, jsonReplacer, 2);
   if (navigator.clipboard?.writeText) {
     navigator.clipboard.writeText(json).then(
       () => ui.notifications.info(t("Action.JsonCopied")),
@@ -96,6 +188,24 @@ export function toJson(report) {
     );
   } else {
     console.log(`[${MODULE_ID}] Audit JSON:\n` + json);
+    ui.notifications.warn(t("Action.JsonInConsole"));
+  }
+}
+
+// Verbose version (full report) — useful for parser/engine-level debug.
+// Exposed via API: game.modules.get(MODULE_ID).api.exporters.toJsonVerbose(report)
+export function toJsonVerbose(report) {
+  const json = JSON.stringify(report, jsonReplacer, 2);
+  if (navigator.clipboard?.writeText) {
+    navigator.clipboard.writeText(json).then(
+      () => ui.notifications.info(t("Action.JsonCopied")),
+      () => {
+        console.log(`[${MODULE_ID}] Audit JSON (verbose):\n` + json);
+        ui.notifications.warn(t("Action.JsonInConsole"));
+      }
+    );
+  } else {
+    console.log(`[${MODULE_ID}] Audit JSON (verbose):\n` + json);
     ui.notifications.warn(t("Action.JsonInConsole"));
   }
 }
