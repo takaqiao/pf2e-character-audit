@@ -33,7 +33,9 @@
       "UnsuppressNotice": "已清空忽略列表",
       "SuppressFeat": "忽略此专长前置",
       "SuppressedFeatNotice": "已忽略 {name} 的前置检查",
-      "QuickFix": "修复"
+      "QuickFix": "修复",
+      "ExportMarkdown": "导出为 Markdown",
+      "ExportHtml": "导出为 HTML"
     },
     "Field": {
       "Title": "出版物",
@@ -56,7 +58,8 @@
       "Warnings": "警告",
       "Infos": "信息",
       "SuppressedNote": "已隐藏的规则",
-      "History": "趋势"
+      "History": "趋势",
+      "RuleLink": "规则 ↗"
     },
     "Overview": {
       "SectionVariants": "变体规则",
@@ -264,6 +267,86 @@
         "PARTY_SAVES_VULNERABILITY": {
           "Title": "队伍{save}豁免薄弱",
           "Hint": "等级 {level} 队伍平均{save}修正 {avgMod}，低于阈值。"
+        },
+        "NPC_LEVEL_OUT_OF_RANGE": {
+          "Title": "NPC 等级超出范围",
+          "Hint": "等级 {level} 超出 PF2e 标准范围（-1 到 25）。"
+        },
+        "NPC_MISSING_TRAITS": {
+          "Title": "NPC 缺少特征",
+          "Hint": "{name} 没有任何生物特征。"
+        },
+        "NPC_AC_HP_OUT_OF_BAND": {
+          "Title": "NPC {stat} 超出预期区间",
+          "Hint": "等级 {level} 的 {stat} 为 {actual}，建造生物基准 {expected}。"
+        },
+        "COMPANION_NO_MASTER": {
+          "Title": "伙伴未关联主人",
+          "Hint": "{name}（{type}）未关联到主人角色。"
+        },
+        "COMPANION_LEVEL_MISMATCH": {
+          "Title": "伙伴等级不匹配",
+          "Hint": "{name} 等级 {companionLevel}，主人等级 {masterLevel}。"
+        },
+        "WIELDING_UNTRAINED_WEAPON": {
+          "Title": "手持未受训武器：{weaponName}",
+          "Hint": "所有可授予该武器熟练度的类别均为 0。未受训攻击 −2。"
+        },
+        "WEARING_UNTRAINED_ARMOR": {
+          "Title": "穿着未受训甲胄：{armorName}",
+          "Hint": "甲胄类别 {armorCategory} 未受训——无 AC 熟练度加值且承受检定减值。"
+        },
+        "SHIELD_AND_TWO_HANDED": {
+          "Title": "无法同时持握 {shield} 和双手武器 {weapon}",
+          "Hint": "双手武器占用双手。"
+        },
+        "MISSING_AMMO": {
+          "Title": "{weapon} 缺少弹药",
+          "Hint": "{weapon} 有装填值但库存无对应弹药。"
+        },
+        "SPELL_SLOTS_PER_RANK_MISMATCH": {
+          "Title": "{rank} 环法术位数量异常",
+          "Hint": "{entryName} 在 {rank} 环有 {actual} 个法术位，职业表预期 {expected}。"
+        },
+        "CANTRIP_COUNT_LOW": {
+          "Title": "戏法数量偏少",
+          "Hint": "{entryName} 当前 {actual} 个戏法；完整施法者通常 {expected} 个。"
+        },
+        "FOCUS_POOL_OVER_FOCUS_SPELLS": {
+          "Title": "专注池超过已掌握专注法术数",
+          "Hint": "池上限 {poolMax}，但只掌握 {focusSpellsOwned} 个专注法术。"
+        },
+        "FOCUS_POOL_OVER_CAP": {
+          "Title": "专注池超出上限 (3)",
+          "Hint": "专注池上限 {poolMax}；PF2e 上限为 3。"
+        },
+        "SPELL_TRADITION_TRAIT_MISMATCH": {
+          "Title": "法术传统标签与施法栏冲突",
+          "Hint": "{entryName} 内 {spell} 带传统 {spellTraditions}，施法栏为 {entryTradition}。"
+        },
+        "VOLUNTARY_FLAW_COUNT_WRONG": {
+          "Title": "自愿弱点数量异常（{count}）",
+          "Hint": "自愿弱点：要么 0 个，要么恰好 2 个落在不同属性上。"
+        },
+        "VOLUNTARY_FLAW_SAME_ATTRIBUTE": {
+          "Title": "同一属性 ({attribute}) 上有两个自愿弱点",
+          "Hint": "自愿弱点必须落在两个不同的属性上。"
+        },
+        "VOLUNTARY_FLAW_NO_MATCHING_BOOST": {
+          "Title": "已取自愿弱点但缺少对应免费提升",
+          "Hint": "自愿弱点应多得 1 个免费提升（1 级 4+1=5）。实际 {actual}，期望 {expected}。"
+        },
+        "MANDATORY_FLAW_ON_REMASTER_ANCESTRY": {
+          "Title": "可能是遗留祖先弱点：{attribute}（{ancestry}）",
+          "Hint": "Remaster 已移除 {ancestry} 的强制弱点。不算规则违反。"
+        },
+        "CLASS_FEATURE_NOT_PRESENT": {
+          "Title": "缺少职业特性：{feature}（{level} 级）",
+          "Hint": "{classSlug} 在 {level} 级自动获得 {feature}，但未在角色卡上找到。"
+        },
+        "KEY_ABILITY_NOT_SET": {
+          "Title": "未选择关键属性",
+          "Hint": "{classSlug} 提供关键属性选择，但当前未选定。"
         }
       }
     },
@@ -352,6 +435,18 @@
       "enableEquipmentAudit": {
         "Name": "启用装备审计",
         "Hint": "审计符文、祈现上限、物品等级、按等级财富。"
+      },
+      "enableSpellAudit": {
+        "Name": "启用法术细节审计",
+        "Hint": "检查法术位、戏法、专注池、单法术传统标签。"
+      },
+      "customAuditRules": {
+        "Name": "自定义审计规则（JSON）",
+        "Hint": "数组：{ code, severity, title, hint, when:{谓词} }。"
+      },
+      "watchModeActive": {
+        "Name": "监视模式（实时审计）",
+        "Hint": "角色或拥有物品数据变化时自动重跑审计。"
       }
     },
     "Filter": {
@@ -386,6 +481,14 @@
         "PrereqUnknowns": "前置未知"
       },
       "OpenFullReport": "查看完整审计"
+    },
+    "SheetBadge": {
+      "Tooltip": "{errors} 项错误，{warnings} 项警告 —— 点击查看详情",
+      "NoSnapshot": "点击进行审计",
+      "Clean": "无问题"
+    },
+    "CustomRules": {
+      "ParseError": "自定义审计规则 JSON 解析失败，已忽略。"
     }
   }
 }

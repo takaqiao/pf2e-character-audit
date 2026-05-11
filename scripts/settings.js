@@ -85,7 +85,10 @@ export function registerSettings() {
   reg("auditButtonOnSheet", { scope: "client", config: true, type: Boolean, default: true });
   reg("allowPlayerAudit", { scope: "world", config: true, type: Boolean, default: false });
   reg("enableEquipmentAudit", { scope: "world", config: true, type: Boolean, default: true });
+  reg("enableSpellAudit", { scope: "world", config: true, type: Boolean, default: true });
   reg("autoAuditOnLevelUp", { scope: "world", config: true, type: Boolean, default: true });
+  reg("watchModeActive", { scope: "world", config: true, type: Boolean, default: false });
+  reg("customAuditRules", { scope: "world", config: true, type: String, default: "[]" });
 }
 
 export function getWhitelistTitles() {

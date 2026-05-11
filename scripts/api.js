@@ -1,5 +1,13 @@
 import { MODULE_ID, MODULE_VERSION } from "./constants.js";
 import { auditActor, auditParty } from "./audit/index.js";
+import { auditNpcOrCompanion } from "./audit/npc-companion.js";
+import { auditEquipmentProficiency } from "./audit/equipment-proficiency.js";
+import { auditSpellDetail } from "./audit/spell-detail.js";
+import { auditVoluntaryFlaws } from "./audit/voluntary-flaws.js";
+import { auditClassFeatureDetail } from "./audit/class-feature-detail.js";
+import { auditCustomRules } from "./audit/custom-rules.js";
+import { getAonUrl, getAonLinkHtml } from "./utils/aon-links.js";
+import { toMarkdown, toHtml, saveMarkdown, saveHtml } from "./ui/exporters-extras.js";
 import { auditPublication } from "./audit/publication.js";
 import { auditCompleteness } from "./audit/completeness.js";
 import { auditPrerequisites } from "./audit/prerequisite.js";
@@ -27,6 +35,12 @@ export function createApi() {
     version: MODULE_VERSION,
     auditActor,
     auditParty,
+    auditNpcOrCompanion,
+    auditAny(actor) {
+      if (!actor) throw new Error("auditAny: actor is required");
+      if (actor.type === "character" && !actor.flags?.pf2e?.companionType) return auditActor(actor);
+      return auditNpcOrCompanion(actor);
+    },
     openAuditApp,
     openPartyApp,
     audit: {
@@ -39,14 +53,21 @@ export function createApi() {
       partySkillCoverage: auditPartySkillCoverage,
       partyLanguageCoverage: auditPartyLanguageCoverage,
       partySaves: auditPartySaves,
-      partyExtras: auditPartyExtras
+      partyExtras: auditPartyExtras,
+      npcOrCompanion: auditNpcOrCompanion,
+      equipmentProficiency: auditEquipmentProficiency,
+      spellDetail: auditSpellDetail,
+      voluntaryFlaws: auditVoluntaryFlaws,
+      classFeatureDetail: auditClassFeatureDetail,
+      customRules: auditCustomRules
     },
+    aon: { getUrl: getAonUrl, getLinkHtml: getAonLinkHtml },
     diff: { computeSnapshotDiff, formatChatSummary },
     buildBuildStateFromActor,
     parsePrerequisites: (feat) => parseAllPrerequisiteNodes(feat),
     evaluatePrerequisite: evaluateRequirementNode,
     detectVariants,
     debugBabele,
-    exporters: { toChat, toJournal, toJson, toJsonVerbose }
+    exporters: { toChat, toJournal, toJson, toJsonVerbose, toMarkdown, toHtml, saveMarkdown, saveHtml }
   };
 }

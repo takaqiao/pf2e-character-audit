@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.1.24] - 2026-05-12
+- **NPC + companion audit** — `api.auditAny(actor)` dispatches by actor.type. New codes: `NPC_LEVEL_OUT_OF_RANGE`, `NPC_MISSING_TRAITS`, `NPC_AC_HP_OUT_OF_BAND`, `COMPANION_NO_MASTER`, `COMPANION_LEVEL_MISMATCH`.
+- **Sheet header badge** — small colored pill on character sheet showing audit issue count (reads cached snapshot, no on-render audit).
+- **Equipment proficiency** — `WIELDING_UNTRAINED_WEAPON`, `WEARING_UNTRAINED_ARMOR`, `SHIELD_AND_TWO_HANDED`, `MISSING_AMMO`.
+- **Spell granularity** — `SPELL_SLOTS_PER_RANK_MISMATCH`, `CANTRIP_COUNT_LOW`, `FOCUS_POOL_OVER_FOCUS_SPELLS`, `FOCUS_POOL_OVER_CAP`, `SPELL_TRADITION_TRAIT_MISMATCH`.
+- **Voluntary flaws** — `VOLUNTARY_FLAW_COUNT_WRONG`, `VOLUNTARY_FLAW_SAME_ATTRIBUTE`, `VOLUNTARY_FLAW_NO_MATCHING_BOOST`, `MANDATORY_FLAW_ON_REMASTER_ANCESTRY`.
+- **Class-feature granular check** — `CLASS_FEATURE_NOT_PRESENT` for 22 classes' core auto-grants per level.
+- **AoN rule citation links** — `{{aon code}}` Handlebars helper + `api.aon.getUrl()`.
+- **Custom GM rules** — `customAuditRules` setting accepts JSON array with predicate-based rules (level/class/ancestry/HP/AC/traits/feats/skill).
+- **Markdown / HTML exporters** — `api.exporters.toMarkdown / toHtml / saveMarkdown / saveHtml`, buttons added to audit footer.
+- **Watch mode** — `watchModeActive` setting enables debounced live audit on any actor/item change.
+- 20 new issue codes, 5 new settings, +60 i18n keys (EN/CN parity preserved at 274 each).
+
 ## [0.1.23] - 2026-05-12
 - **Proficiency progression checks** — Fort/Ref/Will/Perception/Class DC/Spell DC vs class table for 26 classes. `RANK_BEHIND_PROGRESSION` (warn) when behind, `RANK_AHEAD_OF_PROGRESSION` (error) when ahead.
 - **Skill rank min-level rule** — `SKILL_RANK_TOO_HIGH_FOR_LEVEL` (Expert ≥ L3, Master ≥ L7, Legendary ≥ L15).

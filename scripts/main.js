@@ -5,6 +5,9 @@ import { createApi } from "./api.js";
 import { injectFallbacks } from "./i18n.js";
 import { ensureAFMap } from "./audit/additional-feats.js";
 import { registerLevelUpHook } from "./ui/watch.js";
+import { registerSheetBadgeHook } from "./ui/sheet-badge.js";
+import { registerWatchModeHook } from "./ui/watch-mode.js";
+import { getAonLinkHtml } from "./utils/aon-links.js";
 
 Hooks.once("i18nInit", () => {
   // Inject hardcoded English fallbacks for any translation key that didn't
@@ -39,4 +42,9 @@ Hooks.once("ready", () => {
   // taken via another archetype's Additional Feats list (PC p.215).
   ensureAFMap();
   registerLevelUpHook();
+  registerSheetBadgeHook();
+  registerWatchModeHook();
+  if (typeof Handlebars !== "undefined") {
+    Handlebars.registerHelper("aon", (code) => new Handlebars.SafeString(getAonLinkHtml(code)));
+  }
 });

@@ -2,6 +2,7 @@ import { MODULE_ID, SEVERITY } from "../constants.js";
 import { auditActor, suppressIssueCode, suppressFeatPrereq, unsuppressAll } from "../audit/index.js";
 import { t, key } from "../i18n.js";
 import { toChat, toJournal, toJson } from "./exporters.js";
+import { saveMarkdown, saveHtml } from "./exporters-extras.js";
 import { hasQuickFix, runQuickFix } from "./quick-fix.js";
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
@@ -14,11 +15,20 @@ function severityIcon(sev) {
 }
 
 function localizeIssue(issue) {
+  // Custom rules (and any homebrew detector) supply literal title/hint and set
+  // i18nKey to null. When i18nKey is null, prefer the literal strings.
+  const params = issue.params ?? {};
+  const titleText = issue.i18nKey
+    ? game.i18n.format(`${issue.i18nKey}.Title`, params)
+    : (issue.title ?? issue.code ?? "");
+  const hintText = issue.i18nKey
+    ? game.i18n.format(`${issue.i18nKey}.Hint`, params)
+    : (issue.hint ?? "");
   return {
     ...issue,
     icon: severityIcon(issue.severity),
-    titleText: game.i18n.format(`${issue.i18nKey}.Title`, issue.params ?? {}),
-    hintText: game.i18n.format(`${issue.i18nKey}.Hint`, issue.params ?? {}),
+    titleText,
+    hintText,
     quickFix: hasQuickFix(issue.code)
   };
 }
@@ -119,6 +129,8 @@ export class AuditReportApp extends HandlebarsApplicationMixin(ApplicationV2) {
       exportChat: AuditReportApp.#onExportChat,
       exportJournal: AuditReportApp.#onExportJournal,
       exportJson: AuditReportApp.#onExportJson,
+      exportMarkdown: AuditReportApp.#onExportMarkdown,
+      exportHtml: AuditReportApp.#onExportHtml,
       openItem: AuditReportApp.#onOpenItem,
       filterSev: AuditReportApp.#onFilterSev,
       filterPub: AuditReportApp.#onFilterPub,
@@ -182,6 +194,8 @@ export class AuditReportApp extends HandlebarsApplicationMixin(ApplicationV2) {
         chat: t("Action.SendChat"),
         journal: t("Action.ExportJournal"),
         json: t("Action.CopyJson"),
+        markdown: t("Action.ExportMarkdown"),
+        html: t("Action.ExportHtml"),
         actorId: r.actorId,
         actorName: r.actorName,
         actorLevel: r.actorLevel,
@@ -232,6 +246,14 @@ export class AuditReportApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
   static #onExportJson() {
     if (this._report) toJson(this._report);
+  }
+
+  static #onExportMarkdown() {
+    if (this._report) saveMarkdown(this._report);
+  }
+
+  static #onExportHtml() {
+    if (this._report) saveHtml(this._report);
   }
 
   static async #onOpenItem(event, target) {

@@ -6,6 +6,13 @@ import { auditPrerequisites } from "./prerequisite.js";
 import { auditProficiencyProgression } from "./proficiency-progression.js";
 import { auditEquipment } from "./equipment-audit.js";
 import { auditClericDomains, auditPartyExtras } from "./cross-party-extras.js";
+import { auditEquipmentProficiency } from "./equipment-proficiency.js";
+import { auditSpellDetail } from "./spell-detail.js";
+import { auditVoluntaryFlaws } from "./voluntary-flaws.js";
+import { auditClassFeatureDetail } from "./class-feature-detail.js";
+import { auditCustomRules } from "./custom-rules.js";
+import { auditNpcOrCompanion } from "./npc-companion.js";
+export { auditNpcOrCompanion };
 import { emptyReport, summarizeReport, buildBadge } from "./report.js";
 
 function resummarize(bucket) {
@@ -141,23 +148,42 @@ export function auditActor(actor, opts = {}) {
     report.completeness = runDetector("completeness", () => auditCompleteness(actor, variants), report);
     const prog = runDetector("proficiencyProgression", () => auditProficiencyProgression(actor), report);
     const cd = runDetector("clericDomains", () => auditClericDomains(actor), report);
+    const vf = runDetector("voluntaryFlaws", () => auditVoluntaryFlaws(actor), report);
+    const cfd = runDetector("classFeatureDetail", () => auditClassFeatureDetail(actor), report);
     if (report.completeness) {
-      if (prog?.issues?.length) report.completeness.issues.push(...prog.issues);
-      if (cd?.issues?.length) report.completeness.issues.push(...cd.issues);
+      for (const r of [prog, cd, vf, cfd]) {
+        if (r?.issues?.length) report.completeness.issues.push(...r.issues);
+      }
       resummarize(report.completeness);
     }
   }
   if (shouldRun("enableEquipmentAudit")) {
     const eq = runDetector("equipment", () => auditEquipment(actor), report);
-    if (eq?.issues?.length && report.completeness) {
-      report.completeness.issues.push(...eq.issues);
+    const ep = runDetector("equipmentProficiency", () => auditEquipmentProficiency(actor), report);
+    const merged = [...(eq?.issues ?? []), ...(ep?.issues ?? [])];
+    if (merged.length) {
+      if (report.completeness) report.completeness.issues.push(...merged);
+      else report.completeness = { issues: merged, summary: null };
       resummarize(report.completeness);
-    } else if (eq?.issues?.length) {
-      report.completeness = eq;
+    }
+  }
+  if (shouldRun("enableSpellAudit")) {
+    const sd = runDetector("spellDetail", () => auditSpellDetail(actor), report);
+    if (sd?.issues?.length) {
+      if (report.completeness) report.completeness.issues.push(...sd.issues);
+      else report.completeness = sd;
+      resummarize(report.completeness);
     }
   }
   if (shouldRun("enablePrerequisiteAudit")) {
     report.prerequisites = runDetector("prerequisite", () => auditPrerequisites(actor), report);
+  }
+  // Custom GM rules always run last so house rules layer on top.
+  const custom = runDetector("customRules", () => auditCustomRules(actor), report);
+  if (custom?.issues?.length) {
+    if (!report.completeness) report.completeness = { issues: [], summary: null };
+    report.completeness.issues.push(...custom.issues);
+    resummarize(report.completeness);
   }
 
   applySuppression(report, report.suppressedCodes, report.suppressedFeats);

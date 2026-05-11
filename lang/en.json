@@ -33,7 +33,9 @@
       "UnsuppressNotice": "Cleared ignore list.",
       "SuppressFeat": "Ignore this feat",
       "SuppressedFeatNotice": "Ignoring {name}'s prereq",
-      "QuickFix": "Fix"
+      "QuickFix": "Fix",
+      "ExportMarkdown": "Export Markdown",
+      "ExportHtml": "Export HTML"
     },
     "Field": {
       "Title": "Title",
@@ -56,7 +58,8 @@
       "Warnings": "warnings",
       "Infos": "infos",
       "SuppressedNote": "Suppressed rules",
-      "History": "Trend"
+      "History": "Trend",
+      "RuleLink": "Rule ↗"
     },
     "Overview": {
       "SectionVariants": "Variant Rules",
@@ -264,6 +267,86 @@
         "PARTY_SAVES_VULNERABILITY": {
           "Title": "Party {save} saves are weak",
           "Hint": "Average {save} modifier is {avgMod} for a level {level} party — below floor. Encounters targeting this save will be deadly."
+        },
+        "NPC_LEVEL_OUT_OF_RANGE": {
+          "Title": "NPC level out of range",
+          "Hint": "Level {level} is outside PF2e standard range (-1 to 25)."
+        },
+        "NPC_MISSING_TRAITS": {
+          "Title": "NPC missing traits",
+          "Hint": "{name} has no creature traits. Add alignment, size, creature type, etc."
+        },
+        "NPC_AC_HP_OUT_OF_BAND": {
+          "Title": "NPC {stat} out of expected band",
+          "Hint": "Level {level} {stat} is {actual}; Building Creatures benchmark is {expected}."
+        },
+        "COMPANION_NO_MASTER": {
+          "Title": "Companion has no master",
+          "Hint": "{name} ({type}) is not linked to a master actor."
+        },
+        "COMPANION_LEVEL_MISMATCH": {
+          "Title": "Companion level mismatch",
+          "Hint": "{name} is level {companionLevel} but master is level {masterLevel}."
+        },
+        "WIELDING_UNTRAINED_WEAPON": {
+          "Title": "Wielding untrained weapon: {weaponName}",
+          "Hint": "Untrained in every applicable proficiency (category/group {weaponGroup}). Untrained attacks take −2."
+        },
+        "WEARING_UNTRAINED_ARMOR": {
+          "Title": "Wearing untrained armor: {armorName}",
+          "Hint": "Armor category {armorCategory} is untrained — no AC proficiency bonus, plus check penalty."
+        },
+        "SHIELD_AND_TWO_HANDED": {
+          "Title": "Cannot hold {shield} and two-handed {weapon} simultaneously",
+          "Hint": "Two-handed weapons occupy both hands."
+        },
+        "MISSING_AMMO": {
+          "Title": "No ammunition for {weapon}",
+          "Hint": "{weapon} has a reload value but no matching ammo in inventory."
+        },
+        "SPELL_SLOTS_PER_RANK_MISMATCH": {
+          "Title": "Spell slot count off at rank {rank}",
+          "Hint": "{entryName} has {actual} slot(s) at rank {rank}; class progression expects {expected}."
+        },
+        "CANTRIP_COUNT_LOW": {
+          "Title": "Few cantrips known",
+          "Hint": "{entryName} knows {actual} cantrip(s); full casters typically have {expected}."
+        },
+        "FOCUS_POOL_OVER_FOCUS_SPELLS": {
+          "Title": "Focus pool exceeds owned focus spells",
+          "Hint": "Pool max {poolMax} but only {focusSpellsOwned} focus spell(s) owned."
+        },
+        "FOCUS_POOL_OVER_CAP": {
+          "Title": "Focus pool exceeds cap (3)",
+          "Hint": "Focus pool max is {poolMax}; PF2e caps at 3."
+        },
+        "SPELL_TRADITION_TRAIT_MISMATCH": {
+          "Title": "Spell tradition trait conflicts with entry",
+          "Hint": "{spell} on {entryName} has tradition(s) {spellTraditions}; entry is {entryTradition}."
+        },
+        "VOLUNTARY_FLAW_COUNT_WRONG": {
+          "Title": "Voluntary flaw count invalid ({count})",
+          "Hint": "Voluntary Flaws: take exactly 0 or exactly 2 ability flaws in two different attributes."
+        },
+        "VOLUNTARY_FLAW_SAME_ATTRIBUTE": {
+          "Title": "Two voluntary flaws on same attribute ({attribute})",
+          "Hint": "Voluntary flaws must hit two DIFFERENT attributes."
+        },
+        "VOLUNTARY_FLAW_NO_MATCHING_BOOST": {
+          "Title": "Voluntary flaws without matching free boost",
+          "Hint": "Voluntary flaws grant 1 extra free boost at L1 (4+1=5). Found {actual}, expected {expected}."
+        },
+        "MANDATORY_FLAW_ON_REMASTER_ANCESTRY": {
+          "Title": "Possibly stale ancestry flaw: {attribute} ({ancestry})",
+          "Hint": "Remaster removed mandatory ability flaws from {ancestry}. May be legacy data — not a violation."
+        },
+        "CLASS_FEATURE_NOT_PRESENT": {
+          "Title": "Missing class feature: {feature} (L{level})",
+          "Hint": "{classSlug} characters auto-gain {feature} at level {level}, but no matching item is present."
+        },
+        "KEY_ABILITY_NOT_SET": {
+          "Title": "Key Ability not selected",
+          "Hint": "Class {classSlug} offers a choice of Key Ability but none is selected."
         }
       }
     },
@@ -352,6 +435,18 @@
       "enableEquipmentAudit": {
         "Name": "Enable equipment audit",
         "Hint": "Audit runes, investiture, item-level vs character, and treasure-by-level."
+      },
+      "enableSpellAudit": {
+        "Name": "Enable spell-detail audit",
+        "Hint": "Check spell-slot counts, cantrip count, focus pool, and per-spell tradition mismatches."
+      },
+      "customAuditRules": {
+        "Name": "Custom audit rules (JSON)",
+        "Hint": "Array of { code, severity, title, hint, when:{predicates} }. See module docs."
+      },
+      "watchModeActive": {
+        "Name": "Watch mode (live audit)",
+        "Hint": "Re-run audit automatically whenever actor or owned-item data changes."
       }
     },
     "Filter": {
@@ -386,6 +481,14 @@
         "PrereqUnknowns": "prereq unknowns"
       },
       "OpenFullReport": "View full audit"
+    },
+    "SheetBadge": {
+      "Tooltip": "{errors} errors, {warnings} warnings — click for details",
+      "NoSnapshot": "Click to audit",
+      "Clean": "No issues"
+    },
+    "CustomRules": {
+      "ParseError": "Custom audit rules: invalid JSON, ignoring."
     }
   }
 }
