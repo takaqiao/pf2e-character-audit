@@ -208,6 +208,62 @@
         "CLASS_FEATURES_MISSING_SPECIFIC": {
           "Title": "Missing {count} class features",
           "Hint": "Per the class definition: {names}. Drag them from the compendium."
+        },
+        "RANK_BEHIND_PROGRESSION": {
+          "Title": "{stat} proficiency below class progression at level {level}",
+          "Hint": "Class table expects {expectedRank} at this level, but the character is at {actualRank}. Bump the rank on the Skills/Saves tab or accept the gap if intentional."
+        },
+        "RANK_AHEAD_OF_PROGRESSION": {
+          "Title": "{stat} proficiency exceeds class progression at level {level}",
+          "Hint": "Class table allows at most {expectedRank} at this level, but the character is at {actualRank}. The PF2e system does not block over-ranking; reduce the rank unless granted by a feat/archetype."
+        },
+        "SKILL_RANK_TOO_HIGH_FOR_LEVEL": {
+          "Title": "{skill} rank {rank} requires level {minLevel}",
+          "Hint": "Universal proficiency rule: Expert needs level 3+, Master 7+, Legendary 15+. Character is level {characterLevel}."
+        },
+        "ITEM_LEVEL_EXCEEDS_CHARACTER": {
+          "Title": "Item level too high: {itemName} (L{itemLevel})",
+          "Hint": "Item level {itemLevel} exceeds character level {characterLevel} + 2 tolerance. Verify the item is appropriate; consumables are exempt."
+        },
+        "INVESTITURE_OVER_LIMIT": {
+          "Title": "Too many invested items ({count}/10)",
+          "Hint": "PF2e allows up to 10 invested items at once. Uninvest extras to gain their benefits."
+        },
+        "RUNE_DUPLICATE": {
+          "Title": "Duplicate/conflicting rune on {itemName}",
+          "Hint": "Multiple fundamental or property runes of type {runeType} detected. Each item allows one of each fundamental rune; property runes must be distinct."
+        },
+        "RUNE_LEVEL_EXCEEDS_CHARACTER": {
+          "Title": "Rune above character level on {itemName}",
+          "Hint": "Rune {runeName} requires item level {runeLevel}, but character is level {characterLevel}. OK for loot, flag for review."
+        },
+        "ABP_RUNE_CONFLICT": {
+          "Title": "ABP active but {itemName} carries fundamental runes",
+          "Hint": "Automatic Bonus Progression is on; fundamental runes are redundant. Remove potency/striking/resilient runes from gear."
+        },
+        "TREASURE_BY_LEVEL_LOW": {
+          "Title": "Wealth below curve: {totalGp} gp (expected ~{expectedGp})",
+          "Hint": "Character at level {characterLevel} has under 50% of the GMC Character Wealth by Level guidance."
+        },
+        "TREASURE_BY_LEVEL_HIGH": {
+          "Title": "Wealth above curve: {totalGp} gp (expected ~{expectedGp})",
+          "Hint": "Character at level {characterLevel} has over 200% of the GMC Character Wealth by Level guidance."
+        },
+        "CLERIC_DOMAIN_COUNT_OFF": {
+          "Title": "Cleric domain count mismatch",
+          "Hint": "Cleric has {actual} domain(s) but {expected} were expected from feats."
+        },
+        "PARTY_SKILL_COVERAGE_GAP": {
+          "Title": "Party missing trained {skill}",
+          "Hint": "No party member is trained in {skill}."
+        },
+        "PARTY_LANGUAGE_COVERAGE_GAP": {
+          "Title": "Party speaks no {language}",
+          "Hint": "No party member knows {language}."
+        },
+        "PARTY_SAVES_VULNERABILITY": {
+          "Title": "Party {save} saves are weak",
+          "Hint": "Average {save} modifier is {avgMod} for a level {level} party — below floor. Encounters targeting this save will be deadly."
         }
       }
     },
@@ -288,6 +344,14 @@
       "allowPlayerAudit": {
         "Name": "Allow players to trigger audits",
         "Hint": "Off by default; only the GM can audit."
+      },
+      "autoAuditOnLevelUp": {
+        "Name": "Auto-audit on level-up",
+        "Hint": "When a character's level changes, automatically run the audit and whisper a summary to the GM."
+      },
+      "enableEquipmentAudit": {
+        "Name": "Enable equipment audit",
+        "Hint": "Audit runes, investiture, item-level vs character, and treasure-by-level."
       }
     },
     "Filter": {
@@ -310,6 +374,18 @@
     "Delta": {
       "LastAudit": "Last audit",
       "NoChange": "no change"
+    },
+    "AutoAudit": {
+      "ChatTitle": "<strong>{actorName}</strong> reached level {level} — audit results",
+      "Summary": {
+        "Title": "Audit after level-up",
+        "Errors": "errors",
+        "Warnings": "warnings",
+        "Infos": "infos",
+        "PrereqFails": "prereq failures",
+        "PrereqUnknowns": "prereq unknowns"
+      },
+      "OpenFullReport": "View full audit"
     }
   }
 }

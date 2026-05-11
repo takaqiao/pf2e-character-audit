@@ -84,6 +84,8 @@ export function registerSettings() {
   reg("showDeadActors", { scope: "world", config: true, type: Boolean, default: false });
   reg("auditButtonOnSheet", { scope: "client", config: true, type: Boolean, default: true });
   reg("allowPlayerAudit", { scope: "world", config: true, type: Boolean, default: false });
+  reg("enableEquipmentAudit", { scope: "world", config: true, type: Boolean, default: true });
+  reg("autoAuditOnLevelUp", { scope: "world", config: true, type: Boolean, default: true });
 }
 
 export function getWhitelistTitles() {

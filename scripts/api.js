@@ -3,6 +3,16 @@ import { auditActor, auditParty } from "./audit/index.js";
 import { auditPublication } from "./audit/publication.js";
 import { auditCompleteness } from "./audit/completeness.js";
 import { auditPrerequisites } from "./audit/prerequisite.js";
+import { auditProficiencyProgression } from "./audit/proficiency-progression.js";
+import { auditEquipment } from "./audit/equipment-audit.js";
+import {
+  auditClericDomains,
+  auditPartySkillCoverage,
+  auditPartyLanguageCoverage,
+  auditPartySaves,
+  auditPartyExtras
+} from "./audit/cross-party-extras.js";
+import { computeSnapshotDiff, formatChatSummary } from "./ui/watch.js";
 import { buildBuildStateFromActor } from "./prereq/build-state.js";
 import { parseAllPrerequisiteNodes } from "./prereq/parsers.js";
 import { evaluateRequirementNode } from "./prereq/checker.js";
@@ -22,8 +32,16 @@ export function createApi() {
     audit: {
       publication: auditPublication,
       prerequisite: auditPrerequisites,
-      completeness: auditCompleteness
+      completeness: auditCompleteness,
+      proficiencyProgression: auditProficiencyProgression,
+      equipment: auditEquipment,
+      clericDomains: auditClericDomains,
+      partySkillCoverage: auditPartySkillCoverage,
+      partyLanguageCoverage: auditPartyLanguageCoverage,
+      partySaves: auditPartySaves,
+      partyExtras: auditPartyExtras
     },
+    diff: { computeSnapshotDiff, formatChatSummary },
     buildBuildStateFromActor,
     parsePrerequisites: (feat) => parseAllPrerequisiteNodes(feat),
     evaluatePrerequisite: evaluateRequirementNode,

@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.1.23] - 2026-05-12
+- **Proficiency progression checks** — Fort/Ref/Will/Perception/Class DC/Spell DC vs class table for 26 classes. `RANK_BEHIND_PROGRESSION` (warn) when behind, `RANK_AHEAD_OF_PROGRESSION` (error) when ahead.
+- **Skill rank min-level rule** — `SKILL_RANK_TOO_HIGH_FOR_LEVEL` (Expert ≥ L3, Master ≥ L7, Legendary ≥ L15).
+- **Equipment audit** — item-level > char+2, invested > 10, duplicate runes, rune-level > char, ABP-rune conflict, GMC Treasure-by-Level low/high.
+- **Cleric domain count check.**
+- **Party coverage** — `crossPartyAnalysis`: untrained key skills, missing common languages, weak Fort/Ref/Will averages.
+- **Auto-audit on level-up** — `updateActor` hook detects `system.details.level.value` change, whispers GM a summary chat card.
+- **Snapshot diff API** — `api.diff.computeSnapshotDiff(report, prevSnapshot)` returns added/fixed/persistent counts.
+- New settings: `enableEquipmentAudit`, `autoAuditOnLevelUp`.
+
 ## [0.1.22] - 2026-05-12
 - Additional Feats lookup via archetype journal pack (UUID-based, language-independent).
 

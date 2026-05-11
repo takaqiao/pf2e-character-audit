@@ -4,6 +4,7 @@ import { registerHooks } from "./ui/injectors.js";
 import { createApi } from "./api.js";
 import { injectFallbacks } from "./i18n.js";
 import { ensureAFMap } from "./audit/additional-feats.js";
+import { registerLevelUpHook } from "./ui/watch.js";
 
 Hooks.once("i18nInit", () => {
   // Inject hardcoded English fallbacks for any translation key that didn't
@@ -37,4 +38,5 @@ Hooks.once("ready", () => {
   // sections. The resulting UUID map lets the prereq audit recognise feats
   // taken via another archetype's Additional Feats list (PC p.215).
   ensureAFMap();
+  registerLevelUpHook();
 });

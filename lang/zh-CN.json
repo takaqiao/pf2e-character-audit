@@ -208,6 +208,62 @@
         "CLASS_FEATURES_MISSING_SPECIFIC": {
           "Title": "缺少 {count} 项职业特性",
           "Hint": "对照职业列表，缺少：{names}。把缺失项从 compendium 拖入即可。"
+        },
+        "RANK_BEHIND_PROGRESSION": {
+          "Title": "等级 {level} 处 {stat} 熟练度未达职业表预期",
+          "Hint": "职业进阶表此等级应为 {expectedRank}，但当前为 {actualRank}。"
+        },
+        "RANK_AHEAD_OF_PROGRESSION": {
+          "Title": "等级 {level} 处 {stat} 熟练度超出职业表",
+          "Hint": "职业进阶表此等级上限为 {expectedRank}，但当前为 {actualRank}。"
+        },
+        "SKILL_RANK_TOO_HIGH_FOR_LEVEL": {
+          "Title": "{skill} 达到 {rank} 需要至少 {minLevel} 级",
+          "Hint": "通用规则：专家 ≥ 3 级，大师 ≥ 7 级，传奇 ≥ 15 级。当前角色 {characterLevel} 级。"
+        },
+        "ITEM_LEVEL_EXCEEDS_CHARACTER": {
+          "Title": "物品等级过高：{itemName}（{itemLevel} 级）",
+          "Hint": "物品等级 {itemLevel} 超过角色等级 {characterLevel}+2 的容差。消耗品已排除。"
+        },
+        "INVESTITURE_OVER_LIMIT": {
+          "Title": "祈现物品过多（{count}/10）",
+          "Hint": "PF2e 规则限定同时最多 10 件祈现物品。"
+        },
+        "RUNE_DUPLICATE": {
+          "Title": "{itemName} 上存在重复/冲突的符文",
+          "Hint": "检测到多个 {runeType} 类型的符文。同类基础符文仅可一个，属性符文不可重复。"
+        },
+        "RUNE_LEVEL_EXCEEDS_CHARACTER": {
+          "Title": "{itemName} 的符文等级超出角色等级",
+          "Hint": "符文 {runeName} 需 {runeLevel} 级，角色为 {characterLevel} 级。"
+        },
+        "ABP_RUNE_CONFLICT": {
+          "Title": "ABP 已启用但 {itemName} 仍带有基础符文",
+          "Hint": "世界已开启 ABP，基础符文（精准/打击/坚韧）冗余且可能叠加异常。"
+        },
+        "TREASURE_BY_LEVEL_LOW": {
+          "Title": "财富低于曲线：{totalGp} gp（预期约 {expectedGp}）",
+          "Hint": "{characterLevel} 级角色财富不足 GMC 表 50%。"
+        },
+        "TREASURE_BY_LEVEL_HIGH": {
+          "Title": "财富高于曲线：{totalGp} gp（预期约 {expectedGp}）",
+          "Hint": "{characterLevel} 级角色财富超过 GMC 表 200%。"
+        },
+        "CLERIC_DOMAIN_COUNT_OFF": {
+          "Title": "牧师领域数量不符",
+          "Hint": "当前 {actual} 个领域，根据专长应有 {expected} 个。"
+        },
+        "PARTY_SKILL_COVERAGE_GAP": {
+          "Title": "队伍缺少受训{skill}",
+          "Hint": "队伍中无人受训{skill}。"
+        },
+        "PARTY_LANGUAGE_COVERAGE_GAP": {
+          "Title": "队伍不通晓{language}",
+          "Hint": "队伍中无人通晓{language}。"
+        },
+        "PARTY_SAVES_VULNERABILITY": {
+          "Title": "队伍{save}豁免薄弱",
+          "Hint": "等级 {level} 队伍平均{save}修正 {avgMod}，低于阈值。"
         }
       }
     },
@@ -288,6 +344,14 @@
       "allowPlayerAudit": {
         "Name": "允许玩家触发审计",
         "Hint": "默认仅 GM 能触发；启用后玩家也可在自己角色卡上点审计。"
+      },
+      "autoAuditOnLevelUp": {
+        "Name": "升级时自动审计",
+        "Hint": "当角色等级变化时，自动运行审计并将摘要发送给 GM。"
+      },
+      "enableEquipmentAudit": {
+        "Name": "启用装备审计",
+        "Hint": "审计符文、祈现上限、物品等级、按等级财富。"
       }
     },
     "Filter": {
@@ -310,6 +374,18 @@
     "Delta": {
       "LastAudit": "上次审计",
       "NoChange": "无变化"
+    },
+    "AutoAudit": {
+      "ChatTitle": "<strong>{actorName}</strong> 升到等级 {level} — 审计结果",
+      "Summary": {
+        "Title": "升级后审计",
+        "Errors": "错误",
+        "Warnings": "警告",
+        "Infos": "提示",
+        "PrereqFails": "前置失败",
+        "PrereqUnknowns": "前置未知"
+      },
+      "OpenFullReport": "查看完整审计"
     }
   }
 }

@@ -3,7 +3,21 @@ import { detectVariants, getPartyMembers } from "../utils/pf2e-api.js";
 import { auditPublication, aggregateAcrossActors } from "./publication.js";
 import { auditCompleteness } from "./completeness.js";
 import { auditPrerequisites } from "./prerequisite.js";
+import { auditProficiencyProgression } from "./proficiency-progression.js";
+import { auditEquipment } from "./equipment-audit.js";
+import { auditClericDomains, auditPartyExtras } from "./cross-party-extras.js";
 import { emptyReport, summarizeReport, buildBadge } from "./report.js";
+
+function resummarize(bucket) {
+  if (!bucket?.issues) return;
+  const issues = bucket.issues;
+  bucket.summary = {
+    errors: issues.filter((i) => i.severity === SEVERITY.ERROR).length,
+    warnings: issues.filter((i) => i.severity === SEVERITY.WARN).length,
+    infos: issues.filter((i) => i.severity === SEVERITY.INFO).length,
+    total: issues.length
+  };
+}
 
 function shouldRun(name) {
   try {
@@ -125,6 +139,22 @@ export function auditActor(actor, opts = {}) {
   }
   if (shouldRun("enableCompletenessAudit")) {
     report.completeness = runDetector("completeness", () => auditCompleteness(actor, variants), report);
+    const prog = runDetector("proficiencyProgression", () => auditProficiencyProgression(actor), report);
+    const cd = runDetector("clericDomains", () => auditClericDomains(actor), report);
+    if (report.completeness) {
+      if (prog?.issues?.length) report.completeness.issues.push(...prog.issues);
+      if (cd?.issues?.length) report.completeness.issues.push(...cd.issues);
+      resummarize(report.completeness);
+    }
+  }
+  if (shouldRun("enableEquipmentAudit")) {
+    const eq = runDetector("equipment", () => auditEquipment(actor), report);
+    if (eq?.issues?.length && report.completeness) {
+      report.completeness.issues.push(...eq.issues);
+      resummarize(report.completeness);
+    } else if (eq?.issues?.length) {
+      report.completeness = eq;
+    }
   }
   if (shouldRun("enablePrerequisiteAudit")) {
     report.prerequisites = runDetector("prerequisite", () => auditPrerequisites(actor), report);
@@ -175,6 +205,12 @@ export function auditParty(opts = {}) {
   const variants = detectVariants();
   const party = members.map((a) => auditActor(a, opts));
   const crossPartyPublication = aggregateAcrossActors(party);
+  let crossPartyAnalysis = null;
+  try {
+    crossPartyAnalysis = auditPartyExtras(members);
+  } catch (err) {
+    console.warn("[pf2e-character-audit] crossPartyAnalysis failed:", err);
+  }
   return {
     generatedAt: new Date().toISOString(),
     moduleId: MODULE_ID,
@@ -182,6 +218,7 @@ export function auditParty(opts = {}) {
     variants,
     members: members.map((a) => ({ id: a.id, name: a.name, uuid: a.uuid, level: a.system?.details?.level?.value })),
     party,
-    crossPartyPublication
+    crossPartyPublication,
+    crossPartyAnalysis
   };
 }
