@@ -56,10 +56,10 @@ function tryReadBabeleTranslations() {
 export function debugBabele() {
   console.group("[pf2e-character-audit] Babele probe");
   const paths = [
-    ["game.babele", () => game?.babele],
-    ["game.babele.translations", () => game?.babele?.translations],
-    ["game.babele.packs", () => game?.babele?.packs],
-    ["game.modules.get('babele')", () => game?.modules?.get?.("babele")],
+    ["game.babele", () => globalThis.game?.babele],
+    ["game.babele.translations", () => globalThis.game?.babele?.translations],
+    ["game.babele.packs", () => globalThis.game?.babele?.packs],
+    ["game.modules.get('babele')", () => globalThis.game?.modules?.get?.("babele")],
     ["globalThis.Babele", () => globalThis.Babele],
     ["globalThis.Babele.get()", () => globalThis.Babele?.get?.()]
   ];
@@ -87,14 +87,20 @@ export function debugBabele() {
 }
 
 // Parse a bilingual document name like "乌尔芬卫士入门 Ulfen Guard Dedication"
-// or "光亮术 Light" → { cn, en }. Returns null when the pattern doesn't match.
+// or "光亮术 Light" → { cn, en }. Also handles names with full-width parens
+// where no separating space exists, e.g. "召唤怪物（基础）Summon Construct (Basic)".
+// Returns null when the pattern doesn't match.
 function splitBilingual(name) {
   if (typeof name !== "string") return null;
   const trimmed = name.trim();
-  // Skip "(自定义 Lore)" / "(Custom Lore)" style synthetic names
-  if (trimmed.startsWith("(")) return null;
-  // CJK run followed by space then ASCII run (letters / numbers / parens / hyphens)
-  const m = trimmed.match(/^([一-鿿][^A-Za-z]*?)\s+([A-Za-z][A-Za-z0-9'\(\) :,\-]+?)$/);
+  // Skip "(自定义 Lore)" / "(Custom Lore)" style synthetic names that start
+  // with an ASCII or full-width opening paren — no CJK head to anchor on.
+  if (trimmed.startsWith("(") || trimmed.startsWith("（")) return null;
+  // CJK head (may include full-width punctuation like （）、·・) optionally
+  // followed by whitespace, then an ASCII tail starting with a letter.
+  // \s* (zero-or-more) is required because translations like
+  // "召唤怪物（基础）Summon Construct (Basic)" omit the separator.
+  const m = trimmed.match(/^([一-鿿][^A-Za-z]*?)\s*([A-Za-z][A-Za-z0-9'\(\) :,\-]+?)$/);
   if (!m) return null;
   const cn = m[1].trim();
   const en = m[2].trim();
@@ -110,15 +116,23 @@ function splitBilingual(name) {
 // is enough to build a CN→EN map without poking Babele's runtime APIs.
 function buildReverseMapFromCompendiums(map) {
   let added = 0;
-  for (const pack of game?.packs ?? []) {
-    const index = pack.index;
-    if (!index) continue;
-    for (const entry of index) {
-      const parts = splitBilingual(entry?.name);
-      if (parts && !map.has(parts.cn)) {
-        map.set(parts.cn, parts.en);
-        added++;
+  const packs = (typeof game !== "undefined" && game?.packs) ? game.packs : null;
+  if (!packs) return 0;
+  for (const pack of packs) {
+    try {
+      const index = pack?.index;
+      if (!index) continue;
+      // Foundry's Collection iterator covers empty indexes safely (length 0).
+      for (const entry of index) {
+        const parts = splitBilingual(entry?.name);
+        if (parts && !map.has(parts.cn)) {
+          map.set(parts.cn, parts.en);
+          added++;
+        }
       }
+    } catch (err) {
+      // One broken pack must not poison the whole scan.
+      console.warn(`[pf2e-character-audit] skipped pack ${pack?.collection ?? "?"}:`, err);
     }
   }
   return added;
@@ -142,10 +156,29 @@ function buildReverseMapFromWorld(map) {
       added++;
     }
   };
-  for (const actor of game?.actors ?? []) {
-    for (const item of actor.items ?? []) visit(item);
+  // Defensive: game / collections may be undefined in Node tests or
+  // during very early init. Iterating `undefined` throws, so guard each.
+  if (typeof game === "undefined") return 0;
+  const actors = game?.actors;
+  if (actors && typeof actors[Symbol.iterator] === "function") {
+    for (const actor of actors) {
+      try {
+        const items = actor?.items;
+        if (!items || typeof items[Symbol.iterator] !== "function") continue;
+        for (const item of items) visit(item);
+      } catch (err) {
+        console.warn(`[pf2e-character-audit] skipped actor ${actor?.name ?? "?"}:`, err);
+      }
+    }
   }
-  for (const item of game?.items ?? []) visit(item);
+  const worldItems = game?.items;
+  if (worldItems && typeof worldItems[Symbol.iterator] === "function") {
+    try {
+      for (const item of worldItems) visit(item);
+    } catch (err) {
+      console.warn("[pf2e-character-audit] skipped world items:", err);
+    }
+  }
   return added;
 }
 
@@ -197,11 +230,15 @@ export function getReverseMap() {
     return cachedReverseMap;
   }
   try {
-    cachedReverseMap = buildReverseMap();
+    const next = buildReverseMap();
+    cachedReverseMap = next;
     lastBuildTime = now;
   } catch (err) {
     console.warn("[pf2e-character-audit] babele reverse-map build failed:", err);
-    cachedReverseMap = new Map();
+    // Preserve any previously-good cache; only fall back to empty on first failure.
+    if (cachedReverseMap === null) cachedReverseMap = new Map();
+    // Mark as freshly attempted so we don't hot-loop rebuilds on persistent error.
+    lastBuildTime = now;
   }
   return cachedReverseMap;
 }
@@ -219,7 +256,7 @@ export function invalidateReverseMap() {
 // the rank/skill words in prereq text — e.g. "特技技能熟练度为大师" comes out
 // as "Acrobatics熟练度 is Maestro" which the parser can't decode.
 const RESERVED_GENERIC_TOKENS = new Set([
-  // Proficiency ranks
+  // Proficiency ranks (受训 listed once — Set dedupes regardless)
   "未受训", "受训", "专家", "大师", "传奇",
   // PF2E skills
   "杂技", "特技", "体技",
@@ -242,20 +279,36 @@ const RESERVED_GENERIC_TOKENS = new Set([
   "力量", "敏捷", "体质", "智力", "感知", "魅力",
   // Structural / rule particles
   "熟练度", "技能", "调整值", "成员",
+  // Religion / theology rule words (a deity entry named "伊欧梅黛 Iomedae"
+  // must not rewrite the literal token "神祇" or "偏好武器" in prereq text).
+  "神祇", "偏好武器", "学识",
+  // Spellcasting rule words
+  "焦点", "戏法", "戏法位", "法术", "法术位", "仪式",
+  // Rank / tier / level / name particles
+  "阶", "环", "名", "圈",
 ]);
 
 export function applyReverseLookup(text) {
+  if (text == null) return text;
   const map = getReverseMap();
   if (!map || map.size === 0) return text;
-  if (!/[一-鿿]/.test(text)) return text;
+  const asString = String(text);
+  if (!/[一-鿿]/.test(asString)) return asString;
 
-  let out = String(text);
-  // Longest first so "鲁莽骑手入门" beats "鲁莽" if both exist.
-  const sortedKeys = [...map.keys()].sort((a, b) => b.length - a.length);
+  let out = asString;
+  // Longest first so "鲁莽骑手入门" beats "鲁莽" if both exist. Secondary sort by
+  // string value to make order fully deterministic across engines/insertion order
+  // when two keys share length (e.g. "大师缪斯" vs "大师风范" — both 4 chars).
+  const sortedKeys = [...map.keys()].sort((a, b) => {
+    if (b.length !== a.length) return b.length - a.length;
+    return a < b ? -1 : a > b ? 1 : 0;
+  });
   for (const cn of sortedKeys) {
-    if (cn.length < 2) continue;
+    if (!cn || cn.length < 2) continue;
     if (RESERVED_GENERIC_TOKENS.has(cn)) continue;
-    if (out.includes(cn)) out = out.split(cn).join(map.get(cn));
+    const en = map.get(cn);
+    if (typeof en !== "string" || !en) continue;
+    if (out.includes(cn)) out = out.split(cn).join(en);
   }
   return out;
 }

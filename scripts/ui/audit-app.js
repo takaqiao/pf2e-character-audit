@@ -104,7 +104,10 @@ function deltaFromSnapshot(report, previous) {
 
 export class AuditReportApp extends HandlebarsApplicationMixin(ApplicationV2) {
   constructor(actor, options = {}) {
-    super(options);
+    // Give every actor its own application id so two reports can co-exist
+    // and re-rendering one doesn't clobber the other.
+    const id = actor?.id ? `pf2e-character-audit-${actor.id}` : "pf2e-character-audit";
+    super({ id, ...options });
     this.actor = actor;
     this._activeTab = "overview";
     this._report = null;
@@ -113,7 +116,7 @@ export class AuditReportApp extends HandlebarsApplicationMixin(ApplicationV2) {
   }
 
   static DEFAULT_OPTIONS = {
-    id: "pf2e-character-audit-{id}",
+    id: "pf2e-character-audit",
     classes: ["pf2e-character-audit", "audit-report"],
     tag: "section",
     window: {

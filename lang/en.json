@@ -347,6 +347,10 @@
         "KEY_ABILITY_NOT_SET": {
           "Title": "Key Ability not selected",
           "Hint": "Class {classSlug} offers a choice of Key Ability but none is selected."
+        },
+        "CLERIC_DOMAIN_SPELL_COUNT_OFF": {
+          "Title": "Cleric domain spell count mismatch",
+          "Hint": "Expected {expected} domain focus spells (Domain Initiate {domainInitiate} + Advanced Domain {advancedDomain}), found {actual}. Either add the matching focus spell or the missing feat."
         }
       }
     },

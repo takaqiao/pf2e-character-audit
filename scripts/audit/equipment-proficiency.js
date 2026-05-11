@@ -17,9 +17,11 @@
 
 import { SEVERITY } from "../constants.js";
 
-const TWO_HANDED_TRAITS = new Set([
-  "two-hand-d6", "two-hand-d8", "two-hand-d10", "two-hand-d12"
-]);
+// NOTE: `two-hand-dN` traits are intentionally NOT treated as 2H here. They
+// describe a *versatile* mode (weapon may be used 1H, gains a different damage
+// die when used 2H), so wielding such a weapon alongside a shield is legal —
+// the wielder simply doesn't get the two-hand damage benefit. Only the bare
+// "two-handed" trait (and explicit usage metadata) marks a strict 2H weapon.
 
 function makeIssue(code, severity, params = {}) {
   return {
@@ -73,14 +75,14 @@ function weaponMaxRank(actor, weapon) {
 
 function isTwoHandedWeapon(weapon) {
   const traits = weapon?.system?.traits?.value ?? [];
-  if (!Array.isArray(traits)) return false;
-  if (traits.includes("two-handed")) return true;
-  for (const t of traits) {
-    if (TWO_HANDED_TRAITS.has(t)) return true;
-  }
+  if (Array.isArray(traits) && traits.includes("two-handed")) return true;
+  // two-hand-dN is a *versatile* trait, NOT a strict 2H requirement — skip.
   // Fall back to hands metadata if exposed (1 = 1H, 2 = 2H).
   const usage = weapon?.system?.usage?.value;
   if (typeof usage === "string" && /held-in-two-hands|2h/i.test(usage)) return true;
+  // handsHeld currently held in 2 hands is also a hard signal.
+  const heldHands = Number(weapon?.system?.equipped?.handsHeld ?? 0);
+  if (heldHands >= 2) return true;
   return false;
 }
 
@@ -129,28 +131,35 @@ function checkShieldAndTwoHanded(actor, issues) {
   }
 }
 
-function ammoMatches(weapon, ammo) {
+function isAmmoItem(ammo) {
   if (!ammo) return false;
-  const wSlug = weapon?.system?.slug ?? weapon?.slug;
-  const wGroup = weapon?.system?.group;
-  const aSlug = ammo?.system?.slug ?? ammo?.slug;
-  // PF2e doesn't strictly bind ammo to a weapon at the system level outside of
-  // explicit selectedAmmoId; we accept any consumable with the "ammo" trait or
-  // type "consumable" + consumableType "ammo" as a candidate. Group-aligned
-  // names (arrow / bolt / bullet / dart) are best-effort matched.
   const traits = ammo?.system?.traits?.value ?? [];
-  if (!traits.includes("ammo") && ammo?.system?.consumableType?.value !== "ammo"
-      && ammo?.system?.category !== "ammo" && ammo?.type !== "consumable") {
-    return false;
-  }
+  if (Array.isArray(traits) && traits.includes("ammo")) return true;
+  if (ammo?.system?.consumableType?.value === "ammo") return true;
+  if (ammo?.system?.consumableType === "ammo") return true;
+  if (ammo?.system?.category === "ammo") return true;
+  if (ammo?.system?.stackGroup === "arrows") return true;
+  if (ammo?.system?.stackGroup === "bolts") return true;
+  if (ammo?.system?.stackGroup === "rounds5") return true;
+  if (ammo?.system?.stackGroup === "rounds10") return true;
+  if (ammo?.system?.stackGroup === "blowgunDarts") return true;
+  if (ammo?.system?.stackGroup === "slingBullets") return true;
+  return false;
+}
+
+function ammoMatches(weapon, ammo) {
+  if (!isAmmoItem(ammo)) return false;
   // If selectedAmmoId is set on the weapon, only that ammo counts.
   const selected = weapon?.system?.selectedAmmoId;
   if (selected) return ammo.id === selected;
+  const wSlug = weapon?.system?.slug ?? weapon?.slug;
+  const wGroup = weapon?.system?.group;
+  const aSlug = ammo?.system?.slug ?? ammo?.slug ?? "";
   // Group-name heuristic.
   if (wGroup && aSlug && aSlug.includes(wGroup)) return true;
   if (wSlug && aSlug && aSlug.includes(wSlug)) return true;
   // Otherwise accept any ammo on the actor — a missing-ammo finding requires
-  // zero ammo at all.
+  // zero ammo of any kind.
   return true;
 }
 

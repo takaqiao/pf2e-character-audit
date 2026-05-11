@@ -37,47 +37,38 @@ function summarize(issues) {
 
 const DOMAIN_FEAT_SLUGS = new Set(["domain-initiate", "advanced-domain"]);
 
-/** Pull a domain slug out of a domain-feat's pf2e flags (best-effort). */
-function readDomainChoice(feat) {
-  const flags = feat?.flags?.pf2e ?? {};
-  const fromRules = flags.rulesSelections?.domain;
-  if (typeof fromRules === "string" && fromRules) return fromRules;
-  const fromChoice = flags.choiceSelections?.domain;
-  if (typeof fromChoice === "string" && fromChoice) return fromChoice;
-  // Some builds store an object — try .value
-  if (fromRules && typeof fromRules === "object" && typeof fromRules.value === "string") {
-    return fromRules.value;
+/**
+ * Count the actor's domain focus spells. Returns:
+ *   distinct — number of unique domains the actor has at least one spell of
+ *   total   — total count of domain focus spells (initial + advanced)
+ * Heuristic — relies on focus trait + cleric trait + slug pattern.
+ */
+// Count spells in the actor's focus pool spellcasting entry. PF2e remaster
+// does NOT tag domain spells with `cleric` or a `<domain>` trait — domain
+// spells are plain focus spells (focus + divine traits, nothing else
+// distinctive on the spell item). Use the focus pool itself as the source
+// of truth: every spell sitting in the cleric's focus pool was granted by
+// either the deity's starting domain (no, that's not a thing — see below)
+// or by a Domain Initiate / Advanced Domain feat.
+//
+// Per RAW Domain Initiate, the cleric class does NOT auto-grant any focus
+// spell. So a cleric's focus pool contents = (Domain Initiate count +
+// Advanced Domain count) for vanilla characters. Other classes' focus
+// spells (multiclass archetype) live in separate spellcasting entries.
+function countFocusPoolSpells(actor) {
+  const entries = actor.spellcasting?.contents ?? [];
+  let total = 0;
+  for (const entry of entries) {
+    const prep = entry.system?.prepared?.value;
+    const isFocus = prep === "focus" || entry.isFocusPool === true || entry.system?.category === "focus";
+    if (!isFocus) continue;
+    // The entry's spells collection may be `entry.spells` (Collection) with
+    // `.size` or an array via `.contents`. Try both shapes defensively.
+    if (entry.spells?.size != null) total += entry.spells.size;
+    else if (Array.isArray(entry.spells?.contents)) total += entry.spells.contents.length;
+    else if (Array.isArray(entry.spells)) total += entry.spells.length;
   }
-  if (fromChoice && typeof fromChoice === "object" && typeof fromChoice.value === "string") {
-    return fromChoice.value;
-  }
-  return null;
-}
-
-/** Count distinct domain focus spells the actor owns. Heuristic. */
-function countDomainFocusSpells(actor) {
-  const spells = actor.itemTypes?.spell ?? [];
-  const domains = new Set();
-  for (const s of spells) {
-    const traits = s.system?.traits?.value ?? [];
-    if (!Array.isArray(traits)) continue;
-    if (!traits.includes("focus")) continue;
-    // Domain spells are tagged with `cleric` AND a domain trait. We can't
-    // enumerate every domain (homebrew exists), but PF2e tags the spell with
-    // the domain slug directly. Inspect the spell's slug for "-domain-spell"
-    // suffix as a fallback signal.
-    const slug = s.slug ?? s.system?.slug ?? "";
-    const looksLikeDomainSpell = /(^|-)domain(-spell)?$/.test(slug)
-      || /-(initial|advanced)-domain-spell$/.test(slug)
-      || traits.includes("cleric");
-    if (!looksLikeDomainSpell) continue;
-    // Pull the most-specific non-generic trait as a "domain identifier".
-    const GENERIC = new Set(["focus", "cleric", "divine", "uncommon", "rare", "common", "cantrip", "spell"]);
-    const candidate = traits.find((t) => !GENERIC.has(t));
-    if (candidate) domains.add(candidate);
-    else domains.add(slug); // fall back to slug uniqueness
-  }
-  return domains.size;
+  return total;
 }
 
 export function auditClericDomains(actor) {
@@ -97,33 +88,23 @@ export function auditClericDomains(actor) {
     (f) => (f.slug ?? f.system?.slug) === "advanced-domain"
   ).length;
 
-  // Expected: 1 (primary) + each Domain Initiate feat + each Advanced Domain.
-  // Advanced Domain doesn't grant a new domain — it grants an advanced spell
-  // for one already owned — so don't count it toward distinct-domain expectation.
-  const expected = 1 + domainInitiateCount;
+  // Simple invariant: cleric's focus pool size = Domain Initiate + Advanced
+  // Domain feats taken. The cleric class doesn't auto-grant any focus spell
+  // (per RAW Domain Initiate); every focus spell on a cleric came from one
+  // of those feats. If the count doesn't match, the player either took the
+  // feat but didn't drag the spell in, or has the spell without the feat.
+  const expectedSpells = domainInitiateCount + advancedDomainCount;
+  const actualSpells = countFocusPoolSpells(actor);
 
-  // Try to read the distinct domain slugs the player actually picked.
-  const chosenDomains = new Set();
-  // Primary domain may live on the cleric class doctrine feature; we don't
-  // try to read it directly. Instead, count distinct domain focus spells.
-  for (const f of domainFeats) {
-    const d = readDomainChoice(f);
-    if (d) chosenDomains.add(d);
-  }
-
-  const focusSpellDomains = countDomainFocusSpells(actor);
-  // Use the larger of (feat-choice flags, focus-spell heuristic) as actual.
-  const actual = Math.max(chosenDomains.size + (chosenDomains.size > 0 ? 1 : 0), focusSpellDomains);
-
-  // Defensive: if we couldn't determine either signal at all, bail.
-  if (actual === 0 || expected === 0) {
+  if (expectedSpells === 0 && actualSpells === 0) {
     return { issues, summary: summarize(issues) };
   }
 
-  if (actual !== expected) {
-    issues.push(makeIssue("CLERIC_DOMAIN_COUNT_OFF", SEVERITY.WARN, {
-      expected,
-      actual,
+  if (actualSpells !== expectedSpells) {
+    issues.push(makeIssue("CLERIC_DOMAIN_SPELL_COUNT_OFF", SEVERITY.WARN, {
+      expected: expectedSpells,
+      actual: actualSpells,
+      domainInitiate: domainInitiateCount,
       advancedDomain: advancedDomainCount
     }));
   }

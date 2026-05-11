@@ -508,7 +508,28 @@ const CN_FEATURE_ALIAS = {
   "bardic-lore": ["游唱诗人学识", "诗人学识"],
   "composition-spells": ["谱写法术", "吟唱法术"],
   "hunt-prey": ["狩猎宿敌"],
-  "hunters-edge": ["游侠优势", "猎人优势"]
+  "hunters-edge": ["游侠优势", "猎人优势"],
+  "edicts": ["戒律"],
+  "code": ["守则", "信条"],
+  "tenets": ["信条", "教旨"],
+  "champions-code": ["勇士守则", "圣武士守则"],
+  "champions-reaction": ["勇士反应"],
+  "divine-ally": ["神圣盟友"],
+  "deific-weapon": ["神祇武器"],
+  "panache": ["豪情"],
+  "precise-strike": ["精准打击"],
+  "confident-finisher": ["自信终结"],
+  "innovation": ["创新", "发明"],
+  "overdrive": ["过载"],
+  "spellbook": ["法术书"],
+  "arcane-bond": ["奥术结合", "奥术连结"],
+  "arcane-school": ["奥术学派"],
+  "arcane-thesis": ["奥术论文", "奥术论题"],
+  "arcane-spellcasting": ["奥术施法"],
+  "occult-spellcasting": ["神秘施法"],
+  "primal-spellcasting": ["原初施法"],
+  "divine-spellcasting": ["神圣施法"],
+  "key-ability": ["关键属性", "关键能力"]
 };
 
 function makeIssue(code, severity, params = {}) {
@@ -628,6 +649,7 @@ function checkFromClassItems(actor, issues) {
   const level = getCharacterLevel(actor);
   const ownedSlugs = getOwnedItemSlugs(actor);
   const ownedUUIDs = getOwnedItemUUIDs(actor);
+  const ownedNames = getOwnedItemNames(actor);
 
   for (const entry of entries) {
     if (!entry || typeof entry !== "object") continue;
@@ -642,6 +664,24 @@ function checkFromClassItems(actor, issues) {
     let owned = false;
     if (uuid && ownedUUIDs.has(uuid)) owned = true;
     if (!owned && terminal && ownedSlugs.has(terminal)) owned = true;
+    // Substring slug match (handles compendium-id terminals where ownedSlugs
+    // contains the slug form but UUID does not).
+    if (!owned && terminal && !/^[A-Za-z0-9]{16}$/.test(terminal)) {
+      for (const s of ownedSlugs) {
+        if (s === terminal || s.includes(terminal) || terminal.includes(s)) {
+          owned = true;
+          break;
+        }
+      }
+    }
+    // Name-substring fallback: try the prettified English name and any
+    // CN aliases keyed by the terminal slug.
+    if (!owned && terminal) {
+      const pretty = prettifyUUIDTerminal(terminal);
+      const aliases = CN_FEATURE_ALIAS[terminal] ?? [];
+      const candidates = [pretty, ...aliases].filter(Boolean);
+      if (candidates.length && nameMatches(ownedNames, candidates)) owned = true;
+    }
     if (owned) continue;
 
     const featureName = prettifyUUIDTerminal(terminal) ?? terminal ?? uuid;

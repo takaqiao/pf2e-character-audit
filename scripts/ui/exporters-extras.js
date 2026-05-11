@@ -395,10 +395,12 @@ export function downloadAs(filename, content, mimeType = "application/octet-stre
 // ---------- convenience save handlers ----------
 
 function buildFilenameBase(report) {
-  const date = new Date().toISOString().slice(0, 10);
-  if (isPartyReport(report)) return `pf2e-party-audit-${date}`;
+  // Full timestamp: YYYYMMDD-HHMMSS (UTC). Filesystem-safe; sortable.
+  const iso = new Date().toISOString(); // e.g. "2026-05-12T03:14:15.123Z"
+  const ts = iso.slice(0, 19).replace(/[-:T]/g, "").replace(/(\d{8})(\d{6})/, "$1-$2");
+  if (isPartyReport(report)) return `pf2e-party-audit-${ts}`;
   const safeName = String(report.actorName ?? "actor").replace(/[^\w.-]+/g, "_");
-  return `pf2e-audit-${safeName}-${date}`;
+  return `pf2e-audit-${safeName}-${ts}`;
 }
 
 export function saveMarkdown(report) {

@@ -347,6 +347,10 @@
         "KEY_ABILITY_NOT_SET": {
           "Title": "未选择关键属性",
           "Hint": "{classSlug} 提供关键属性选择，但当前未选定。"
+        },
+        "CLERIC_DOMAIN_SPELL_COUNT_OFF": {
+          "Title": "牧师领域法术数量不符",
+          "Hint": "应有 {expected} 个领域 focus 法术（Domain Initiate {domainInitiate} + Advanced Domain {advancedDomain}），实际 {actual} 个。补法术或调整专长选择。"
         }
       }
     },

@@ -1,4 +1,4 @@
-import { MODULE_ID, SEVERITY } from "../constants.js";
+import { MODULE_ID, MODULE_VERSION, SEVERITY, EVALUATION } from "../constants.js";
 import { detectVariants, getPartyMembers } from "../utils/pf2e-api.js";
 import { auditPublication, aggregateAcrossActors } from "./publication.js";
 import { auditCompleteness } from "./completeness.js";
@@ -103,13 +103,15 @@ function applySuppression(report, suppressedCodes, suppressedFeats) {
   if (featSet.size > 0 && Array.isArray(report.prerequisites?.issues)) {
     const before = report.prerequisites.issues.length;
     report.prerequisites.issues = report.prerequisites.issues.filter((i) => !featSet.has(i.featSlug));
-    suppressed += before - report.prerequisites.issues.length;
+    const removed = before - report.prerequisites.issues.length;
+    suppressed += removed;
     const issues = report.prerequisites.issues;
+    const prevTotal = report.prerequisites.summary?.total ?? before;
     report.prerequisites.summary = {
-      total: (report.prerequisites.summary?.total ?? 0),
-      pass: report.prerequisites.summary?.pass ?? 0,
-      fail: issues.filter((i) => i.evaluation === "fail").length,
-      unknown: issues.filter((i) => i.evaluation === "unknown").length
+      total: Math.max(0, prevTotal - removed),
+      pass: issues.filter((i) => i.evaluation === EVALUATION.PASS).length,
+      fail: issues.filter((i) => i.evaluation === EVALUATION.FAIL).length,
+      unknown: issues.filter((i) => i.evaluation === EVALUATION.UNKNOWN).length
     };
   }
   if (suppressed > 0) report.suppressedCount = suppressed;
@@ -240,7 +242,7 @@ export function auditParty(opts = {}) {
   return {
     generatedAt: new Date().toISOString(),
     moduleId: MODULE_ID,
-    moduleVersion: undefined,
+    moduleVersion: MODULE_VERSION,
     variants,
     members: members.map((a) => ({ id: a.id, name: a.name, uuid: a.uuid, level: a.system?.details?.level?.value })),
     party,

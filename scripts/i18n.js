@@ -47,7 +47,39 @@ const FALLBACKS = {
   "Field.Requirement": "Requirement",
   "Overview.Titles": "titles",
   "Overview.Items": "items",
-  "Overview.Unknown": "unknown"
+  "Overview.Unknown": "unknown",
+  // App titles
+  "App.Title.Single": "PF2e Character Audit",
+  "App.Title.Party": "PF2e Party Audit",
+  // Notices
+  "Notice.NotCharacter": "PF2e Character Audit only supports actors of type \"character\".",
+  // 0.1.24+ settings (Name + Hint) — fallbacks so a stale i18n cache still
+  // shows readable labels instead of raw keys after a mid-world update.
+  "Settings.enableSpellAudit.Name": "Enable spell-detail audit",
+  "Settings.enableSpellAudit.Hint": "Check spell-slot counts, cantrip count, focus pool, and per-spell tradition mismatches.",
+  "Settings.enableEquipmentAudit.Name": "Enable equipment audit",
+  "Settings.enableEquipmentAudit.Hint": "Audit runes, investiture, item-level vs character, and treasure-by-level.",
+  "Settings.autoAuditOnLevelUp.Name": "Auto-audit on level-up",
+  "Settings.autoAuditOnLevelUp.Hint": "When a character's level changes, automatically run the audit and whisper a summary to the GM.",
+  "Settings.watchModeActive.Name": "Watch mode (live audit)",
+  "Settings.watchModeActive.Hint": "Re-run audit automatically whenever actor or owned-item data changes.",
+  "Settings.customAuditRules.Name": "Custom audit rules (JSON)",
+  "Settings.customAuditRules.Hint": "Array of { code, severity, title, hint, when:{predicates} }. See module docs.",
+  // Auto-audit chat summary
+  "AutoAudit.ChatTitle": "<strong>{actorName}</strong> reached level {level} — audit results",
+  "AutoAudit.Summary.Title": "Audit after level-up",
+  "AutoAudit.Summary.Errors": "errors",
+  "AutoAudit.Summary.Warnings": "warnings",
+  "AutoAudit.Summary.Infos": "infos",
+  "AutoAudit.Summary.PrereqFails": "prereq failures",
+  "AutoAudit.Summary.PrereqUnknowns": "prereq unknowns",
+  "AutoAudit.OpenFullReport": "View full audit",
+  // Sheet badge
+  "SheetBadge.Tooltip": "{errors} errors, {warnings} warnings — click for details",
+  "SheetBadge.NoSnapshot": "Click to audit",
+  "SheetBadge.Clean": "No issues",
+  // Custom rules
+  "CustomRules.ParseError": "Custom audit rules: invalid JSON, ignoring."
 };
 
 export function key(suffix) {
@@ -67,10 +99,13 @@ export function t(suffix) {
 
 export function format(suffix, data = {}) {
   const fullKey = key(suffix);
-  const tpl = game.i18n?.localize?.(fullKey);
-  if (tpl && tpl !== fullKey) return game.i18n.format(fullKey, data);
-  // Fallback path: do simple {placeholder} substitution against our default.
-  let s = FALLBACKS[suffix] ?? fullKey;
+  const tpl = game?.i18n?.localize?.(fullKey);
+  if (tpl && tpl !== fullKey && typeof game?.i18n?.format === "function") {
+    return game.i18n.format(fullKey, data);
+  }
+  // Fallback path: do simple {placeholder} substitution against our default
+  // (or the localized template, if we have one but no game.i18n.format).
+  let s = (tpl && tpl !== fullKey ? tpl : null) ?? FALLBACKS[suffix] ?? fullKey;
   for (const [k, v] of Object.entries(data ?? {})) {
     s = s.replaceAll(`{${k}}`, String(v));
   }

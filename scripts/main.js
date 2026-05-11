@@ -47,4 +47,21 @@ Hooks.once("ready", () => {
   if (typeof Handlebars !== "undefined") {
     Handlebars.registerHelper("aon", (code) => new Handlebars.SafeString(getAonLinkHtml(code)));
   }
+  // When the Additional Feats journal scan finishes after a world reload, any
+  // already-open AuditReportApp likely ran with an empty map (false fails on
+  // Reactive Striker etc.). Auto-rerender so the user doesn't have to click
+  // Re-audit manually.
+  Hooks.on("pf2e-character-audit.afMapReady", () => {
+    try {
+      const instances = foundry.applications?.instances ?? new Map();
+      for (const app of instances.values()) {
+        if (app?.constructor?.name === "AuditReportApp" && app.rendered) {
+          app._report = null;
+          app.render(false);
+        }
+      }
+    } catch (err) {
+      console.warn(`[${MODULE_ID}] afMapReady rerender failed:`, err);
+    }
+  });
 });

@@ -141,6 +141,8 @@ function isInnateEntry(entry) {
 
 function isFocusEntry(entry) {
   return entry?.system?.prepared?.value === "focus"
+    || entry?.system?.category === "focus"
+    || entry?.system?.category?.value === "focus"
     || entry?.system?.tradition?.value === "focus"
     || entry?.isFocusPool === true;
 }

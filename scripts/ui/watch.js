@@ -137,7 +137,8 @@ export function registerLevelUpHook() {
   Hooks.on("updateActor", (actor, change, _options, _userId) => {
     try {
       const newLevel = change?.system?.details?.level?.value;
-      if (newLevel === undefined) return;
+      // Only fire on numeric level updates; ignore undefined/non-numeric values.
+      if (typeof newLevel !== "number" || !Number.isFinite(newLevel)) return;
       if (!game.user?.isGM) return;
       if (actor?.type !== "character") return;
       let enabled = true;

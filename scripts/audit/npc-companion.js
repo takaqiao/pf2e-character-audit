@@ -129,13 +129,19 @@ export function auditCompanion(actor) {
   }
 
   // 5. COMPANION_LEVEL_MISMATCH
-  const masterLevel = Number(master.system?.details?.level?.value);
-  const companionLevel = Number(actor.system?.details?.level?.value);
-  if (Number.isFinite(masterLevel) && Number.isFinite(companionLevel)
-      && masterLevel !== companionLevel) {
-    issues.push(makeIssue("COMPANION_LEVEL_MISMATCH", SEVERITY.WARN, {
-      name, companionLevel, masterLevel
-    }));
+  // Familiars don't have an independent level (their effective level = master).
+  // Skip the check for familiars to avoid false positives when the field is
+  // absent or zero. Animal companions and eidolons should match master level.
+  if (!isFamiliar) {
+    const masterLevel = Number(master.system?.details?.level?.value);
+    const companionLevel = Number(actor.system?.details?.level?.value);
+    if (Number.isFinite(masterLevel) && Number.isFinite(companionLevel)
+        && companionLevel > 0
+        && masterLevel !== companionLevel) {
+      issues.push(makeIssue("COMPANION_LEVEL_MISMATCH", SEVERITY.WARN, {
+        name, companionLevel, masterLevel
+      }));
+    }
   }
 
   return pack(issues);

@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.1.26] - 2026-05-12
+- Cleric domain check simplified: read focus pool size directly vs `Initiate + Advanced` feat count. Removes brittle trait/slug heuristic and the over-eager distinct-domain check.
+- AF map race-condition: on first build, fires `pf2e-character-audit.afMapReady` hook; open AuditReportApp instances auto re-render so Reactive Striker etc. flip from false-fail to pass without manual re-audit.
+- Spell DC progression check disabled (PF2e system advances rank via `Expert Spellcaster` class feature; `class-feature-detail` catches missing features — this layer was redundant noise).
+- 11-detector verification sweep with in-place fixes: babele-bridge (full-width paren parsing, Node-safe, cache failure preserves prior); prereq (AF description scan scoped to section); completeness (boost count respects Voluntary Flaws, key-ability only for multi-choice classes, DEDICATION_2_FEAT_RULE exempts most-recent dedication); publication (custom-lore flag propagated, actor dedup); equipment-proficiency (versatile-weapon false-positive, ammo gate); voluntary-flaws (Remaster ancestry list trimmed); class-feature-detail (bilingual substring + alias matching); additional-feats (regex covers both `<strong>X</strong>:` and `<strong>X:</strong>`); sheet-badge (GM gate); audit-app (per-actor id); exporters-extras (timestamp in filename); index.js (suppression summary recalc); i18n (0.1.24+ fallback keys).
+
 ## [0.1.25] - 2026-05-12
 - **Reactive Striker regression fixed**: Additional Feats lookup now also accepts dedications by `-dedication` slug / name suffix / class category, not only by literal `dedication` trait. Translation-pack items that lose the trait now resolve correctly. `api.debugAF(actor)` exposed for diagnostics.
 - **Spell DC reads effective rank**: now uses `entry.statistic.rank` (post-rule-element) instead of base `system.proficiency.value`. Eliminates false `RANK_BEHIND_PROGRESSION` warnings when system has already advanced via `Expert Spellcaster` etc.

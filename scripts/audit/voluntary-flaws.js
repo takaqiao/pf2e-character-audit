@@ -19,7 +19,8 @@ import { SEVERITY, ATTRIBUTES } from "../constants.js";
 
 // Remaster ancestries that no longer pre-fill mandatory flaws. Used only as
 // a fallback when neither ancestry.system.flaws.value nor system.flaws.ancestry
-// is available. Conservative list — extend as needed.
+// is available. This is the spec-authoritative minimum set; extend if Paizo
+// remasters additional ancestries.
 const REMASTER_FLAWLESS_ANCESTRIES = new Set([
   "orc",
   "half-orc",
@@ -29,28 +30,10 @@ const REMASTER_FLAWLESS_ANCESTRIES = new Set([
   "kobold",
   "leshy",
   "lizardfolk",
-  "iruxi",
   "ratfolk",
   "tengu",
   "anadi",
-  "android",
-  "azarketi",
-  "catfolk",
-  "conrasu",
-  "fetchling",
-  "fleshwarp",
-  "gnoll",
-  "kashrishi",
-  "kitsune",
-  "nagaji",
-  "poppet",
-  "shisk",
-  "shoony",
-  "skeleton",
-  "sprite",
-  "strix",
-  "vanara",
-  "vishkanya"
+  "android"
 ]);
 
 function makeIssue(code, severity, params = {}) {
@@ -129,6 +112,18 @@ export function auditVoluntaryFlaws(actor) {
   const levelBoosts = Array.isArray(build?.boosts?.[1]) ? build.boosts[1] : [];
   const grantedFlaws = readAncestryGrantedFlaws(actor);
   const ancestrySlug = actor?.ancestry?.slug ?? null;
+
+  // If we have no ancestry data at all AND the actor has level-1 flaws, we
+  // cannot reliably distinguish mandatory (legacy) from voluntary flaws.
+  // Skip the count/same-attribute/missing-boost checks rather than emit a
+  // false-positive ERROR. The remaster-flawless info pass below also gates on
+  // ancestrySlug, so it self-skips.
+  const ancestryDataMissing = !ancestrySlug
+    && grantedFlaws.length === 0
+    && !actor?.ancestry;
+  if (ancestryDataMissing && levelFlaws.length > 0) {
+    return { issues, summary: summarize(issues) };
+  }
 
   // Subtract one occurrence of each ancestry-granted flaw from levelFlaws to
   // isolate VOLUNTARY flaws. This way a legacy/CRB ancestry that grants 1 STR

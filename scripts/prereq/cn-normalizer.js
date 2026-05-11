@@ -348,14 +348,14 @@ export function normalizeRequirement(text) {
 
   // Pattern: "<ability><num>" / "<ability> <num> 或更高" / "<ability>调整值+<num>"
   // → "<ability> <num>". Leveler parser handles both "Strength 14" (score) and
-  // "Strength +2" (modifier) so we emit raw score by default.
+  // "Strength +2" (modifier); we preserve whichever notation appeared in
+  // the source so the parser can interpret it correctly.
   out = out.replace(
     new RegExp(`(${CJK_RUN_LAZY})(?:调整值)?(?:为|达到)?\\s*([+]?\\d+)\\s*(?:或更高|或以上)?`, "g"),
     (m, attr, num) => {
       const en = ABILITY_CN_TO_EN[attr];
       if (!en) return m;
-      const n = num.startsWith("+") ? num : num;
-      return `${en} ${n}`;
+      return `${en} ${num}`;
     }
   );
 

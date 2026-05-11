@@ -45,12 +45,28 @@ function splitBilingualName(rawName) {
   return { cn: null, en: name };
 }
 
-const ADDITIONAL_FEATS_SECTION = /additional\s+feats?|额外专长|额外的?专长|附加专长/i;
+// Section header — must be a heading-ish line, not a passing mention.
+const ADDITIONAL_FEATS_SECTION = /(?:<(?:h[1-6]|strong|b)[^>]*>\s*)?(?:additional\s+feats?|额外专长|额外的?专长|附加专长)/i;
+
+// Extract the slice of `desc` that starts at the Additional Feats heading,
+// so a feat name appearing in some earlier flavor paragraph doesn't trigger
+// a false positive. We stop at the next heading-like break or end-of-string.
+function extractAdditionalFeatsSection(desc) {
+  const m = desc.match(ADDITIONAL_FEATS_SECTION);
+  if (!m) return null;
+  const start = m.index + m[0].length;
+  const rest = desc.slice(start);
+  // Cut at the next likely heading boundary (another <h*>, <strong> heading-ish, or "Cross-Class"/"Class Feats" section).
+  const nextHeading = rest.search(/<h[1-6][^>]*>|class\s+feats?|跨职业|职业专长/i);
+  return nextHeading >= 0 ? rest.slice(0, nextHeading) : rest;
+}
 
 function isFeatGrantedAsAdditionalFeat(actor, currentFeat) {
   const parts = splitBilingualName(currentFeat.name);
   const en = parts.en ? parts.en.toLowerCase() : null;
   const cn = parts.cn;
+  // Skip ultra-short names to avoid accidental substring hits ("Ki", "Bon").
+  if ((!en || en.length < 4) && (!cn || cn.length < 2)) return null;
 
   for (const item of actor.items ?? []) {
     if (item === currentFeat || item.id === currentFeat.id) continue;
@@ -58,11 +74,13 @@ function isFeatGrantedAsAdditionalFeat(actor, currentFeat) {
     if (!traits.includes("dedication")) continue;
 
     const desc = item.system?.description?.value ?? "";
-    if (!desc || !ADDITIONAL_FEATS_SECTION.test(desc)) continue;
+    if (!desc) continue;
+    const section = extractAdditionalFeatsSection(desc);
+    if (!section) continue;
 
-    const descLower = desc.toLowerCase();
-    if (en && descLower.includes(en)) return item.name;
-    if (cn && desc.includes(cn)) return item.name;
+    const sectionLower = section.toLowerCase();
+    if (en && en.length >= 4 && sectionLower.includes(en)) return item.name;
+    if (cn && cn.length >= 2 && section.includes(cn)) return item.name;
   }
   return null;
 }

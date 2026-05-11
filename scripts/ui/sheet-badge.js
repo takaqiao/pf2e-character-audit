@@ -113,14 +113,22 @@ function rootEl(html, app) {
 
 function shouldShow(actor) {
   if (!actor || actor.type !== "character") return false;
-  // Show if a snapshot exists, OR the user has the sheet-button setting on
-  // (in which case we render a neutral "?" prompt).
-  if (latestSnapshot(actor)) return true;
-  try {
-    return game.settings.get(MODULE_ID, "auditButtonOnSheet") !== false;
-  } catch {
-    return false;
+  // Gate: GM always sees the badge (subject to the sheet-button client setting);
+  // players only see it if the GM has enabled `allowPlayerAudit`.
+  const isGM = !!game.user?.isGM;
+  if (!isGM) {
+    try {
+      if (!game.settings.get(MODULE_ID, "allowPlayerAudit")) return false;
+    } catch {
+      return false;
+    }
   }
+  let buttonOn = true;
+  try {
+    buttonOn = game.settings.get(MODULE_ID, "auditButtonOnSheet") !== false;
+  } catch { /* keep default */ }
+  // Show if the sheet-button toggle is on OR a prior snapshot exists.
+  return buttonOn || !!latestSnapshot(actor);
 }
 
 function onRender(app, html) {

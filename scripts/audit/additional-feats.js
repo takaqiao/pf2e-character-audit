@@ -27,7 +27,7 @@
 let cachedMap = null;
 let buildPromise = null;
 
-const AF_SECTION_RE = /<strong>\s*(?:Additional\s+Feats?|补充专长|额外专长|额外的?专长|附加专长)\s*[:：]?\s*<\/strong>([\s\S]*?)(?:<\/p>|<h[1-6])/i;
+const AF_SECTION_RE = /<strong>\s*(?:Additional\s+Feats?|补充专长|额外专长|额外的?专长|附加专长)\s*[:：]?\s*<\/strong>\s*[:：]?([\s\S]*?)(?:<\/p>|<h[1-6])/i;
 const UUID_RE = /@UUID\[([^\]]+)\](?:\{([^}]+)\})?/g;
 
 function extractAFSection(text) {

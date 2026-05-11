@@ -40,6 +40,9 @@ const CLASS_SUBCLASS_REQUIREMENTS = {
             "spirit-instinct", "superstition-instinct"]
   },
   witch: {
+    // TODO verify: witch patron slugs in PF2e v8 are likely longer than this
+    // list (e.g. fate, night, pacts, resentment). The keyword-fallback in
+    // checkClassSubclass should still catch unlisted ones via FEATURE_KEYWORDS.
     featureName: "patron",
     slugs: ["faith", "fervor", "knowledge", "mosquito", "rune", "silence",
             "spinner-of-threads", "stitches", "wild", "winter"]
@@ -64,7 +67,7 @@ const CLASS_SUBCLASS_REQUIREMENTS = {
   inventor: { featureName: "innovation", slugs: ["armor-innovation", "construct-innovation", "weapon-innovation"] },
   kineticist: { featureName: "kinetic gate", slugs: ["dual-gate", "single-gate", "elemental-gate-fire", "elemental-gate-air", "elemental-gate-earth", "elemental-gate-water", "elemental-gate-metal", "elemental-gate-wood"] },
   summoner: { featureName: "eidolon", slugs: ["angel", "anger-phantom", "beast", "construct", "demon", "devotion-phantom", "dragon", "dragon-tyrant", "elemental", "fey", "psychopomp", "undead-phantom"] },
-  gunslinger: { featureName: "way", slugs: ["pistolero", "sniper", "drifter", "vanguard", "triggerbrand", "fortune", "drifter"] },
+  gunslinger: { featureName: "way", slugs: ["pistolero", "sniper", "drifter", "vanguard", "triggerbrand", "fortune"] },
   thaumaturge: {
     featureName: "implement",
     slugs: ["amulet", "bell", "chalice", "lantern", "mirror", "regalia", "tome", "wand", "weapon"]
@@ -173,9 +176,19 @@ function checkBasics(actor, issues) {
   if (!actor.heritage) issues.push(makeIssue("MISSING_HERITAGE", SEVERITY.ERROR));
   if (!actor.background) issues.push(makeIssue("MISSING_BACKGROUND", SEVERITY.ERROR));
   if (!actor.class) issues.push(makeIssue("MISSING_CLASS", SEVERITY.ERROR));
-  const keyAbility = actor.class?.system?.keyAbility?.selected;
-  if (actor.class && (!keyAbility || (Array.isArray(keyAbility) && keyAbility.length === 0))) {
-    issues.push(makeIssue("MISSING_KEY_ABILITY", SEVERITY.ERROR));
+  // Only flag MISSING_KEY_ABILITY when the class actually offers a CHOICE.
+  // Single-option classes (Wizard=Int, etc.) may legitimately leave `selected`
+  // empty since the value is fixed by the class. The class-feature-detail
+  // module emits KEY_ABILITY_NOT_SET for the choose-from-many case; we mirror
+  // the same guard here to avoid double-fire / false positives.
+  const choices = actor.class?.system?.keyAbility?.value;
+  const selected = actor.class?.system?.keyAbility?.selected;
+  const hasChoice = Array.isArray(choices) && choices.length > 1;
+  if (actor.class && hasChoice) {
+    const isUnset = !selected
+      || (Array.isArray(selected) && selected.length === 0)
+      || (typeof selected === "string" && selected.trim() === "");
+    if (isUnset) issues.push(makeIssue("MISSING_KEY_ABILITY", SEVERITY.ERROR));
   }
 }
 
@@ -185,12 +198,30 @@ function checkBoosts(actor, expected, variants, issues) {
     return;
   }
   const boosts = actor.system?.build?.attributes?.boosts ?? {};
+  // Voluntary flaws grant +1 free boost at level 1, so boosts[1] may legitimately
+  // contain 5 entries. Detect this by subtracting ancestry-granted flaws from the
+  // level-1 flaw slot — anything left is voluntary.
+  const lvOneFlaws = Array.isArray(actor.system?.build?.attributes?.flaws?.[1])
+    ? [...actor.system.build.attributes.flaws[1]]
+    : [];
+  const ancestryFlaws = (() => {
+    const a = actor.ancestry;
+    const v = a?.system?.flaws?.value ?? a?.system?.flaws ?? [];
+    if (!Array.isArray(v)) return [];
+    return v.map((x) => (typeof x === "string" ? x : x?.value ?? x?.slug)).filter(Boolean);
+  })();
+  for (const g of ancestryFlaws) {
+    const idx = lvOneFlaws.indexOf(g);
+    if (idx >= 0) lvOneFlaws.splice(idx, 1);
+  }
+  const hasVoluntaryFlaw = lvOneFlaws.length >= 2; // remaster: voluntary flaws are exactly 2
   for (const lv of expected.boostLevels) {
     const slot = boosts[lv] ?? boosts[String(lv)] ?? [];
     const arr = Array.isArray(slot) ? slot : [];
-    if (arr.length !== 4) {
+    const expectedCount = lv === 1 && hasVoluntaryFlaw ? 5 : 4;
+    if (arr.length !== expectedCount) {
       issues.push(
-        makeIssue("BOOST_COUNT_MISMATCH", SEVERITY.ERROR, { level: lv, actual: arr.length, expected: 4 }, { level: lv })
+        makeIssue("BOOST_COUNT_MISMATCH", SEVERITY.ERROR, { level: lv, actual: arr.length, expected: expectedCount }, { level: lv })
       );
     }
   }
@@ -367,9 +398,30 @@ function checkDedications(actor, issues) {
   });
   if (dedications.length <= 1) return;
 
+  // The 2-feat rule applies to PREVIOUS dedications. The most-recently-taken
+  // dedication (highest-level among the owned dedications) is exempt — the
+  // character just picked it up and hasn't had a chance to take follow-ups yet.
+  // We use the dedication feat's `level.value` as the proxy for "when taken";
+  // this isn't perfectly accurate (it's the prerequisite level, not the actual
+  // pick level) but is the only signal available on the item.
+  const sorted = [...dedications].sort((a, b) => {
+    const al = a.system?.level?.value ?? 1;
+    const bl = b.system?.level?.value ?? 1;
+    return bl - al; // descending
+  });
+  const exempt = new Set();
+  // Exempt the single most-recent dedication (ties resolved by first in list).
+  if (sorted.length > 0) exempt.add(sorted[0].id);
+
+  // De-dupe issues per dedication slug so the same archetype can't be reported
+  // twice if the actor somehow ended up with two copies of the same dedication.
+  const reported = new Set();
   for (const ded of dedications) {
+    if (exempt.has(ded.id)) continue;
     const slug = ded.slug ?? ded.system?.slug;
     if (!slug) continue;
+    if (reported.has(slug)) continue;
+    reported.add(slug);
     const followups = findArchetypeFollowups(actor, ded);
     if (followups.length < 2) {
       issues.push(makeIssue("DEDICATION_2_FEAT_RULE", SEVERITY.WARN, {
@@ -402,6 +454,10 @@ function checkSpellcasting(actor, issues) {
   const entries = actor.itemTypes.spellcastingEntry ?? [];
   if (entries.length === 0) return;
   const spellCount = (actor.itemTypes.spell ?? []).length;
+  // TODO verify: tighter threshold (e.g. >=1 per accessible rank) would catch
+  // half-built spellbooks, but risks false positives for innate-only casters
+  // (sorcerer with focus pool only, summoner without spellbook, etc.). The
+  // current "zero spells" gate is conservative but reliable.
   if (spellCount === 0) {
     issues.push(makeIssue("SPELL_LIST_INCOMPLETE", SEVERITY.WARN, { actual: 0 }));
   }

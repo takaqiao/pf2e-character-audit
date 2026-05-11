@@ -1,4 +1,4 @@
-import { EXCLUDED_PUBLICATION_TYPES, SEVERITY } from "../constants.js";
+import { EXCLUDED_PUBLICATION_TYPES } from "../constants.js";
 import { getWhitelistTitles } from "../settings.js";
 
 const UNKNOWN_KEY = "PF2E-CA.Publication.Unknown";
@@ -22,7 +22,10 @@ export function getLicense(item) {
   if (!p) return { license: "", remaster: false, display: "" };
   const lic = safeText(p.license);
   const r = !!p.remaster;
-  return { license: lic, remaster: r, display: lic ? `${lic}${r ? "·R" : ""}` : "" };
+  // OGL items flagged remaster become "OGL·R"; ORC items are post-remaster by definition,
+  // but if the data carries remaster=true we still surface "ORC·R" for transparency.
+  // TODO verify: confirm with PF2e system whether ORC entries ever set remaster=true.
+  return { license: lic, remaster: r, display: lic ? `${lic}${r ? "·R" : ""}` : (r ? "·R" : "") };
 }
 
 export function isExcluded(item) {
@@ -66,6 +69,7 @@ export function auditPublication(actor) {
     if (isExcluded(item)) continue;
     const pub = getPub(item);
     const lic = getLicense(item);
+    const cat = categoryFor(item);
     total++;
     if (pub.isUnknown) unknownCount++;
     if (lic.remaster) remasterCount++;
@@ -88,12 +92,11 @@ export function auditPublication(actor) {
       uuid: item.uuid,
       name: item.name,
       type: item.type,
-      category: categoryFor(item),
+      category: cat,
       fromLegacy: !!pub.fromLegacy
     });
     titles.set(pub.title, entry);
 
-    const cat = categoryFor(item);
     byCategory[cat] = byCategory[cat] || [];
     byCategory[cat].push({
       title: pub.title,
@@ -130,7 +133,13 @@ export function auditPublication(actor) {
 
 export function aggregateAcrossActors(reports) {
   const cross = new Map();
+  const seenActors = new Set();
   for (const r of reports) {
+    // Guard against the same actor appearing twice in the input — we want to count
+    // titles "across distinct actors", not multiply by duplicates.
+    const actorKey = r?.actorUuid ?? r?.actorId ?? r?.actorName;
+    if (actorKey && seenActors.has(actorKey)) continue;
+    if (actorKey) seenActors.add(actorKey);
     for (const t of r.publication?.actorRollup ?? []) {
       const e = cross.get(t.title) ?? {
         title: t.title,
@@ -139,6 +148,7 @@ export function aggregateAcrossActors(reports) {
         remaster: t.remaster,
         whitelisted: t.whitelisted,
         isUnknown: t.isUnknown,
+        isCustom: t.isCustom,
         count: 0,
         actorBreakdown: []
       };

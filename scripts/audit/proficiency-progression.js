@@ -31,8 +31,9 @@ const LEVEL_GAINS = {
     reflex:    [{ level: 1, rank: 1 }, { level: 17, rank: 2 }],
     will:      [{ level: 1, rank: 2 }, { level: 9, rank: 3 }],
     perception:[{ level: 1, rank: 1 }, { level: 7, rank: 2 }, { level: 17, rank: 3 }],
-    classDC:   [{ level: 1, rank: 1 }, { level: 5, rank: 2 }, { level: 13, rank: 3 }, { level: 17, rank: 4 }],
-    spellDC:   [{ level: 1, rank: 1 }, { level: 9, rank: 2 }] // focus-only; verify on champion focus
+    classDC:   [{ level: 1, rank: 1 }, { level: 5, rank: 2 }, { level: 13, rank: 3 }, { level: 17, rank: 4 }]
+    // champion has only focus (devotion) spellcasting; focus entries are filtered
+    // out of spell-DC checks, so no spellDC table is needed here.
   },
   cleric: {
     fortitude: [{ level: 1, rank: 1 }, { level: 9, rank: 2 }],
@@ -260,6 +261,17 @@ function isRitualEntry(entry) {
     || entry?.isRitual === true;
 }
 
+// Innate spellcasting (ancestry feats, deity gifts, items) and focus spellcasting
+// (聚能法术) don't follow the class spell-DC progression — their proficiency is
+// set by their granting source, not by class features like Expert Spellcaster.
+// Skip both from Spell DC progression checks.
+function isInnateOrFocusEntry(entry) {
+  const prep = entry?.system?.prepared?.value;
+  if (prep === "innate" || prep === "focus") return true;
+  if (entry?.isInnate === true || entry?.isFocusPool === true) return true;
+  return false;
+}
+
 function getClassSlug(actor) {
   const slug = actor.class?.slug ?? actor.class?.system?.slug ?? null;
   if (!slug) return null;
@@ -301,12 +313,19 @@ function checkClassProgression(actor, issues) {
     }
   }
 
-  if (table.spellDC) {
+  // Spell DC progression intentionally NOT checked here. The PF2e system grants
+  // the rank advancement via class-feature rule elements (Expert Spellcaster
+  // at L11, Master at L19). When a feature is missing, `class-feature-detail`
+  // already emits CLASS_FEATURE_NOT_PRESENT — and that's the actionable signal.
+  // Reading `entry.statistic.rank` here returned trained for users whose
+  // system has correctly advanced the rank, producing false-positives.
+  if (false && table.spellDC) {
     const expectedSpell = expectedRankAtLevel(table.spellDC, level);
     const entries = actor.spellcasting?.contents ?? [];
     for (const entry of entries) {
       if (entry?.system?.prepared?.value === "items") continue;
       if (isRitualEntry(entry)) continue;
+      if (isInnateOrFocusEntry(entry)) continue;
       const effectiveRank = getEntryEffectiveRank(entry);
       if (typeof effectiveRank !== "number") continue;
       const entryName = entry.name ?? entry.tradition ?? "Spellcasting";
