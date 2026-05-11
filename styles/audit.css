@@ -1,936 +1,547 @@
-/* PF2e Character Audit — visual styles
+/* pf2e-character-audit — UI styles
  *
- * Aesthetic: paper + ink. Tries to fit alongside PF2e's own document chrome
- * (warm cream surfaces, deep ink text, serif headings, sparse iconography).
- * Hardcoded hex values throughout; no theme variable inheritance from
- * Foundry — that proved unreliable across third-party themes.
+ * Thin styling layer on top of Foundry VTT's built-in ApplicationV2 chrome.
+ * Colours come from FVTT's CSS variables (`--color-*`, `--color-level-*`)
+ * so the module blends with whatever theme the user has. No custom palette,
+ * no custom fonts, no animations, no decorative shadows/gradients.
  */
 
-.pf2e-character-audit.audit-report,
-.pf2e-character-audit.party-audit {
-  /* Surfaces */
-  --ca-surface:    #fdfaf3;
-  --ca-surface-2:  #f5f1e6;
-  --ca-surface-3:  #ecebe7;
-  --ca-card:       #ffffff;
-  /* Ink */
-  --ca-text:       #1c1a17;
-  --ca-text-muted: #5d5953;
-  --ca-text-faint: #8a857d;
-  /* Lines */
-  --ca-border:     #d6cfb8;
-  --ca-border-strong: #b3aa92;
-  /* Accent (sepia) */
-  --ca-accent:     #5b3a1f;
-  --ca-accent-bg:  #f0e8d6;
+/* ─── Layout ─────────────────────────────────────────────── */
 
-  /* Severity tokens — text + bg paired for ≥4.5:1 contrast */
-  --ca-error-text: #7a1212;
-  --ca-error-bg:   #f4dad8;
-  --ca-error-line: #a52a2a;
-
-  --ca-warn-text:  #6a4106;
-  --ca-warn-bg:    #f5e9c8;
-  --ca-warn-line:  #b87800;
-
-  --ca-info-text:  #1e3a78;
-  --ca-info-bg:    #e2ebf6;
-  --ca-info-line:  #2c4f9c;
-
-  --ca-ok-text:    #2a5536;
-  --ca-ok-bg:      #dfecdf;
-  --ca-ok-line:    #3a7544;
-
-  --ca-serif: Georgia, "Source Serif Pro", "Roboto Slab", "PT Serif", serif;
-  --ca-mono: ui-monospace, SFMono-Regular, "JetBrains Mono", Consolas, monospace;
-
-  font-size: 13px;
-  line-height: 1.55;
-  color: var(--ca-text);
-  background: var(--ca-surface);
-}
-
-/* OS dark mode + Foundry dark theme */
-@media (prefers-color-scheme: dark) {
-  .pf2e-character-audit.audit-report,
-  .pf2e-character-audit.party-audit {
-    --ca-surface:    #1f1c18;
-    --ca-surface-2:  #16140f;
-    --ca-surface-3:  #2a2620;
-    --ca-card:       #25221c;
-    --ca-text:       #ece6d8;
-    --ca-text-muted: #b8b1a1;
-    --ca-text-faint: #847e72;
-    --ca-border:     #3a352c;
-    --ca-border-strong:#564f43;
-    --ca-accent:     #d6a566;
-    --ca-accent-bg:  #312820;
-
-    --ca-error-text: #f3b9b6;
-    --ca-error-bg:   #391918;
-    --ca-error-line: #c34b46;
-
-    --ca-warn-text:  #f5d791;
-    --ca-warn-bg:    #2c2310;
-    --ca-warn-line:  #c48a1f;
-
-    --ca-info-text:  #c0d3f0;
-    --ca-info-bg:    #14213d;
-    --ca-info-line:  #4970b6;
-
-    --ca-ok-text:    #b9e0bf;
-    --ca-ok-bg:      #142b1c;
-    --ca-ok-line:    #4a8758;
-  }
-}
-body.theme-dark .pf2e-character-audit.audit-report,
-body.theme-dark .pf2e-character-audit.party-audit,
-body.dark-theme .pf2e-character-audit.audit-report,
-body.dark-theme .pf2e-character-audit.party-audit {
-  --ca-surface:    #1f1c18;
-  --ca-surface-2:  #16140f;
-  --ca-surface-3:  #2a2620;
-  --ca-card:       #25221c;
-  --ca-text:       #ece6d8;
-  --ca-text-muted: #b8b1a1;
-  --ca-text-faint: #847e72;
-  --ca-border:     #3a352c;
-  --ca-border-strong:#564f43;
-  --ca-accent:     #d6a566;
-  --ca-accent-bg:  #312820;
-
-  --ca-error-text: #f3b9b6;
-  --ca-error-bg:   #391918;
-  --ca-error-line: #c34b46;
-
-  --ca-warn-text:  #f5d791;
-  --ca-warn-bg:    #2c2310;
-  --ca-warn-line:  #c48a1f;
-
-  --ca-info-text:  #c0d3f0;
-  --ca-info-bg:    #14213d;
-  --ca-info-line:  #4970b6;
-
-  --ca-ok-text:    #b9e0bf;
-  --ca-ok-bg:      #142b1c;
-  --ca-ok-line:    #4a8758;
-}
-
-/* App container */
 .audit-report-app,
 .party-audit-app {
   display: flex;
   flex-direction: column;
   min-height: 100%;
-  background: var(--ca-surface);
-  color: var(--ca-text);
+  gap: 0;
+}
+
+.party-audit-app {
+  display: grid;
+  grid-template-columns: 210px 1fr;
+  grid-template-rows: 1fr auto;
+  height: 100%;
+  min-height: 0;
 }
 
 /* ─── Header ─────────────────────────────────────────────── */
 
-.pf2e-character-audit .audit-header {
+.audit-header {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
-  align-items: center;
-  gap: 0.85rem;
-  padding: 0.8rem 1.05rem;
-  border-bottom: 1px solid var(--ca-border);
-  background: var(--ca-surface-2);
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--color-border-light-tertiary, #c9c7b8);
 }
-
-.pf2e-character-audit .audit-actor-info { flex: 1; min-width: 0; }
-
-.pf2e-character-audit .audit-header h2 {
+.audit-header h2 {
   margin: 0;
-  font-family: var(--ca-serif);
-  font-size: 1.25rem;
-  font-weight: 700;
-  line-height: 1.25;
-  letter-spacing: 0.005em;
-  color: var(--ca-text);
+  font-size: 1.1rem;
+  font-weight: 600;
   border: none;
 }
-
-.pf2e-character-audit .audit-level {
-  display: inline-block;
-  margin-left: 0.55rem;
-  padding: 0.05rem 0.5rem;
-  background: var(--ca-accent-bg);
-  color: var(--ca-accent);
-  border: 1px solid var(--ca-border-strong);
-  border-radius: 3px;
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  vertical-align: 0.12em;
-  font-family: var(--ca-mono);
+.audit-header .audit-level {
+  margin-left: 0.4rem;
+  font-size: 0.85rem;
+  opacity: 0.75;
+  font-weight: 400;
 }
-
-.pf2e-character-audit .audit-actor-meta {
-  margin: 0.3rem 0 0;
-  color: var(--ca-text-muted);
-  font-size: 0.84rem;
+.audit-header .audit-actor-meta {
+  width: 100%;
+  margin: 0.2rem 0 0;
+  font-size: 0.85rem;
+  opacity: 0.7;
 }
-
-/* Status badges (counts) */
-.pf2e-character-audit .audit-summary-badges {
-  display: flex;
-  gap: 0.35rem;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-.pf2e-character-audit .audit-badge {
+.audit-summary-badges {
   display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  padding: 0.18rem 0.55rem;
-  border-radius: 3px;
-  font-size: 0.78rem;
-  font-weight: 700;
-  line-height: 1.2;
-  border: 1px solid;
-  white-space: nowrap;
-  font-variant-numeric: tabular-nums;
+  gap: 0.5rem;
+  align-items: baseline;
+  font-size: 0.85rem;
 }
-.pf2e-character-audit .audit-badge i { font-size: 0.8em; }
-.pf2e-character-audit .audit-badge.error { color: var(--ca-error-text); background: var(--ca-error-bg); border-color: var(--ca-error-line); }
-.pf2e-character-audit .audit-badge.warn  { color: var(--ca-warn-text);  background: var(--ca-warn-bg);  border-color: var(--ca-warn-line); }
-.pf2e-character-audit .audit-badge.info  { color: var(--ca-info-text);  background: var(--ca-info-bg);  border-color: var(--ca-info-line); }
-.pf2e-character-audit .audit-badge.ok    { color: var(--ca-ok-text);    background: var(--ca-ok-bg);    border-color: var(--ca-ok-line); }
+.audit-summary-badges .audit-badge {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.25rem;
+}
+.audit-summary-badges .audit-badge.error i { color: var(--color-level-error, #aa2e2e); }
+.audit-summary-badges .audit-badge.warn  i { color: var(--color-level-warning, #997513); }
+.audit-summary-badges .audit-badge.info  i { color: var(--color-level-info, #2e5e9a); }
+.audit-summary-badges .audit-badge.ok    i { color: var(--color-level-success, #2f7a3a); }
 
-/* ─── Tabs ─────────────────────────────────────────────────── */
+/* ─── Tabs ───────────────────────────────────────────────── */
 
-.pf2e-character-audit .audit-tabs {
+.audit-tabs {
   display: flex;
   gap: 0;
-  padding: 0 1.05rem;
-  border-bottom: 1px solid var(--ca-border);
-  background: var(--ca-surface);
+  padding: 0 0.75rem;
+  border-bottom: 1px solid var(--color-border-light-tertiary, #c9c7b8);
   flex-wrap: wrap;
 }
-
-.pf2e-character-audit .audit-tab {
+.audit-tab {
   background: transparent;
   border: none;
   border-bottom: 2px solid transparent;
-  padding: 0.55rem 0.85rem;
-  cursor: pointer;
-  color: var(--ca-text-muted);
-  font-weight: 500;
-  font-size: 0.9rem;
-  line-height: 1.3;
-  transition: color 0.1s, border-color 0.1s;
+  padding: 0.35rem 0.75rem;
   margin-bottom: -1px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.9rem;
+  color: inherit;
+  opacity: 0.65;
 }
-.pf2e-character-audit .audit-tab:hover {
-  color: var(--ca-text);
-}
-.pf2e-character-audit .audit-tab.active {
-  color: var(--ca-text);
-  font-weight: 700;
-  border-bottom-color: var(--ca-accent);
+.audit-tab:hover { opacity: 1; }
+.audit-tab.active {
+  opacity: 1;
+  font-weight: 600;
+  border-bottom-color: currentColor;
 }
 
-.pf2e-character-audit .audit-tab-content {
-  padding: 0.95rem 1.05rem;
+.audit-tab-content {
   flex: 1;
   overflow: auto;
-  background: var(--ca-surface);
-  color: var(--ca-text);
+  padding: 0.6rem 0.75rem;
 }
 
-/* ─── Filter chips (severity) ────────────────────────────── */
+/* ─── Overview ───────────────────────────────────────────── */
 
-.pf2e-character-audit .audit-filter-bar {
-  display: flex;
-  gap: 0.35rem;
-  flex-wrap: wrap;
-  margin-bottom: 0.7rem;
-  align-items: center;
-  font-size: 0.82rem;
-  color: var(--ca-text-muted);
-}
-.pf2e-character-audit .audit-filter-bar .filter-label {
-  font-weight: 600;
-  margin-right: 0.2rem;
-}
-.pf2e-character-audit .audit-filter-bar .audit-filter-spacer { flex: 1; }
-.pf2e-character-audit .audit-filter-chip {
-  background: transparent;
-  border: 1px solid var(--ca-border);
-  color: var(--ca-text-muted);
-  border-radius: 3px;
-  padding: 0.15rem 0.55rem;
-  font-size: 0.78rem;
-  cursor: pointer;
-  font-weight: 600;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-}
-.pf2e-character-audit .audit-filter-chip.active {
-  background: var(--ca-accent-bg);
-  color: var(--ca-accent);
-  border-color: var(--ca-border-strong);
-}
-.pf2e-character-audit .audit-filter-chip:hover { color: var(--ca-text); }
-
-/* ─── Delta strip (history) ──────────────────────────────── */
-
-.pf2e-character-audit .audit-delta {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  flex-wrap: wrap;
-  margin: 0 0 0.7rem;
-  padding: 0.45rem 0.7rem;
-  background: var(--ca-surface-2);
-  border: 1px solid var(--ca-border);
-  border-radius: 4px;
-  font-size: 0.82rem;
-  color: var(--ca-text-muted);
-}
-.pf2e-character-audit .audit-delta .delta-label { font-weight: 600; color: var(--ca-text); }
-.pf2e-character-audit .audit-delta .delta-time {
-  font-family: var(--ca-mono);
-  font-size: 0.78rem;
-  color: var(--ca-text);
-}
-.pf2e-character-audit .audit-delta .delta-separator { color: var(--ca-text-faint); }
-.pf2e-character-audit .delta-chip {
-  display: inline-block;
-  padding: 0.05rem 0.4rem;
-  border-radius: 3px;
-  font-weight: 700;
-  font-size: 0.76rem;
-  border: 1px solid;
-  font-variant-numeric: tabular-nums;
-}
-.pf2e-character-audit .delta-chip.delta-up { color: var(--ca-error-text); background: var(--ca-error-bg); border-color: var(--ca-error-line); }
-.pf2e-character-audit .delta-chip.delta-down { color: var(--ca-ok-text); background: var(--ca-ok-bg); border-color: var(--ca-ok-line); }
-.pf2e-character-audit .delta-chip.delta-flat { color: var(--ca-text-muted); background: transparent; border-color: var(--ca-border); font-weight: 500; }
-
-/* ─── Overview ─────────────────────────────────────────────── */
-
-.pf2e-character-audit .audit-overview-grid {
+.audit-overview-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-  gap: 0.7rem;
-  margin-bottom: 0.85rem;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
 }
-
-.pf2e-character-audit .audit-overview-section {
-  border: 1px solid var(--ca-border);
-  border-radius: 4px;
-  padding: 0.65rem 0.85rem;
-  background: var(--ca-card);
-  color: var(--ca-text);
+.audit-overview-section {
+  border: 1px solid var(--color-border-light-tertiary, #c9c7b8);
+  padding: 0.4rem 0.6rem;
+  background: var(--color-bg-alt, transparent);
 }
-
-.pf2e-character-audit .audit-overview-section h3 {
-  margin: 0 0 0.5rem;
-  font-family: var(--ca-serif);
-  font-size: 0.95rem;
-  font-weight: 700;
+.audit-overview-section h3 {
+  margin: 0 0 0.3rem;
+  font-size: 0.88rem;
+  font-weight: 600;
   border: none;
-  padding-bottom: 0.3rem;
-  color: var(--ca-text);
-  border-bottom: 1px solid var(--ca-border);
+  padding-bottom: 0.2rem;
+  border-bottom: 1px solid var(--color-border-light-tertiary, #ddd);
 }
 
-.pf2e-character-audit .audit-summary-counts {
+.audit-summary-counts {
   list-style: none;
   margin: 0;
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.1rem;
 }
-.pf2e-character-audit .audit-summary-counts.inline {
+.audit-summary-counts.inline {
   flex-direction: row;
   flex-wrap: wrap;
-  gap: 0.4rem;
-  margin: 0 0 0.6rem 0;
+  gap: 0.7rem;
+  margin-bottom: 0.5rem;
 }
-.pf2e-character-audit .audit-summary-counts li {
+.audit-summary-counts li {
   display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0.18rem 0.55rem;
-  border-radius: 3px;
-  font-size: 0.84rem;
-  font-weight: 600;
-  background: var(--ca-surface-2);
-  color: var(--ca-text);
-  border: 1px solid var(--ca-border);
-  font-variant-numeric: tabular-nums;
+  align-items: baseline;
+  gap: 0.3rem;
+  font-size: 0.88rem;
 }
-.pf2e-character-audit .audit-summary-counts li i { opacity: 0.85; }
-.pf2e-character-audit .audit-summary-counts li.error { color: var(--ca-error-text); background: var(--ca-error-bg); border-color: var(--ca-error-line); }
-.pf2e-character-audit .audit-summary-counts li.warn  { color: var(--ca-warn-text);  background: var(--ca-warn-bg);  border-color: var(--ca-warn-line); }
-.pf2e-character-audit .audit-summary-counts li.info  { color: var(--ca-info-text);  background: var(--ca-info-bg);  border-color: var(--ca-info-line); }
-.pf2e-character-audit .audit-summary-counts li.pass  { color: var(--ca-ok-text);    background: var(--ca-ok-bg);    border-color: var(--ca-ok-line); }
+.audit-summary-counts li.error i { color: var(--color-level-error, #aa2e2e); }
+.audit-summary-counts li.warn  i { color: var(--color-level-warning, #997513); }
+.audit-summary-counts li.info  i { color: var(--color-level-info, #2e5e9a); }
+.audit-summary-counts li.pass  i { color: var(--color-level-success, #2f7a3a); }
 
-.pf2e-character-audit .audit-variant-list {
+.audit-variant-list {
   list-style: none;
   margin: 0;
   padding: 0;
-  display: grid;
-  gap: 0.18rem;
 }
-.pf2e-character-audit .audit-variant-list li {
+.audit-variant-list li {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  padding: 0.1rem 0;
+}
+.audit-variant-list li.on  { font-weight: 600; }
+.audit-variant-list li.off { opacity: 0.55; }
+
+.audit-callout {
+  display: flex;
+  gap: 0.5rem;
+  align-items: baseline;
+  padding: 0.4rem 0.6rem;
+  border-left: 3px solid;
+  background: var(--color-bg-alt, transparent);
+  margin-top: 0.4rem;
+}
+.audit-callout.error { border-color: var(--color-level-error, #aa2e2e); }
+.audit-callout.warn  { border-color: var(--color-level-warning, #997513); }
+.audit-callout.info  { border-color: var(--color-level-info, #2e5e9a); }
+.audit-callout.ok    { border-color: var(--color-level-success, #2f7a3a); }
+.audit-callout.error i { color: var(--color-level-error, #aa2e2e); }
+.audit-callout.warn  i { color: var(--color-level-warning, #997513); }
+.audit-callout.info  i { color: var(--color-level-info, #2e5e9a); }
+.audit-callout.ok    i { color: var(--color-level-success, #2f7a3a); }
+
+/* ─── Delta / history ────────────────────────────────────── */
+
+.audit-delta {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.85rem;
+  flex-wrap: wrap;
+}
+.audit-delta .delta-label { font-weight: 600; }
+.audit-delta .delta-time { opacity: 0.7; font-family: var(--font-mono, monospace); font-size: 0.82rem; }
+.audit-delta .delta-separator { opacity: 0.45; }
+.delta-chip { font-family: var(--font-mono, monospace); font-size: 0.82rem; font-weight: 600; }
+.delta-chip.delta-up   { color: var(--color-level-error, #aa2e2e); }
+.delta-chip.delta-down { color: var(--color-level-success, #2f7a3a); }
+.delta-chip.delta-flat { opacity: 0.55; font-weight: 400; }
+
+.audit-history-bars {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 1px;
+  height: 14px;
+  border: 1px solid var(--color-border-light-tertiary, #c9c7b8);
+  padding: 1px;
+}
+.history-bar {
+  display: inline-block;
+  width: 3px;
+  background: currentColor;
+  opacity: 0.4;
+  align-self: flex-end;
+}
+.history-bar.history-bar-current { opacity: 0.9; }
+
+/* ─── Filter chips ───────────────────────────────────────── */
+
+.audit-filter-bar {
+  display: flex;
+  gap: 0.3rem;
+  align-items: baseline;
+  flex-wrap: wrap;
+  margin-bottom: 0.5rem;
+  font-size: 0.85rem;
+}
+.audit-filter-bar .filter-label { opacity: 0.7; margin-right: 0.2rem; }
+.audit-filter-bar .audit-filter-spacer { flex: 1; }
+.audit-filter-chip {
+  font: inherit;
+  font-size: 0.82rem;
+  padding: 0.1rem 0.5rem;
+  cursor: pointer;
+  opacity: 0.7;
+  background: transparent;
+  border: 1px solid var(--color-border-light-tertiary, #c9c7b8);
+  border-radius: 2px;
+}
+.audit-filter-chip:hover { opacity: 1; }
+.audit-filter-chip.active {
+  opacity: 1;
+  font-weight: 600;
+  background: var(--color-bg-alt, rgba(0,0,0,0.05));
+}
+
+/* ─── Issue list ─────────────────────────────────────────── */
+
+.audit-issue-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.audit-issue {
+  display: grid;
+  grid-template-columns: 1.3em 1fr;
+  gap: 0.5rem;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid var(--color-border-light-tertiary, #ddd);
+  align-items: baseline;
+}
+.audit-issue:last-child { border-bottom: none; }
+.audit-issue-icon { text-align: center; opacity: 0.85; }
+.audit-issue.error .audit-issue-icon { color: var(--color-level-error, #aa2e2e); }
+.audit-issue.warn  .audit-issue-icon { color: var(--color-level-warning, #997513); }
+.audit-issue.info  .audit-issue-icon { color: var(--color-level-info, #2e5e9a); }
+
+.audit-issue-body { min-width: 0; }
+.audit-issue-title {
+  font-weight: 600;
+  word-break: break-word;
+}
+.audit-issue-title a,
+.audit-issue-title button.audit-link {
+  background: transparent;
+  border: none;
+  color: inherit;
+  font: inherit;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: var(--color-text-subtle, rgba(0,0,0,0.3));
+}
+.audit-issue-title button.audit-link:hover { text-decoration-color: currentColor; }
+.audit-issue-title small {
+  margin-left: 0.3rem;
+  opacity: 0.7;
+  font-weight: 400;
+  font-size: 0.85em;
+}
+.audit-issue-hint {
+  font-size: 0.88em;
+  opacity: 0.85;
+  margin-top: 0.1rem;
+  word-break: break-word;
+}
+.audit-prereq-normalized {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.82em;
+  opacity: 0.65;
+  font-style: italic;
+}
+.audit-reasons {
+  list-style: none;
+  margin: 0.2rem 0 0;
+  padding: 0;
+  font-size: 0.85em;
+  opacity: 0.85;
+}
+.audit-reasons li { padding: 0.05rem 0; }
+
+.audit-issue-footer {
+  display: flex;
+  gap: 0.4rem;
+  align-items: baseline;
+  margin-top: 0.25rem;
+}
+.audit-issue-code {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.72em;
+  opacity: 0.5;
+  padding: 0 0.2rem;
+}
+.audit-issue-action,
+.audit-issue-suppress {
+  font: inherit;
+  font-size: 0.78em;
+  padding: 0.05rem 0.4rem;
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid var(--color-border-light-tertiary, #c9c7b8);
+  border-radius: 2px;
+  opacity: 0.7;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.25rem;
+}
+.audit-issue-action:hover,
+.audit-issue-suppress:hover { opacity: 1; }
+
+/* ─── Publication tab ───────────────────────────────────── */
+
+.audit-publication-summary {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.5rem;
+  font-size: 0.88rem;
+}
+.audit-publication-summary span {
+  display: inline-flex;
+  gap: 0.25rem;
+  align-items: baseline;
+}
+.audit-publication-summary i { opacity: 0.6; }
+
+.audit-publication h3,
+.audit-completeness h3,
+.audit-prereq h3 {
+  margin: 0.75rem 0 0.35rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border: none;
+  padding-bottom: 0.2rem;
+  border-bottom: 1px solid var(--color-border-light-tertiary, #ddd);
+}
+
+.audit-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.3rem 0 0.6rem;
+}
+.audit-table th,
+.audit-table td {
+  text-align: left;
+  padding: 0.3rem 0.5rem;
+  border-bottom: 1px solid var(--color-border-light-tertiary, #ddd);
+}
+.audit-table th {
+  font-weight: 600;
+  font-size: 0.82rem;
+  letter-spacing: 0.02em;
+}
+.audit-table tr.unknown td { color: var(--color-level-error, #aa2e2e); }
+.audit-table tr.whitelisted td { color: var(--color-level-success, #2f7a3a); }
+.audit-table td.num,
+.audit-table th.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+.audit-item-list {
+  list-style: none;
+  margin: 0.2rem 0 0;
+  padding: 0 0 0.3rem;
+}
+.audit-item-list li {
+  padding: 0.15rem 0.5rem;
+  font-size: 0.85rem;
+  border-bottom: 1px dotted var(--color-border-light-tertiary, #eee);
+}
+.audit-item-list li:last-child { border-bottom: none; }
+.audit-meta {
+  margin-left: 0.3rem;
+  opacity: 0.65;
+  font-size: 0.85em;
+}
+
+details {
+  margin: 0.3rem 0;
+  padding: 0;
+}
+details > summary {
+  cursor: pointer;
+  padding: 0.25rem 0;
+  font-weight: 600;
+  font-size: 0.88rem;
+}
+
+/* ─── Party member list ─────────────────────────────────── */
+
+.audit-member-list {
+  border-right: 1px solid var(--color-border-light-tertiary, #c9c7b8);
+  padding: 0.5rem;
+  overflow: auto;
+}
+.audit-member-list h3 {
+  margin: 0 0 0.4rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0.7;
+  border: none;
+}
+.audit-member-list ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.audit-member-list ul li { list-style: none; margin: 0; padding: 0; }
+.audit-member {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 1px solid transparent;
+  padding: 0.3rem 0.45rem;
+  margin-bottom: 0.15rem;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  user-select: none;
+}
+.audit-member:hover {
+  background: var(--color-bg-alt, rgba(0,0,0,0.04));
+}
+.audit-member.active {
+  background: var(--color-bg-alt, rgba(0,0,0,0.06));
+  border-color: var(--color-border-light-tertiary, #c9c7b8);
+  font-weight: 600;
+}
+.audit-member.cross { border-style: dashed; opacity: 0.85; }
+.audit-member .member-row { display: block; }
+.audit-member .member-row-name { font-size: 0.92rem; }
+.audit-member .member-row-meta {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  font-size: 0.84rem;
-  padding: 0.15rem 0.45rem;
-  border-radius: 3px;
-  color: var(--ca-text-muted);
+  margin-top: 0.15rem;
+  font-size: 0.78rem;
+  opacity: 0.85;
 }
-.pf2e-character-audit .audit-variant-list li.on  {
-  color: var(--ca-ok-text);
-  background: var(--ca-ok-bg);
-  font-weight: 700;
-  border: 1px solid var(--ca-ok-line);
+.audit-member .member-level {
+  font-family: var(--font-mono, monospace);
+  font-weight: 400;
 }
-.pf2e-character-audit .audit-variant-list li .variant-key { font-variant-numeric: tabular-nums; }
+.audit-member .member-badges {
+  display: inline-flex;
+  gap: 0.25rem;
+}
+.audit-member .member-badges .audit-badge {
+  display: inline-flex;
+  gap: 0.15rem;
+  align-items: baseline;
+}
+.audit-member .audit-badge.error i { color: var(--color-level-error, #aa2e2e); }
+.audit-member .audit-badge.warn  i { color: var(--color-level-warning, #997513); }
+.audit-member .audit-badge.info  i { color: var(--color-level-info, #2e5e9a); }
 
-.pf2e-character-audit .audit-callout {
-  padding: 0.65rem 0.9rem;
-  border-radius: 4px;
-  margin-top: 0.55rem;
-  border-left: 3px solid;
-  font-weight: 500;
-  font-size: 0.92rem;
-  line-height: 1.5;
-  display: flex;
-  gap: 0.55rem;
-  align-items: flex-start;
-}
-.pf2e-character-audit .audit-callout i { font-size: 1rem; opacity: 0.9; padding-top: 0.1em; }
-.pf2e-character-audit .audit-callout.ok    { color: var(--ca-ok-text);    background: var(--ca-ok-bg);    border-color: var(--ca-ok-line); }
-.pf2e-character-audit .audit-callout.warn  { color: var(--ca-warn-text);  background: var(--ca-warn-bg);  border-color: var(--ca-warn-line); }
-.pf2e-character-audit .audit-callout.error { color: var(--ca-error-text); background: var(--ca-error-bg); border-color: var(--ca-error-line); }
-.pf2e-character-audit .audit-callout.info  { color: var(--ca-info-text);  background: var(--ca-info-bg);  border-color: var(--ca-info-line); }
-
-/* ─── Tables ──────────────────────────────────────────────── */
-
-.pf2e-character-audit .audit-publication-summary {
-  display: flex;
-  gap: 0.85rem;
-  flex-wrap: wrap;
-  margin-bottom: 0.55rem;
-  padding: 0.5rem 0.7rem;
-  background: var(--ca-surface-2);
-  border: 1px solid var(--ca-border);
-  border-radius: 4px;
-  font-size: 0.83rem;
-  color: var(--ca-text);
-  font-weight: 500;
-  font-variant-numeric: tabular-nums;
-}
-.pf2e-character-audit .audit-publication-summary span { display: inline-flex; gap: 0.3rem; align-items: center; }
-.pf2e-character-audit .audit-publication-summary i { color: var(--ca-text-muted); }
-
-.pf2e-character-audit .audit-publication h3,
-.pf2e-character-audit .audit-completeness h3,
-.pf2e-character-audit .audit-prereq h3 {
-  margin: 0.85rem 0 0.45rem;
-  font-family: var(--ca-serif);
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: var(--ca-text);
-  border: none;
-  padding-bottom: 0.25rem;
-  border-bottom: 1px solid var(--ca-border);
-}
-
-.pf2e-character-audit .audit-table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
-  margin: 0.4rem 0 0.85rem;
-  background: var(--ca-card);
-  color: var(--ca-text);
-  border: 1px solid var(--ca-border);
-  border-radius: 4px;
-  overflow: hidden;
-}
-.pf2e-character-audit .audit-table thead th {
-  background: var(--ca-surface-2);
-  color: var(--ca-text);
-  font-weight: 700;
-  font-size: 0.82rem;
-  letter-spacing: 0.04em;
-  text-align: left;
-  padding: 0.4rem 0.65rem;
-  border-bottom: 1px solid var(--ca-border-strong);
-  text-transform: uppercase;
-}
-.pf2e-character-audit .audit-table td {
-  padding: 0.38rem 0.65rem;
-  border-bottom: 1px solid var(--ca-border);
-  vertical-align: top;
-  color: var(--ca-text);
-}
-.pf2e-character-audit .audit-table tbody tr:last-child td { border-bottom: none; }
-.pf2e-character-audit .audit-table tbody tr:hover td { background: var(--ca-surface-2); }
-.pf2e-character-audit .audit-table td.num,
-.pf2e-character-audit .audit-table th.num { text-align: right; font-variant-numeric: tabular-nums; }
-.pf2e-character-audit .audit-table tr.unknown td { color: var(--ca-error-text); background: var(--ca-error-bg); }
-.pf2e-character-audit .audit-table tr.whitelisted td { color: var(--ca-ok-text); }
-
-/* Details accordions */
-.pf2e-character-audit details {
-  margin: 0.35rem 0;
-  padding: 0;
-  background: var(--ca-card);
-  border-radius: 4px;
-  border: 1px solid var(--ca-border);
-  color: var(--ca-text);
-}
-.pf2e-character-audit details > summary {
-  cursor: pointer;
-  font-weight: 600;
-  color: var(--ca-text);
-  padding: 0.4rem 0.7rem;
-  list-style: none;
-  position: relative;
-  padding-left: 1.5rem;
-  font-size: 0.88rem;
-}
-.pf2e-character-audit details > summary::-webkit-details-marker { display: none; }
-.pf2e-character-audit details > summary::before {
-  content: "";
-  position: absolute;
-  left: 0.55rem;
-  top: 50%;
-  width: 0;
-  height: 0;
-  border-left: 5px solid var(--ca-text-faint);
-  border-top: 4px solid transparent;
-  border-bottom: 4px solid transparent;
-  transform: translateY(-50%);
-  transition: transform 0.12s;
-}
-.pf2e-character-audit details[open] > summary::before {
-  transform: translateY(-50%) rotate(90deg);
-}
-.pf2e-character-audit details[open] > summary {
-  border-bottom: 1px solid var(--ca-border);
-}
-.pf2e-character-audit details ul.audit-item-list {
-  list-style: none;
-  margin: 0;
-  padding: 0.3rem 0.7rem 0.4rem;
-}
-.pf2e-character-audit .audit-item-list li {
-  padding: 0.22rem 0;
-  border-bottom: 1px dotted var(--ca-border);
-  font-size: 0.86rem;
-  color: var(--ca-text);
-}
-.pf2e-character-audit .audit-item-list li:last-child { border-bottom: none; }
-.pf2e-character-audit .audit-meta {
-  color: var(--ca-text-muted);
-  font-size: 0.82rem;
-  margin-left: 0.3rem;
-}
-
-/* ─── Issue cards ────────────────────────────────────────── */
-
-.pf2e-character-audit .audit-issue-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
+.party-audit-main {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  min-height: 0;
+  overflow: auto;
 }
 
-.pf2e-character-audit .audit-issue {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 0.65rem;
-  padding: 0.55rem 0.75rem;
-  border-radius: 4px;
-  background: var(--ca-card);
-  color: var(--ca-text);
-  border: 1px solid var(--ca-border);
-  border-left-width: 3px;
-}
-.pf2e-character-audit .audit-issue.error {
-  border-left-color: var(--ca-error-line);
-  background: var(--ca-error-bg);
-  color: var(--ca-error-text);
-  border-color: var(--ca-error-line);
-}
-.pf2e-character-audit .audit-issue.warn {
-  border-left-color: var(--ca-warn-line);
-  background: var(--ca-warn-bg);
-  color: var(--ca-warn-text);
-  border-color: var(--ca-warn-line);
-}
-.pf2e-character-audit .audit-issue.info {
-  border-left-color: var(--ca-info-line);
-  background: var(--ca-info-bg);
-  color: var(--ca-info-text);
-  border-color: var(--ca-info-line);
-}
+/* ─── Footer ─────────────────────────────────────────────── */
 
-.pf2e-character-audit .audit-issue-icon {
-  font-size: 0.95rem;
-  line-height: 1.45;
-  width: 1em;
-  text-align: center;
-  flex-shrink: 0;
-}
-
-.pf2e-character-audit .audit-issue-body { min-width: 0; }
-
-.pf2e-character-audit .audit-issue-title {
-  font-weight: 700;
-  color: inherit;
-  word-break: break-word;
-  font-size: 0.92rem;
-}
-.pf2e-character-audit .audit-issue-title a,
-.pf2e-character-audit .audit-issue-title button.audit-link {
-  color: inherit;
-  background: transparent;
-  border: none;
-  font: inherit;
-  padding: 0;
-  text-decoration: underline;
-  text-decoration-color: rgba(0,0,0,0.25);
-  text-underline-offset: 2px;
-  cursor: pointer;
-}
-.pf2e-character-audit .audit-issue-title a:hover,
-.pf2e-character-audit .audit-issue-title button.audit-link:hover {
-  text-decoration-color: currentColor;
-}
-
-.pf2e-character-audit .audit-issue-hint {
-  margin-top: 0.2rem;
-  color: inherit;
-  font-size: 0.85rem;
-  word-break: break-word;
-}
-
-.pf2e-character-audit .audit-issue-footer {
+.audit-footer {
   display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  margin-top: 0.35rem;
+  gap: 0.35rem;
+  padding: 0.45rem 0.75rem;
+  border-top: 1px solid var(--color-border-light-tertiary, #c9c7b8);
+  flex-wrap: wrap;
 }
-.pf2e-character-audit .audit-issue-code {
+.party-audit-app .audit-footer { grid-column: 1 / -1; }
+
+/* Footer buttons inherit Foundry's default button styling — don't override. */
+
+/* ─── Empty states ──────────────────────────────────────── */
+
+.audit-empty {
+  padding: 1rem;
+  text-align: center;
+  font-style: italic;
+  opacity: 0.7;
+  border: 1px dashed var(--color-border-light-tertiary, #ddd);
+}
+.audit-empty.ok {
+  font-style: normal;
+  opacity: 1;
+  border-style: solid;
+}
+.audit-empty.ok i { color: var(--color-level-success, #2f7a3a); margin-right: 0.3rem; }
+
+/* ─── Misc ──────────────────────────────────────────────── */
+
+.actor-tag {
   display: inline-block;
-  padding: 0.05rem 0.35rem;
-  font-size: 0.7rem;
-  font-family: var(--ca-mono);
-  background: rgba(255, 255, 255, 0.45);
-  color: inherit;
-  border: 1px solid currentColor;
+  padding: 0 0.4rem;
+  margin: 0.1rem 0.15rem 0.1rem 0;
+  font-size: 0.78rem;
+  border: 1px solid var(--color-border-light-tertiary, #ddd);
   border-radius: 2px;
   opacity: 0.85;
-  letter-spacing: 0.02em;
-}
-.pf2e-character-audit .audit-issue-suppress,
-.pf2e-character-audit .audit-issue-action {
-  background: transparent;
-  border: 1px solid currentColor;
-  color: inherit;
-  opacity: 0.75;
-  border-radius: 2px;
-  padding: 0.1rem 0.5rem;
-  font-size: 0.72rem;
-  cursor: pointer;
-  font-family: inherit;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  font-weight: 600;
-}
-.pf2e-character-audit .audit-issue-suppress:hover,
-.pf2e-character-audit .audit-issue-action:hover {
-  opacity: 1;
-  background: rgba(255, 255, 255, 0.25);
-}
-@media (prefers-color-scheme: dark) {
-  .pf2e-character-audit .audit-issue-suppress:hover,
-  .pf2e-character-audit .audit-issue-action:hover { background: rgba(0, 0, 0, 0.25); }
-}
-
-/* History bars (sparkline) */
-.pf2e-character-audit .audit-history-label {
-  font-weight: 600;
-  color: var(--ca-text);
-  margin-right: 0.2rem;
-}
-.pf2e-character-audit .audit-history-bars {
-  display: inline-flex;
-  align-items: flex-end;
-  gap: 2px;
-  height: 18px;
-  padding: 0 2px;
-  background: var(--ca-card);
-  border: 1px solid var(--ca-border);
-  border-radius: 3px;
-}
-.pf2e-character-audit .history-bar {
-  display: inline-block;
-  width: 4px;
-  background: var(--ca-text-muted);
-  border-radius: 1px;
-  align-self: flex-end;
-}
-.pf2e-character-audit .history-bar.history-bar-current { background: var(--ca-accent); }
-@media (prefers-color-scheme: dark) {
-  .pf2e-character-audit .audit-issue-code { background: rgba(0, 0, 0, 0.35); }
-}
-
-.pf2e-character-audit .audit-issue small {
-  color: inherit;
-  opacity: 0.78;
-  font-weight: 500;
-  font-size: 0.78rem;
-}
-
-.pf2e-character-audit .audit-reasons {
-  list-style: none;
-  margin: 0.3rem 0 0;
-  padding: 0;
-  font-size: 0.83rem;
-  color: inherit;
-}
-.pf2e-character-audit .audit-reasons li { padding: 0.08rem 0; }
-
-.pf2e-character-audit .audit-prereq-normalized {
-  display: block;
-  margin-top: 0.25rem;
-  font-size: 0.78rem;
-  font-style: italic;
-  color: inherit;
-  opacity: 0.78;
-}
-
-/* ─── Footer & buttons ───────────────────────────────────── */
-
-.pf2e-character-audit .audit-link {
-  background: transparent;
-  border: none;
-  color: inherit;
-  cursor: pointer;
-  padding: 0;
-  font: inherit;
-  text-decoration: underline;
-  text-decoration-color: rgba(0,0,0,0.3);
-  text-underline-offset: 2px;
-}
-.pf2e-character-audit .audit-link:hover { text-decoration-color: currentColor; }
-
-.pf2e-character-audit .audit-empty {
-  color: var(--ca-text-muted);
-  font-style: italic;
-  text-align: center;
-  padding: 1.5rem 1rem;
-  background: var(--ca-surface-2);
-  border-radius: 4px;
-  border: 1px dashed var(--ca-border-strong);
-  font-size: 0.92rem;
-}
-.pf2e-character-audit .audit-empty.ok {
-  color: var(--ca-ok-text);
-  background: var(--ca-ok-bg);
-  border-color: var(--ca-ok-line);
-  border-style: solid;
-  font-weight: 600;
-  font-style: normal;
-}
-
-.pf2e-character-audit .audit-footer {
-  display: flex;
-  gap: 0.4rem;
-  padding: 0.55rem 1.05rem;
-  border-top: 1px solid var(--ca-border);
-  background: var(--ca-surface-2);
-  flex-wrap: wrap;
-}
-
-.pf2e-character-audit .audit-footer button {
-  padding: 0.4rem 0.85rem;
-  font-size: 0.85rem;
-  font-weight: 600;
-  border: 1px solid var(--ca-border-strong);
-  background: var(--ca-card);
-  color: var(--ca-text);
-  border-radius: 3px;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-}
-.pf2e-character-audit .audit-footer button:hover {
-  background: var(--ca-accent-bg);
-  border-color: var(--ca-accent);
-  color: var(--ca-accent);
-}
-
-/* ─── Party audit layout ───────────────────────────────────── */
-
-.pf2e-character-audit.party-audit .party-audit-app {
-  display: grid;
-  grid-template-columns: 230px 1fr;
-  grid-template-rows: 1fr auto;
-  gap: 0;
-  height: 100%;
-  min-height: 0;
-  background: var(--ca-surface);
-}
-
-.pf2e-character-audit .audit-member-list {
-  border-right: 1px solid var(--ca-border);
-  padding: 0.7rem 0.55rem;
-  overflow: auto;
-  background: var(--ca-surface-2);
-  color: var(--ca-text);
-}
-.pf2e-character-audit .audit-member-list h3 {
-  margin: 0 0 0.5rem 0.3rem;
-  font-size: 0.74rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--ca-text-faint);
-  font-weight: 700;
-  border: none;
-}
-.pf2e-character-audit .audit-member-list ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-.pf2e-character-audit .audit-member-list ul li { list-style: none; margin: 0; padding: 0; }
-
-.pf2e-character-audit .audit-member {
-  display: block;
-  width: 100%;
-  padding: 0.45rem 0.6rem;
-  margin: 0 0 0.25rem 0;
-  border: 1px solid transparent;
-  background: var(--ca-card);
-  cursor: pointer;
-  border-radius: 3px;
-  text-align: left;
-  font-family: inherit;
-  font-size: inherit;
-  line-height: 1.32;
-  color: var(--ca-text);
-  user-select: none;
-}
-.pf2e-character-audit .audit-member:hover {
-  background: var(--ca-accent-bg);
-  border-color: var(--ca-border);
-}
-.pf2e-character-audit .audit-member.active {
-  background: var(--ca-accent-bg);
-  border-color: var(--ca-accent);
-  border-left: 3px solid var(--ca-accent);
-  padding-left: calc(0.6rem - 2px);
-}
-.pf2e-character-audit .audit-member.cross {
-  border-style: dashed;
-  background: var(--ca-surface-2);
-}
-
-.pf2e-character-audit .audit-member .member-row { display: block; width: 100%; color: inherit; }
-.pf2e-character-audit .audit-member .member-row-name {
-  font-weight: 700;
-  word-break: break-word;
-  color: var(--ca-text);
-  font-size: 0.92rem;
-  font-family: var(--ca-serif);
-}
-.pf2e-character-audit .audit-member .member-row-meta {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.3rem;
-  margin-top: 0.25rem;
-}
-.pf2e-character-audit .audit-member .member-level {
-  color: var(--ca-text-muted);
-  font-size: 0.76rem;
-  white-space: nowrap;
-  font-variant-numeric: tabular-nums;
-  font-weight: 600;
-  font-family: var(--ca-mono);
-}
-.pf2e-character-audit .audit-member .member-badges {
-  display: inline-flex;
-  flex-wrap: wrap;
-  gap: 0.18rem;
-  align-items: center;
-  justify-content: flex-end;
-}
-.pf2e-character-audit .audit-member .member-badges .audit-badge {
-  font-size: 0.7rem;
-  padding: 0.05rem 0.4rem;
-}
-
-.pf2e-character-audit.party-audit .party-audit-main {
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  overflow: auto;
-  background: var(--ca-surface);
-  color: var(--ca-text);
-}
-
-.pf2e-character-audit.party-audit .audit-footer {
-  grid-column: 1 / -1;
-}
-
-/* ─── Header anchors (sheet / party-sheet header buttons) ── */
-
-a.header-control.pf2e-character-audit-btn:hover,
-a.header-control.pf2e-character-audit-party-btn:hover {
-  color: #5b3a1f;
 }
 
 .pf2e-character-audit-directory-btn {
-  margin: 0.3rem 0;
-  padding: 0.32rem 0.7rem;
-  background: #fdfaf3;
-  color: #1c1a17;
-  border: 1px solid #b3aa92;
-  border-radius: 3px;
+  font: inherit;
+  padding: 0.3rem 0.55rem;
+  margin: 0.25rem 0;
+  font-size: 0.85rem;
   cursor: pointer;
-  font-size: 0.86rem;
-  font-weight: 600;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-}
-.pf2e-character-audit-directory-btn:hover {
-  background: #f0e8d6;
-  color: #5b3a1f;
-}
-
-/* ─── Cross-party actor pill ───────────────────────────────── */
-
-.pf2e-character-audit .actor-tag {
-  display: inline-block;
-  padding: 0.08rem 0.4rem;
-  margin: 0.12rem 0.18rem 0.12rem 0;
-  background: var(--ca-surface-2);
-  color: var(--ca-text);
-  border: 1px solid var(--ca-border);
-  border-radius: 3px;
-  font-size: 0.76rem;
-  font-weight: 500;
 }

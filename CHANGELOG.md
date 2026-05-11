@@ -3,6 +3,19 @@
 User-facing release notes for PF2e Character Audit.
 For full engineering history see [CHANGELOG-detailed.zh.md](CHANGELOG-detailed.zh.md).
 
+## [0.1.17] - 2026-05-12
+
+### Changed
+- **UI rewritten to match Foundry-native styling**. Removes the custom paper/ink palette, serif headings, decorative pills, animated transitions, and box-shadow accents that gave a "branded module" look. Now:
+  - All colours come from FVTT's CSS variables (`--color-text-*`, `--color-bg-alt`, `--color-level-error/warning/info/success`, `--color-border-light-tertiary`).
+  - Fonts inherit (no Georgia/serif override).
+  - Issue list is plain row-and-icon, no card backgrounds.
+  - Buttons inherit FVTT's default styling.
+  - Tabs use a simple underline indicator on the active item.
+  - History sparkline kept but down-scaled and monochrome.
+  - Filter chips look like plain inline buttons.
+- The module now visually fits alongside the rest of FVTT (and PF2e's own sheets) rather than asserting its own aesthetic.
+
 ## [0.1.16] - 2026-05-12
 
 ### Fixed
