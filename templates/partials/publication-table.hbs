@@ -1,5 +1,13 @@
 <div class="audit-publication">
   {{#if publication}}
+    <div class="audit-filter-bar">
+      <span class="filter-label">{{labels.filterShow}}:</span>
+      <button type="button" class="audit-filter-chip {{#if (eq pubFilter "all")}}active{{/if}}" data-action="filterPub" data-filter="all">{{labels.pubFilterAll}}</button>
+      <button type="button" class="audit-filter-chip {{#if (eq pubFilter "ogl")}}active{{/if}}" data-action="filterPub" data-filter="ogl">{{labels.pubFilterOgl}}</button>
+      <button type="button" class="audit-filter-chip {{#if (eq pubFilter "orc")}}active{{/if}}" data-action="filterPub" data-filter="orc">{{labels.pubFilterOrc}}</button>
+      <button type="button" class="audit-filter-chip {{#if (eq pubFilter "legacy")}}active{{/if}}" data-action="filterPub" data-filter="legacy">{{labels.pubFilterLegacy}}</button>
+    </div>
+
     <div class="audit-publication-summary">
       <span><i class="fa-solid fa-book"></i>{{publication.summary.distinctTitles}} {{localize "PF2E-CA.Overview.Titles"}}</span>
       <span><i class="fa-solid fa-list"></i>{{publication.summary.total}} {{localize "PF2E-CA.Overview.Items"}}</span>

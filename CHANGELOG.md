@@ -3,6 +3,20 @@
 User-facing release notes for PF2e Character Audit.
 For full engineering history see [CHANGELOG-detailed.zh.md](CHANGELOG-detailed.zh.md).
 
+## [0.1.14] - 2026-05-12
+
+### Fixed
+- **`DEDICATION_2_FEAT_RULE` counted wrong**: was matching follow-up archetype feats by slug prefix (e.g. expecting "ulfen-guard-*" slugs), but PF2e marks follow-ups via a trait on the feat (e.g. trait `ulfen-guard`). Now uses traits, so Ulfen Guard / Exemplar / etc. follow-ups are counted correctly.
+- **`CLASS_SUBCLASS_MISSING` false-positive on community content** (e.g. Clerics+'s "Armorclad" doctrine): in addition to the canonical slug list, now accepts any class-feature item whose name matches a bilingual keyword pattern for the expected feature (`doctrine|信条|教条`, `muse|缪斯`, `instinct|本能`, …).
+- **`SKILL_INCREASE_MISSING` always reporting 0 actual** on PF2e v8: the new actor schema doesn't always populate `actor.system.build.skills.increases`. The check now silently skips when no data is available rather than producing false errors.
+- **CN normalizer**:
+  - Added skill aliases: `特技/体技` → Acrobatics, `奥术/奥法` → Arcana, plus alternates for every standard skill (so different translation packs all work).
+  - Trailing `技能` tokens left over from compound prereqs (e.g. "Athletics技能 and Intimidation技能") are now stripped.
+  - "`<X>入门 → <X> Dedication`" fallback only fires when Babele's reverse-lookup didn't already translate the term. Stops "领域入门 Domain Initiate" being miscalled "Domain Dedication".
+
+### Added
+- **Publication source filter chips** on the Publication tab: All / OGL only / ORC only / Legacy (non-Remaster). Lets you find every pre-Remaster item in a party for a quick cleanup pass.
+
 ## [0.1.13] - 2026-05-11
 
 ### Fixed

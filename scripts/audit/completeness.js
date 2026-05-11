@@ -72,23 +72,67 @@ const CLASS_SUBCLASS_REQUIREMENTS = {
   commander: { featureName: "banner", slugs: ["assault-banner", "regimental-banner", "stoic-banner", "trickster-banner"] }
 };
 
+// Bilingual feature-keyword patterns. If actor has a class-feature item whose
+// name contains one of these, consider the subclass picked (covers community-
+// content doctrines/muses/instincts the core slug list doesn't enumerate).
+const FEATURE_KEYWORDS = {
+  muse: /muse|缪斯/i,
+  doctrine: /doctrine|信条|教条/i,
+  bloodline: /bloodline|血裔/i,
+  school: /school|学派/i,
+  cause: /cause|事业|心愿/i,
+  instinct: /instinct|本能/i,
+  order: /order|教派/i,
+  racket: /racket|风格/i,
+  patron: /patron|渊源/i,
+  mystery: /mystery|神秘/i,
+  "hunter's edge": /hunter|猎人/i,
+  "research field": /research|研究领域/i,
+  methodology: /methodology|调查方法/i,
+  style: /style/i,
+  "conscious mind": /conscious|意识心智/i,
+  "hybrid study": /hybrid|混合研究/i,
+  innovation: /innovation/i,
+  "kinetic gate": /gate|能门/i,
+  eidolon: /eidolon|万灵/i,
+  way: /way/i,
+  apparition: /apparition|灵显/i,
+  banner: /banner|旗帜/i,
+  implement: /implement|奇具|神器/i
+};
+
 function checkClassSubclass(actor, issues) {
   const classSlug = actor.class?.slug ?? actor.class?.system?.slug;
   if (!classSlug) return;
   const req = CLASS_SUBCLASS_REQUIREMENTS[classSlug];
   if (!req || !req.featureName) return;
+
+  // Method 1: actor has a feat with one of the canonical subclass slugs.
   const ownedSlugs = new Set(
     (actor.itemTypes.feat ?? [])
       .map((f) => f.slug ?? f.system?.slug)
       .filter(Boolean)
   );
-  const hasOne = req.slugs.some((slug) => ownedSlugs.has(slug));
-  if (!hasOne) {
-    issues.push(makeIssue("CLASS_SUBCLASS_MISSING", SEVERITY.ERROR, {
-      className: actor.class?.name ?? classSlug,
-      feature: req.featureName
-    }));
+  if (req.slugs.some((slug) => ownedSlugs.has(slug))) return;
+
+  // Method 2: actor has a classfeature item that looks like the feature
+  // (bilingual keyword match in the name, or carries the class slug as a
+  // trait). Catches community content like Clerics+'s "Armorclad" doctrine.
+  const pattern = FEATURE_KEYWORDS[req.featureName];
+  const classFeats = (actor.itemTypes.feat ?? []).filter((f) => {
+    const cat = f.system?.category ?? f.system?.featType;
+    return cat === "classfeature";
+  });
+  for (const f of classFeats) {
+    const traits = f.system?.traits?.value ?? [];
+    if (pattern && pattern.test(f.name ?? "")) return; // pass
+    if (traits.includes(classSlug) && pattern && pattern.test(f.system?.description?.value ?? "")) return;
   }
+
+  issues.push(makeIssue("CLASS_SUBCLASS_MISSING", SEVERITY.ERROR, {
+    className: actor.class?.name ?? classSlug,
+    feature: req.featureName
+  }));
 }
 
 function makeIssue(code, severity, params = {}, extra = {}) {
@@ -235,6 +279,17 @@ function checkArchetypeSlots(actor, expected, variants, issues) {
 
 function checkSkillIncreases(actor, expected, issues) {
   const expectedTotal = Object.values(expected.skillIncreases).reduce((s, n) => s + n, 0);
+  if (expectedTotal === 0) return;
+
+  // PF2e v8 / Remaster doesn't always populate actor.system.build.skills.
+  // Skip the check entirely when we can't read the data — reporting "0 vs N"
+  // for every higher-level character is just noise.
+  const inc = actor.system?.build?.skills?.increases ?? actor.system?.build?.skills;
+  if (!inc) return;
+  const hasAnyData = (typeof inc === "object")
+    && Object.values(inc).some((v) => Array.isArray(v) ? v.length > 0 : !!v);
+  if (!hasAnyData) return;
+
   const actual = countSkillIncreases(actor);
   if (actual < expectedTotal) {
     issues.push(
@@ -249,22 +304,25 @@ function checkDedications(actor, issues) {
     return traits.includes("dedication");
   });
   if (dedications.length <= 1) return;
-  const archetypeFeatCounts = new Map();
+
   for (const ded of dedications) {
     const slug = ded.slug ?? ded.system?.slug;
     if (!slug) continue;
     const archName = slug.replace(/-dedication$/, "");
+    // PF2e tags archetype follow-up feats with the archetype-name trait, not
+    // by slug prefix (e.g. "Guarded Mind" has trait "ulfen-guard" but slug
+    // doesn't start with "ulfen-guard"). Match by trait.
     const followups = actor.itemTypes.feat.filter((f) => {
-      if (f === ded) return false;
+      if (f.id === ded.id) return false;
       const traits = f.system?.traits?.value ?? [];
-      const fSlug = f.slug ?? f.system?.slug ?? "";
-      return traits.includes("archetype") && fSlug.startsWith(archName);
+      if (traits.includes("dedication")) return false; // exclude other dedications
+      return traits.includes(archName);
     });
-    archetypeFeatCounts.set(slug, followups.length);
-  }
-  for (const [slug, count] of archetypeFeatCounts.entries()) {
-    if (count < 2) {
-      issues.push(makeIssue("DEDICATION_2_FEAT_RULE", SEVERITY.WARN, { dedication: slug, actual: count }));
+    if (followups.length < 2) {
+      issues.push(makeIssue("DEDICATION_2_FEAT_RULE", SEVERITY.WARN, {
+        dedication: ded.name ?? slug,
+        actual: followups.length
+      }));
     }
   }
 }

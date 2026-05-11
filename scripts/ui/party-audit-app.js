@@ -28,6 +28,28 @@ function applySeverityFilter(issues, filter) {
   return issues.filter((i) => i.severity === filter || i.evaluation === filter);
 }
 
+function applyPublicationFilter(publication, filter) {
+  if (!publication || !filter || filter === "all") return publication;
+  const matches = (license, remaster) => {
+    if (filter === "ogl") return license === "OGL" || !remaster;
+    if (filter === "orc") return license === "ORC" || remaster;
+    if (filter === "legacy") return !remaster;
+    return true;
+  };
+  const rollup = (publication.actorRollup ?? []).filter((r) => matches(r.license, r.remaster));
+  const byCategory = {};
+  for (const [cat, list] of Object.entries(publication.byCategory ?? {})) {
+    const kept = list.filter((it) => matches(it.license, it.remaster));
+    if (kept.length > 0) byCategory[cat] = kept;
+  }
+  const filteredSummary = {
+    ...publication.summary,
+    total: rollup.reduce((s, r) => s + r.count, 0),
+    distinctTitles: rollup.length
+  };
+  return { ...publication, summary: filteredSummary, actorRollup: rollup, titles: rollup, byCategory };
+}
+
 function buildHistoryBars(history) {
   if (!Array.isArray(history) || history.length < 2) return null;
   const max = Math.max(1, ...history.map((h) => h.total ?? 0));
@@ -60,10 +82,11 @@ function deltaFromSnapshot(report, previous) {
   };
 }
 
-function localizeReport(report, filter) {
+function localizeReport(report, filter, pubFilter) {
   if (!report) return report;
   return {
     ...report,
+    publication: applyPublicationFilter(report.publication, pubFilter),
     completeness: report.completeness
       ? {
           ...report.completeness,
@@ -87,6 +110,7 @@ export class PartyAuditApp extends HandlebarsApplicationMixin(ApplicationV2) {
     this._selectedActorId = null;
     this._activeTab = "overview";
     this._severityFilter = "all";
+    this._pubFilter = "all";
   }
 
   static DEFAULT_OPTIONS = {
@@ -107,6 +131,7 @@ export class PartyAuditApp extends HandlebarsApplicationMixin(ApplicationV2) {
       exportJournal: PartyAuditApp.#onExportJournal,
       exportJson: PartyAuditApp.#onExportJson,
       filterSev: PartyAuditApp.#onFilterSev,
+      filterPub: PartyAuditApp.#onFilterPub,
       openItem: PartyAuditApp.#onOpenItem,
       suppressIssue: PartyAuditApp.#onSuppress,
       suppressFeat: PartyAuditApp.#onSuppressFeat,
@@ -127,8 +152,9 @@ export class PartyAuditApp extends HandlebarsApplicationMixin(ApplicationV2) {
     }
     if (this._selectedActorId === "__cross__") this._activeTab = "cross";
     const filter = this._severityFilter ?? "all";
+    const pubFilter = this._pubFilter ?? "all";
     const rawSelected = pr.party.find((r) => r.actorId === this._selectedActorId);
-    const selected = localizeReport(rawSelected, filter);
+    const selected = localizeReport(rawSelected, filter, pubFilter);
     const delta = rawSelected ? deltaFromSnapshot(rawSelected, rawSelected.previousSnapshot) : null;
     const historyBars = rawSelected ? buildHistoryBars(rawSelected.history) : null;
     const suppressedCount = rawSelected
@@ -149,6 +175,7 @@ export class PartyAuditApp extends HandlebarsApplicationMixin(ApplicationV2) {
       selectedId: this._selectedActorId,
       selected,
       severityFilter: filter,
+      pubFilter,
       activeTab: this._activeTab,
       crossPartyPublication: pr.crossPartyPublication,
       tabs: [
@@ -173,6 +200,10 @@ export class PartyAuditApp extends HandlebarsApplicationMixin(ApplicationV2) {
         filterWarn: t("Filter.Warnings"),
         filterInfo: t("Filter.Infos"),
         filterShow: t("Filter.Show"),
+        pubFilterAll: t("Filter.PubAll"),
+        pubFilterOgl: t("Filter.PubOgl"),
+        pubFilterOrc: t("Filter.PubOrc"),
+        pubFilterLegacy: t("Filter.PubLegacy"),
         suppressLabel: t("Action.Suppress"),
         suppressFeatLabel: t("Action.SuppressFeat"),
         unsuppressLabel: t("Action.UnsuppressAll"),
@@ -219,6 +250,12 @@ export class PartyAuditApp extends HandlebarsApplicationMixin(ApplicationV2) {
   static #onFilterSev(event, target) {
     const sev = target?.dataset?.sev ?? "all";
     this._severityFilter = sev;
+    this.render();
+  }
+
+  static #onFilterPub(event, target) {
+    const f = target?.dataset?.filter ?? "all";
+    this._pubFilter = f;
     this.render();
   }
 

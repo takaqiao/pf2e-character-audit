@@ -23,6 +23,28 @@ function localizeIssue(issue) {
   };
 }
 
+function applyPublicationFilter(publication, filter) {
+  if (!publication || !filter || filter === "all") return publication;
+  const matches = (license, remaster) => {
+    if (filter === "ogl") return license === "OGL" || !remaster;
+    if (filter === "orc") return license === "ORC" || remaster;
+    if (filter === "legacy") return !remaster;
+    return true;
+  };
+  const rollup = (publication.actorRollup ?? []).filter((r) => matches(r.license, r.remaster));
+  const byCategory = {};
+  for (const [cat, list] of Object.entries(publication.byCategory ?? {})) {
+    const kept = list.filter((it) => matches(it.license, it.remaster));
+    if (kept.length > 0) byCategory[cat] = kept;
+  }
+  const filteredSummary = {
+    ...publication.summary,
+    total: rollup.reduce((s, r) => s + r.count, 0),
+    distinctTitles: rollup.length
+  };
+  return { ...publication, summary: filteredSummary, actorRollup: rollup, titles: rollup, byCategory };
+}
+
 function buildHistoryBars(history) {
   if (!Array.isArray(history) || history.length < 2) return null;
   const max = Math.max(1, ...history.map((h) => h.total ?? 0));
@@ -77,6 +99,7 @@ export class AuditReportApp extends HandlebarsApplicationMixin(ApplicationV2) {
     this._activeTab = "overview";
     this._report = null;
     this._severityFilter = "all";
+    this._pubFilter = "all";
   }
 
   static DEFAULT_OPTIONS = {
@@ -98,6 +121,7 @@ export class AuditReportApp extends HandlebarsApplicationMixin(ApplicationV2) {
       exportJson: AuditReportApp.#onExportJson,
       openItem: AuditReportApp.#onOpenItem,
       filterSev: AuditReportApp.#onFilterSev,
+      filterPub: AuditReportApp.#onFilterPub,
       suppressIssue: AuditReportApp.#onSuppress,
       suppressFeat: AuditReportApp.#onSuppressFeat,
       quickFix: AuditReportApp.#onQuickFix,
@@ -132,10 +156,12 @@ export class AuditReportApp extends HandlebarsApplicationMixin(ApplicationV2) {
         }
       : null;
 
+    const pubFilter = this._pubFilter ?? "all";
     return {
       report: r,
       activeTab: this._activeTab,
       severityFilter: filter,
+      pubFilter,
       delta: deltaFromSnapshot(r, r.previousSnapshot),
       historyBars: buildHistoryBars(r.history),
       suppressedCount: (r.suppressedCodes ?? []).length + (r.suppressedFeats ?? []).length,
@@ -148,7 +174,7 @@ export class AuditReportApp extends HandlebarsApplicationMixin(ApplicationV2) {
       summary: r.summary,
       badge: r.badge,
       variants: r.variants,
-      publication: r.publication,
+      publication: applyPublicationFilter(r.publication, pubFilter),
       completeness,
       prerequisites,
       labels: {
@@ -170,6 +196,10 @@ export class AuditReportApp extends HandlebarsApplicationMixin(ApplicationV2) {
         filterWarn: t("Filter.Warnings"),
         filterInfo: t("Filter.Infos"),
         filterShow: t("Filter.Show"),
+        pubFilterAll: t("Filter.PubAll"),
+        pubFilterOgl: t("Filter.PubOgl"),
+        pubFilterOrc: t("Filter.PubOrc"),
+        pubFilterLegacy: t("Filter.PubLegacy"),
         suppressLabel: t("Action.Suppress"),
         suppressFeatLabel: t("Action.SuppressFeat"),
         unsuppressLabel: t("Action.UnsuppressAll"),
@@ -218,6 +248,12 @@ export class AuditReportApp extends HandlebarsApplicationMixin(ApplicationV2) {
   static #onFilterSev(event, target) {
     const sev = target?.dataset?.sev ?? "all";
     this._severityFilter = sev;
+    this.render();
+  }
+
+  static #onFilterPub(event, target) {
+    const f = target?.dataset?.filter ?? "all";
+    this._pubFilter = f;
     this.render();
   }
 

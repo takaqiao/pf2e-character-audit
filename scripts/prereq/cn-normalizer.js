@@ -21,22 +21,22 @@
 // the audit demotes it to `info` to avoid a wall of yellow warnings.
 
 const SKILL_CN_TO_EN = {
-  "杂技": "Acrobatics",
-  "神秘": "Arcana",
-  "运动": "Athletics",
-  "工艺": "Crafting", "手艺": "Crafting", "技艺": "Crafting",
-  "欺骗": "Deception",
-  "外交": "Diplomacy",
-  "威吓": "Intimidation",
-  "医疗": "Medicine",
+  "杂技": "Acrobatics", "特技": "Acrobatics", "体技": "Acrobatics",
+  "神秘": "Arcana", "奥术": "Arcana", "奥法": "Arcana",
+  "运动": "Athletics", "竞技": "Athletics",
+  "工艺": "Crafting", "手艺": "Crafting", "技艺": "Crafting", "制造": "Crafting",
+  "欺骗": "Deception", "诈骗": "Deception",
+  "外交": "Diplomacy", "交涉": "Diplomacy",
+  "威吓": "Intimidation", "恐吓": "Intimidation",
+  "医疗": "Medicine", "医术": "Medicine",
   "自然": "Nature",
-  "神秘学": "Occultism", "异能学": "Occultism",
+  "神秘学": "Occultism", "异能学": "Occultism", "玄秘": "Occultism", "异能": "Occultism",
   "表演": "Performance",
   "宗教": "Religion",
-  "社群": "Society",
-  "隐匿": "Stealth",
+  "社群": "Society", "社交": "Society",
+  "隐匿": "Stealth", "潜行": "Stealth",
   "生存": "Survival",
-  "盗窃": "Thievery"
+  "盗窃": "Thievery", "盗术": "Thievery"
 };
 
 const RANK_CN_TO_EN = {
@@ -284,7 +284,9 @@ export function normalizeRequirement(text) {
   // Step 0: ask Babele for any CN named-reference we can swap out (covers
   // dedications, class features, focus spells, etc.). Runs first so the
   // subsequent regex patterns operate on a partially-English string.
+  const beforeBabele = out;
   out = applyReverseLookup(out);
+  const babeleHelped = out !== beforeBabele;
   if (!hasCJK(out)) return out;
 
   // Pattern: "一个能用来回忆知识的技能熟练度为<rank>"
@@ -326,10 +328,18 @@ export function normalizeRequirement(text) {
     (_, stem, rank) => `${rankToEn(rank)} in ${stem} Lore`
   );
 
-  // Fallback dedication pattern: "<X>入门" → "<X> Dedication"
-  // Babele reverse-lookup (Step 0) handles most cases, but if a translation
-  // pack isn't loaded this gives the parser a fighting chance.
-  out = out.replace(new RegExp(`(${CJK_RUN})入门`, "g"), (_, stem) => `${stem} Dedication`);
+  // Fallback dedication pattern: "<X>入门" → "<X> Dedication". Only apply when
+  // Babele's reverse-lookup didn't already handle this term — "入门" is
+  // ambiguous in PF2E Chinese: most archetype intros are "Dedication" but
+  // class feats like "领域入门 Domain Initiate", "法术入门 Spell Initiate" use
+  // "Initiate", and the wrong translation would mis-route the parser.
+  if (!babeleHelped) {
+    out = out.replace(new RegExp(`(${CJK_RUN})入门`, "g"), (_, stem) => `${stem} Dedication`);
+  }
+
+  // Multi-skill compound: "A 和 B" inside a 在...上... clause already split
+  // earlier may leave lone "技能" tokens. Strip them now.
+  out = out.replace(/技能/g, "");
 
   // Pattern: "<ability><num>" / "<ability> <num> 或更高" / "<ability>调整值+<num>"
   // → "<ability> <num>". Leveler parser handles both "Strength 14" (score) and

@@ -295,7 +295,11 @@
       "All": "All",
       "Errors": "Errors",
       "Warnings": "Warnings",
-      "Infos": "Info"
+      "Infos": "Info",
+      "PubAll": "All sources",
+      "PubOgl": "OGL only",
+      "PubOrc": "ORC only",
+      "PubLegacy": "Legacy (non-Remaster)"
     },
     "Time": {
       "JustNow": "just now",

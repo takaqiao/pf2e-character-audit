@@ -295,7 +295,11 @@
       "All": "全部",
       "Errors": "错误",
       "Warnings": "警告",
-      "Infos": "信息"
+      "Infos": "信息",
+      "PubAll": "全部出版物",
+      "PubOgl": "仅 OGL",
+      "PubOrc": "仅 ORC",
+      "PubLegacy": "非 Remaster (legacy)"
     },
     "Time": {
       "JustNow": "刚刚",
