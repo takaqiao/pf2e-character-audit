@@ -3,6 +3,16 @@
 User-facing release notes for PF2e Character Audit.
 For full engineering history see [CHANGELOG-detailed.zh.md](CHANGELOG-detailed.zh.md).
 
+## [0.1.20] - 2026-05-12
+
+### Fixed
+- **Kip Up / 鲤鱼打挺 false-fail (`大师 → Maestro` collision)**: 0.1.19's world-scan expanded the Babele reverse-map enough that generic rule words started colliding with proper-noun entries. A bilingual item literally named `大师 Maestro` (Bard's Maestro muse — or any creature/NPC named "Maestro") was registered as `大师 → Maestro`, then applied to prereq text BEFORE the rank-pattern regex could match, producing the broken `Acrobatics熟练度 is Maestro`. Fixed by adding `RESERVED_GENERIC_TOKENS` blocklist to `applyReverseLookup` — rank words, skill names, ability scores, and structural particles are never replaced via reverse-lookup; they're handled by the cn-normalizer's regex patterns where context guarantees correctness.
+- Defensive sweep: any stray `熟练度` token that escapes the rank-pattern capture is now stripped at end of normalization.
+
+### Notes on remaining "fails"
+- `乌尔芬卫士入门 Ulfen Guard Dedication` — **real violation**, not a bug. Prereq requires Athletics AND Intimidation trained; this character has Athletics but not Intimidation.
+- `反应打击者 Reactive Striker` — **real violation**, not a bug. Requires Fighter Dedication; this Cleric does not have it (Ulfen Guard occupies the Free Archetype dedication slot).
+
 ## [0.1.19] - 2026-05-12
 
 ### Fixed
