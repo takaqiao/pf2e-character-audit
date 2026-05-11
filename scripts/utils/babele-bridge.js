@@ -211,6 +211,39 @@ export function invalidateReverseMap() {
   lastBuildTime = 0;
 }
 
+// Reserved generic tokens that must NEVER be replaced by Babele reverse-lookup
+// — they have specific rule semantics handled by cn-normalizer's regex patterns
+// (rank words, skill names, ability scores, structural particles). Without this
+// guard, an item literally named "大师 Maestro" (a Bard muse-selector or NPC)
+// or "运动 Athletics" (a creature skill name) sneaks into the map and clobbers
+// the rank/skill words in prereq text — e.g. "特技技能熟练度为大师" comes out
+// as "Acrobatics熟练度 is Maestro" which the parser can't decode.
+const RESERVED_GENERIC_TOKENS = new Set([
+  // Proficiency ranks
+  "未受训", "受训", "专家", "大师", "传奇",
+  // PF2E skills
+  "杂技", "特技", "体技",
+  "神秘", "奥术", "奥法",
+  "运动", "竞技",
+  "工艺", "手艺", "技艺", "制造",
+  "欺骗", "诈骗",
+  "外交", "交涉",
+  "威吓", "恐吓",
+  "医疗", "医术",
+  "自然",
+  "神秘学", "异能学", "玄秘", "异能",
+  "表演",
+  "宗教",
+  "社群", "社交",
+  "隐匿", "潜行",
+  "生存",
+  "盗窃", "盗术",
+  // Ability scores
+  "力量", "敏捷", "体质", "智力", "感知", "魅力",
+  // Structural / rule particles
+  "熟练度", "技能", "调整值", "成员",
+]);
+
 export function applyReverseLookup(text) {
   const map = getReverseMap();
   if (!map || map.size === 0) return text;
@@ -221,6 +254,7 @@ export function applyReverseLookup(text) {
   const sortedKeys = [...map.keys()].sort((a, b) => b.length - a.length);
   for (const cn of sortedKeys) {
     if (cn.length < 2) continue;
+    if (RESERVED_GENERIC_TOKENS.has(cn)) continue;
     if (out.includes(cn)) out = out.split(cn).join(map.get(cn));
   }
   return out;

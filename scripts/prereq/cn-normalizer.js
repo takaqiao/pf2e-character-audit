@@ -338,7 +338,12 @@ export function normalizeRequirement(text) {
   }
 
   // Multi-skill compound: "A 和 B" inside a 在...上... clause already split
-  // earlier may leave lone "技能" tokens. Strip them now.
+  // earlier may leave lone "技能"/"熟练度" tokens. Strip them now so they
+  // don't leak through to the parser (which would treat them as feat-name
+  // tokens and emit unknown). 熟练度 is normally consumed by the rank
+  // patterns above; only reaches here if the rank-word capture failed
+  // (e.g. a non-standard wording the regex didn't cover).
+  out = out.replace(/熟练度/g, " ");
   out = out.replace(/技能/g, "");
 
   // Pattern: "<ability><num>" / "<ability> <num> 或更高" / "<ability>调整值+<num>"
