@@ -3,6 +3,11 @@
 User-facing release notes for PF2e Character Audit.
 For full engineering history see [CHANGELOG-detailed.zh.md](CHANGELOG-detailed.zh.md).
 
+## [0.1.21] - 2026-05-12
+
+### Fixed
+- **Additional Feats rule (Player Core p. 215) now respected**: some archetypes (Ulfen Guard, Eagle Knight, Blackjacket, …) list feats from *other* classes in their "Additional Feats" section. When a feat is taken via that path, the original Dedication prereq (typically `Fighter Dedication`) is replaced by the archetype's own dedication, and the original class trait is dropped. The feat item in the compendium still carries its **original** prereq text, so the parser used to flag false positives — e.g. `反应打击者 Reactive Striker` failing on a Cleric/Ulfen Guard because they lack Fighter Dedication, even though Ulfen Guard's Additional Feats list includes Reactive Striker. Fix: after the parser returns fail, the audit scans every owned dedication's description for an `Additional Feats` / `额外专长` section and looks for the current feat's name. If found, the prereq is treated as satisfied via that archetype.
+
 ## [0.1.20] - 2026-05-12
 
 ### Fixed

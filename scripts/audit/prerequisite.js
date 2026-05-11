@@ -25,6 +25,47 @@ function isAutoGranted(actor, feat) {
   return false;
 }
 
+// Additional Feats rule (Player Core p. 215, "Additional Feats" sidebar):
+// some archetypes list feats from OTHER classes in their "Additional Feats"
+// section. Example: Ulfen Guard lists Reactive Striker, Guardian's Deflection,
+// Shield Warden. When taken via Ulfen Guard, the original Fighter-Dedication
+// prereq is satisfied by Ulfen Guard Dedication instead (and the fighter class
+// trait is dropped). The feat item in the compendium still carries its
+// ORIGINAL prereq text ("Fighter Dedication"), so the parser can't tell the
+// feat was taken via the alt path. We compensate by scanning each owned
+// dedication's description for an "Additional Feats" section that mentions
+// the current feat by name — if found, the prereq is satisfied via that
+// archetype.
+function splitBilingualName(rawName) {
+  const name = String(rawName ?? "").trim();
+  const m = name.match(/^([一-鿿][^A-Za-z]*?)\s+([A-Za-z][A-Za-z0-9'() :,\-]+)$/);
+  if (m) return { cn: m[1].trim(), en: m[2].trim() };
+  if (/[一-鿿]/.test(name)) return { cn: name, en: null };
+  return { cn: null, en: name };
+}
+
+const ADDITIONAL_FEATS_SECTION = /additional\s+feats?|额外专长|额外的?专长|附加专长/i;
+
+function isFeatGrantedAsAdditionalFeat(actor, currentFeat) {
+  const parts = splitBilingualName(currentFeat.name);
+  const en = parts.en ? parts.en.toLowerCase() : null;
+  const cn = parts.cn;
+
+  for (const item of actor.items ?? []) {
+    if (item === currentFeat || item.id === currentFeat.id) continue;
+    const traits = item.system?.traits?.value ?? [];
+    if (!traits.includes("dedication")) continue;
+
+    const desc = item.system?.description?.value ?? "";
+    if (!desc || !ADDITIONAL_FEATS_SECTION.test(desc)) continue;
+
+    const descLower = desc.toLowerCase();
+    if (en && descLower.includes(en)) return item.name;
+    if (cn && desc.includes(cn)) return item.name;
+  }
+  return null;
+}
+
 // Prereqs that involve "your deity's favored weapon" / "神祇的偏好武器" / etc.
 // can't be verified without per-deity weapon-category data. When the parser
 // reports a fail on such a feat, downgrade to "unknown" so the GM gets an info
@@ -217,6 +258,19 @@ export function auditPrerequisites(actor) {
     if (evaluation.met === true) {
       pass++;
       continue;
+    }
+
+    // Additional Feats check: a dedication-style prereq fail may actually be
+    // legal if the feat sits on another archetype's "Additional Feats" list
+    // and the actor has that archetype's dedication. We don't try to detect
+    // which dedication — we just look for the current feat's name inside
+    // an "Additional Feats" section of any owned dedication's description.
+    if (evaluation.met === false) {
+      const grantedBy = isFeatGrantedAsAdditionalFeat(actor, feat);
+      if (grantedBy) {
+        pass++;
+        continue;
+      }
     }
 
     let ev = evaluation.met === false ? EVALUATION.FAIL : EVALUATION.UNKNOWN;
