@@ -34,6 +34,56 @@ function isDeityWeaponPrereq(text) {
   return /deity['’\s]*s?\s*favored\s*weapon|deity['’\s]*s?\s*preferred\s*weapon|神祇.*偏好武器|神祇.*喜爱武器/.test(text);
 }
 
+// Quick path: many "feat name" / "class feature name" / "choice annotation"
+// prereqs (especially Chinese ones the parser can't easily decode) are just
+// the name of something the actor already owns. If the full prereq text — or
+// each comma-separated sub-clause — appears as a substring in any owned item's
+// name, accept it without going through the leveler parser.
+//
+// We deliberately bail out on prereq clauses that look like skill / ability /
+// rank checks (those need real evaluation against build state).
+const SKILL_PREREQ_HINT = /熟练度|trained|expert|master|legendary|untrained|受训|专家|大师|传奇|未受训|spell\s*slot|focus\s*pool|聚能/i;
+const ABILITY_PREREQ_HINT = /\b(strength|dexterity|constitution|intelligence|wisdom|charisma)\s*\d+|力量\s*\d+|敏捷\s*\d+|体质\s*\d+|智力\s*\d+|感知\s*\d+|魅力\s*\d+/i;
+
+function clauseMatchesOwnedItem(actor, clause) {
+  const text = clause.trim();
+  if (text.length < 2) return false;
+  if (SKILL_PREREQ_HINT.test(text)) return false;
+  if (ABILITY_PREREQ_HINT.test(text)) return false;
+  const lowered = text.toLowerCase();
+  for (const item of actor.items ?? []) {
+    const name = (item.name ?? "").toLowerCase();
+    if (name.includes(lowered)) return true;
+  }
+  return false;
+}
+
+function checkPrereqAgainstOwnedItems(actor, fullText) {
+  if (!fullText) return null;
+  // Split on Chinese / English comma & semicolon. PF2e prereqs use them
+  // interchangeably; multi-clause prereqs ALL have to be satisfied.
+  const clauses = fullText.split(/[,;，；]/).map((s) => s.trim()).filter(Boolean);
+  if (clauses.length === 0) return null;
+
+  let matchedAll = true;
+  let matchedAny = false;
+  let hasSkillClause = false;
+  for (const c of clauses) {
+    const hasSkill = SKILL_PREREQ_HINT.test(c) || ABILITY_PREREQ_HINT.test(c);
+    if (hasSkill) { hasSkillClause = true; continue; }
+    if (clauseMatchesOwnedItem(actor, c)) {
+      matchedAny = true;
+    } else {
+      matchedAll = false;
+    }
+  }
+  // If every non-skill clause matched an owned item AND there are no skill
+  // clauses, we consider the prereq satisfied. (Skill clauses still need the
+  // parser — we don't bypass them here.)
+  if (matchedAll && matchedAny && !hasSkillClause) return true;
+  return null; // fall through to parser
+}
+
 function unknownSeverity() {
   try {
     return game.settings.get(MODULE_ID, "prereqUnknownSeverity") ?? "warn";
@@ -91,6 +141,13 @@ export function auditPrerequisites(actor) {
     const prereqEntries = feat.system?.prerequisites?.value ?? [];
     const requirementText = prereqEntries.map((p) => p?.value ?? "").filter(Boolean).join("; ");
     if (!requirementText) {
+      pass++;
+      continue;
+    }
+
+    // Quick path: if every non-skill prereq clause matches an item the actor
+    // already owns by name (substring), accept without parser.
+    if (checkPrereqAgainstOwnedItems(actor, requirementText) === true) {
       pass++;
       continue;
     }

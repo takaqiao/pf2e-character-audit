@@ -3,6 +3,14 @@
 User-facing release notes for PF2e Character Audit.
 For full engineering history see [CHANGELOG-detailed.zh.md](CHANGELOG-detailed.zh.md).
 
+## [0.1.19] - 2026-05-12
+
+### Fixed
+- **Prereq references that the parser keeps mis-decoding** (`乌尔芬卫士入门`, `治疗源泉`, `领域入门`, …): added a quick-path that runs *before* the leveler parser. For every prereq sub-clause that isn't a skill / ability / rank check, the module looks for a substring match against any of the actor's own owned item names. If `乌尔芬卫士入门` is contained in the name of a feat the actor owns (`乌尔芬卫士入门 Ulfen Guard Dedication`), the prereq is accepted without going through normalization or the parser. Eliminates the bulk of "Chinese reference → English alphabet soup" failures.
+- **Babele reverse map now scans world actors + world items**, not just compendium indexes. Owned items are always translated by Babele (it hooks document creation), so this works regardless of whether `pack.index` carries translated names in the user's Babele version. Console log breaks out where entries came from: `api / index / world`.
+- **`DEDICATION_2_FEAT_RULE` still firing on Ulfen Guard despite same pack**: `flags.core.sourceId` isn't always populated — newer FVTT keeps the compendium link in `_stats.compendiumSource`. Now reads three paths. Added **M5**: same `system.publication.title` as the dedication (broader signal, accepted risk of slight over-count in books that ship multiple archetypes).
+- The reverse-map cache now has a 1-minute TTL so freshly-added items get picked up without restarting the world.
+
 ## [0.1.18] - 2026-05-12
 
 ### Fixed

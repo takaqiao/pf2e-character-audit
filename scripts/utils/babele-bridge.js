@@ -6,6 +6,8 @@
 // Babele translation pack's `entries` and registers `cn_stem → en_key`.
 
 let cachedReverseMap = null;
+let lastBuildTime = 0;
+const CACHE_TTL_MS = 60_000; // rebuild at most once a minute to pick up new owned items
 
 function bilingualToCN(name) {
   if (typeof name !== "string") return null;
@@ -122,6 +124,31 @@ function buildReverseMapFromCompendiums(map) {
   return added;
 }
 
+// Scan world actors' owned items + world items collection for bilingual
+// names. This is the most reliable path because owned items are always
+// translated by Babele (Babele intercepts document creation, not pack
+// index reads). If `pack.index` doesn't carry translated names in the
+// user's Babele version, this still works.
+function buildReverseMapFromWorld(map) {
+  let added = 0;
+  const seen = new Set();
+  const visit = (item) => {
+    const name = item?.name;
+    if (!name || seen.has(name)) return;
+    seen.add(name);
+    const parts = splitBilingual(name);
+    if (parts && !map.has(parts.cn)) {
+      map.set(parts.cn, parts.en);
+      added++;
+    }
+  };
+  for (const actor of game?.actors ?? []) {
+    for (const item of actor.items ?? []) visit(item);
+  }
+  for (const item of game?.items ?? []) visit(item);
+  return added;
+}
+
 function buildReverseMap() {
   const map = new Map();
 
@@ -151,22 +178,27 @@ function buildReverseMap() {
     }
   }
 
-  // Path 2 (always run): scan compendium pack indexes for bilingual names.
-  // This is the reliable fallback — works regardless of Babele version because
-  // by the time we audit, the indexes already contain the translated names.
+  // Path 2: compendium pack indexes (if Babele applied translations there).
   const fromIndex = buildReverseMapFromCompendiums(map);
+  // Path 3: world actors' items + world items collection. These are document
+  // instances, which Babele always translates regardless of pack-index handling.
+  const fromWorld = buildReverseMapFromWorld(map);
 
   console.info(
     `[pf2e-character-audit] reverse map: ${map.size} entries ` +
-    `(${fromIndex} from compendium index, rest from Babele API).`
+    `(api=${map.size - fromIndex - fromWorld}, index=${fromIndex}, world=${fromWorld}).`
   );
   return map;
 }
 
 export function getReverseMap() {
-  if (cachedReverseMap !== null) return cachedReverseMap;
+  const now = Date.now();
+  if (cachedReverseMap !== null && now - lastBuildTime < CACHE_TTL_MS) {
+    return cachedReverseMap;
+  }
   try {
     cachedReverseMap = buildReverseMap();
+    lastBuildTime = now;
   } catch (err) {
     console.warn("[pf2e-character-audit] babele reverse-map build failed:", err);
     cachedReverseMap = new Map();
@@ -176,6 +208,7 @@ export function getReverseMap() {
 
 export function invalidateReverseMap() {
   cachedReverseMap = null;
+  lastBuildTime = 0;
 }
 
 export function applyReverseLookup(text) {

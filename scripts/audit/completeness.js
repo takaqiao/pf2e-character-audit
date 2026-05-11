@@ -300,13 +300,21 @@ function checkSkillIncreases(actor, expected, issues) {
 
 const GENERIC_TRAITS = new Set(["archetype", "dedication", "uncommon", "rare", "unique", "common", "multiclass"]);
 
+function readCompendiumSource(item) {
+  return item?.flags?.core?.sourceId
+    ?? item?._stats?.compendiumSource
+    ?? item?._source?.flags?.core?.sourceId
+    ?? "";
+}
+
 function findArchetypeFollowups(actor, ded) {
   const slug = ded.slug ?? ded.system?.slug ?? "";
   const archName = slug.replace(/-dedication$/, "");
   const dedTraits = ded.system?.traits?.value ?? [];
   const dedDistinctive = dedTraits.filter((t) => !GENERIC_TRAITS.has(t));
-  const dedSource = ded.flags?.core?.sourceId ?? "";
+  const dedSource = readCompendiumSource(ded);
   const dedPackKey = dedSource ? dedSource.split(".").slice(0, 3).join(".") : "";
+  const dedPub = ded.system?.publication?.title ?? "";
 
   return (actor.itemTypes.feat ?? []).filter((f) => {
     if (f.id === ded.id) return false;
@@ -330,12 +338,21 @@ function findArchetypeFollowups(actor, ded) {
 
     // M4 — same compendium pack as the dedication. Community-content
     // archetypes usually keep their dedication and follow-ups in one pack.
-    // Restrict to feats that don't look like dedications themselves and that
-    // are class/archetype-category feats.
-    const fSource = f.flags?.core?.sourceId ?? "";
+    // Reads sourceId from every known path (flags.core, _stats, _source).
+    const fSource = readCompendiumSource(f);
     if (dedPackKey && fSource.startsWith(dedPackKey + ".")) {
       const fCat = f.system?.category ?? f.system?.featType ?? "";
       if (fCat === "class" || fCat === "archetype") return true;
+    }
+
+    // M5 — same publication.title as the dedication AND feat is class/
+    // archetype category. Broader than pack-key match; catches sources where
+    // sourceId isn't populated. Acceptable risk of slight over-count in books
+    // that ship multiple archetypes.
+    if (dedPub) {
+      const fPub = f.system?.publication?.title ?? "";
+      const fCat = f.system?.category ?? f.system?.featType ?? "";
+      if (fPub === dedPub && (fCat === "class" || fCat === "archetype")) return true;
     }
 
     return false;
