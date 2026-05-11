@@ -3,6 +3,11 @@
 User-facing release notes for PF2e Character Audit.
 For full engineering history see [CHANGELOG-detailed.zh.md](CHANGELOG-detailed.zh.md).
 
+## [0.1.22] - 2026-05-12
+
+### Changed
+- **Additional Feats detection upgraded to use archetype journal pack as authoritative source** (was: dedication description scan in 0.1.21). At world ready, the module asynchronously scans every loaded `JournalEntry` compendium pack for pages containing `Additional Feats:` / `补充专长:` sections, extracts every `@UUID[...]` reference, and indexes by archetype page name. At audit time, a feat that would fail its prereq is checked against the Additional Feats UUID set of every owned Dedication's matching archetype journal. UUID matching is language-independent and stable across translation packs (`pf2e_compendium_chn` keeps the same UUIDs, only the section heading changes to `补充专长`). Falls back to the 0.1.21 description scan when the journal map hasn't built yet or the relevant pack isn't loaded.
+
 ## [0.1.21] - 2026-05-12
 
 ### Fixed

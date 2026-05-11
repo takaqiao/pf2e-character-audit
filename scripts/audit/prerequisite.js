@@ -3,6 +3,7 @@ import { buildBuildStateFromActor } from "../prereq/build-state.js";
 import { parseAllPrerequisiteNodes } from "../prereq/parsers.js";
 import { evaluateRequirementNode } from "../prereq/checker.js";
 import { hasCJK, normalizeFeatPrerequisites, normalizeRequirement } from "../prereq/cn-normalizer.js";
+import { isFeatInArchetypeAFList, ensureAFMap } from "./additional-feats.js";
 
 // A feat is "auto-granted" by another item (class feature, heritage, etc.) and
 // shouldn't have its prereq re-checked when:
@@ -260,14 +261,19 @@ export function auditPrerequisites(actor) {
       continue;
     }
 
-    // Additional Feats check: a dedication-style prereq fail may actually be
-    // legal if the feat sits on another archetype's "Additional Feats" list
-    // and the actor has that archetype's dedication. We don't try to detect
-    // which dedication — we just look for the current feat's name inside
-    // an "Additional Feats" section of any owned dedication's description.
+    // Additional Feats check (PC p.215): a dedication-style prereq fail may
+    // actually be legal if the feat sits on another archetype's "Additional
+    // Feats" list. PRIMARY path uses the archetype-journal scan
+    // (`isFeatInArchetypeAFList`) which matches by compendium sourceId UUID —
+    // the authoritative reference. FALLBACK scans owned dedication
+    // descriptions for the feat name, used when the journal map hasn't
+    // finished building yet or the relevant journal pack isn't loaded.
     if (evaluation.met === false) {
-      const grantedBy = isFeatGrantedAsAdditionalFeat(actor, feat);
-      if (grantedBy) {
+      if (isFeatInArchetypeAFList(actor, feat)) {
+        pass++;
+        continue;
+      }
+      if (isFeatGrantedAsAdditionalFeat(actor, feat)) {
         pass++;
         continue;
       }
