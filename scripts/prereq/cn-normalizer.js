@@ -36,7 +36,11 @@ const SKILL_CN_TO_EN = {
   "社群": "Society", "社交": "Society",
   "隐匿": "Stealth", "潜行": "Stealth",
   "生存": "Survival",
-  "盗窃": "Thievery", "盗术": "Thievery"
+  "盗窃": "Thievery", "盗术": "Thievery",
+  // Perception is technically a separate proficiency in PF2e (not a skill),
+  // but appears in skill-style prereqs ("察觉熟练度为大师"). Include it here
+  // so the rank-pattern regex picks it up.
+  "察觉": "Perception", "察言观色": "Perception", "察识": "Perception"
 };
 
 const RANK_CN_TO_EN = {
@@ -118,6 +122,11 @@ const CLASS_CN_TO_EN = {
 // otherwise the parser produces slug "maestro-muse" which doesn't exist.
 const FEATURE_CN_TO_EN = {
   // Generic concepts
+  "生命值": " HP",
+  "调整值": " modifier",
+  "每级": "per level ",
+  "不超过": " no more than ",
+  "职业": "class",
   "神祇": "deity",
   "偏好武器": "favored weapon",
   "简易武器": "simple weapons",
@@ -256,12 +265,14 @@ function replaceConnectors(text) {
     .replace(/和/g, " and ")
     .replace(/或/g, " or ")
     .replace(/[一二三四五六七八九十]个/g, " ");
-  // Possessive 的 (only when between non-space characters; doesn't break grammar 100%
-  // but covers PF2E's "X的Y" phrasing reliably).
+  // Possessive 的 — only emit "'s" when the following char is whitespace,
+  // end-of-string, or an ASCII letter/digit. Without this lookahead the
+  // pattern also fires between two CJK characters and produces artefacts
+  // like "值's 职" when vocab tables haven't translated both sides yet.
   out = out
     .replace(/你的/g, "your ")
     .replace(/你/g, "your ")
-    .replace(/(\S)的/g, "$1's ")
+    .replace(/(\S)的(?=\s|$|[A-Za-z0-9])/g, "$1's ")
     .replace(/为/g, " is ")
     .replace(/是/g, " is ")
     .replace(/拥有/g, " has ")
@@ -307,6 +318,22 @@ export function normalizeRequirement(text) {
         `${r} in Religion`
       ].join(" or ");
     }
+  );
+
+  // Pattern: "<skill>(技能)?为<rank>熟练度" → "<rank> in <skill>"
+  // Word-order variant where the rank comes between 为 and 熟练度.
+  // Must run BEFORE the standard "...熟练度为<rank>" pattern or that one
+  // would happily match the empty stem before 熟练度 and leave the rank behind.
+  out = out.replace(
+    new RegExp(`(${CJK_RUN_LAZY})(?:技能)?为${RANK_GROUP}熟练度`, "g"),
+    (_, skill, rank) => `${rankToEn(rank)} in ${skillToEn(skill)}`
+  );
+
+  // Pattern: "<skill>(技能)?已达(到)?<rank>" → "<rank> in <skill>"
+  // Alternate phrasing observed in PF2e CN packs ("运动已达到大师").
+  out = out.replace(
+    new RegExp(`(${CJK_RUN_LAZY})(?:技能)?已达(?:到)?${RANK_GROUP}`, "g"),
+    (_, skill, rank) => `${rankToEn(rank)} in ${skillToEn(skill)}`
   );
 
   // Pattern: "<skill>(技能)?(的)?熟练度(为|达到)<rank>" → "<rank> in <skill>"

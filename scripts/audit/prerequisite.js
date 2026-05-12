@@ -144,6 +144,171 @@ function checkPrereqAgainstOwnedItems(actor, fullText) {
   return null; // fall through to parser
 }
 
+// In PF2e RAW there's a distinction between PREREQUISITE (mechanical: skill
+// ranks, ability scores, specific feats — auditable) and ACCESS (story:
+// "member of <Org>", "citizen of <Place>", "from <Region>", "your deity is
+// X" — GM-discretion, not mechanically enforced). Translation packs and
+// community content often lump them together into one prerequisite string,
+// so we filter story-flavor clauses out before mechanical verification.
+const STORY_CLAUSE_PATTERNS = [
+  /(?:^|\b)member of\b/i,
+  /(?:^|\b)from\s+[A-Z]/,                  // "from Taldor"
+  /(?:^|\b)citizen of\b/i,
+  /(?:^|\b)native of\b/i,
+  /(?:^|\b)ties? to\b/i,
+  /^.*成员\s*$/,                           // "X的成员" / "X's 成员"
+  /^来自/,                                  // "来自 X"
+  /公民\s*$/,
+  /一员\s*$/,
+  /父母.*至少有一/                         // "at least one of your parents is ..."
+];
+
+function isStoryClause(clauseText) {
+  if (!clauseText) return false;
+  return STORY_CLAUSE_PATTERNS.some((re) => re.test(clauseText));
+}
+
+const RANK_NAMES = { untrained: 0, trained: 1, expert: 2, master: 3, legendary: 4 };
+
+// Class-HP-per-level restriction clause (e.g. Barbarian Resiliency from PC1:
+// "a class that grants no more than 10 + CON HP per level"). Raw CN reads
+// "每级生命值不超过10+体质调整值的职业"; normalized variants include "HP per
+// level no more than 10", "class with 10 or less HP per level", etc.
+// Returns:
+//   { threshold: <int>, matched: true } when a threshold is parsed,
+//   null when the clause doesn't look like an HP-restriction clause.
+function parseClassHpRestrictionClause(clauseText) {
+  if (!clauseText) return null;
+  // Normalize full-width digits to ASCII so parseInt works uniformly.
+  const text = clauseText.replace(/[０-９]/g, (d) => String.fromCharCode(d.charCodeAt(0) - 0xFEE0));
+  // CN raw form: "每级生命值不超过<N>"
+  let m = text.match(/每级\s*(?:生命值|HP|Life值?)\s*(?:不超过|不多于|不大于|至多|最多)\s*(\d+)/);
+  if (m) return { threshold: parseInt(m[1], 10) };
+  // Reverse CN: "<N>...每级生命值"
+  m = text.match(/(?:不超过|不多于|不大于|至多|最多)\s*(\d+)[^\d]{0,12}(?:每级)?\s*(?:生命值|HP|Life值?)\s*(?:每级)?/);
+  if (m) return { threshold: parseInt(m[1], 10) };
+  // Normalized hybrid (translator output): "每级Life值不超过10"
+  m = text.match(/每级\s*\S{0,8}\s*不超过\s*(\d+)/);
+  if (m && /(?:生命|HP|Life)/i.test(text)) return { threshold: parseInt(m[1], 10) };
+  // English: "class with N or less HP per level", "N or fewer HP per level",
+  // "no more than N HP per level".
+  m = text.match(/\b(?:no\s+more\s+than|at\s+most|up\s+to)\s+(\d+)\s*\+?\s*(?:CON|Constitution)?[^.]{0,40}?\bHP\s+per\s+level/i);
+  if (m) return { threshold: parseInt(m[1], 10) };
+  m = text.match(/\b(\d+)\s+or\s+(?:less|fewer)\s+HP\s+per\s+level/i);
+  if (m) return { threshold: parseInt(m[1], 10) };
+  m = text.match(/\bbase\s+HP\s+(?:of\s+)?(?:no\s+more\s+than|at\s+most|<=|≤)\s*(\d+)/i);
+  if (m) return { threshold: parseInt(m[1], 10) };
+  // Normalizer-emitted form: "per level HP no more than <N>" (literal
+  // CN → EN of "每级生命值不超过<N>"). The phrase order differs from
+  // canonical English ("no more than N HP per level"), so it needs a
+  // dedicated pattern.
+  m = text.match(/\bper\s+level\s+HP\s+(?:no\s+more\s+than|at\s+most|up\s+to|<=|≤|is\s+(?:no\s+more\s+than|at\s+most))\s+(\d+)/i);
+  if (m) return { threshold: parseInt(m[1], 10) };
+  return null;
+}
+
+// Evaluate a class-HP-per-level restriction against the actor's class.
+// Returns true/false when threshold parsed; null when threshold could not
+// be parsed (defer to parser) OR actor has no class HP value.
+// "每级生命值不超过10+体质调整值的职业" refers to the CLASS's defined
+// base HP-per-level (Fighter=10, Wizard=6, etc.) — NOT the actor's total
+// HP. Other sources (Toughness feat, ancestry HP, CON mod, etc.) add to
+// effective HP but don't count for this prereq.
+//
+// PF2e v8 surfaces this through several paths; we try in order:
+//   1. actor.system.attributes.classhp   (computed from class.hpPerLevel)
+//   2. actor.class.hpPerLevel             (getter on the class item)
+//   3. actor.class.system.hp              (raw class definition; may be a
+//                                          number OR an object — handle both)
+function getClassHpPerLevel(actor) {
+  const fromAttrs = actor?.system?.attributes?.classhp;
+  if (typeof fromAttrs === "number" && fromAttrs > 0) return fromAttrs;
+
+  const fromGetter = actor?.class?.hpPerLevel;
+  if (typeof fromGetter === "number" && fromGetter > 0) return fromGetter;
+
+  const raw = actor?.class?.system?.hp;
+  if (typeof raw === "number" && raw > 0) return raw;
+  if (raw && typeof raw === "object") {
+    const v = Number(raw.value ?? raw.base ?? raw.perLevel);
+    if (Number.isFinite(v) && v > 0) return v;
+  }
+  return null;
+}
+
+function evalClassHpRestrictionClause(actor, clauseText) {
+  const parsed = parseClassHpRestrictionClause(clauseText);
+  if (!parsed) return null;
+  const classHp = getClassHpPerLevel(actor);
+  if (typeof classHp !== "number") return null;
+  return classHp <= parsed.threshold;
+}
+
+// Evaluate a normalized skill clause like "trained in Athletics" /
+// "expert in Athletics and Intimidation" against the actor's actual skill
+// ranks. Returns true / false / null (null = unrecognized → defer to parser).
+function evalSkillClause(actor, clause) {
+  const m = clause.match(/\b(untrained|trained|expert|master|legendary)\s+in\s+(.+?)\s*$/i);
+  if (!m) return null;
+  const requiredRank = RANK_NAMES[m[1].toLowerCase()];
+  if (requiredRank == null) return null;
+  const skillsRaw = m[2].split(/\s+and\s+|\s*,\s*/i).map((s) => s.trim()).filter(Boolean);
+  if (skillsRaw.length === 0) return null;
+  let allMet = true;
+  for (const sk of skillsRaw) {
+    const slug = sk.toLowerCase();
+    const skill = actor.skills?.[slug];
+    const rank = typeof skill?.rank === "number"
+      ? skill.rank
+      : (typeof actor.system?.skills?.[slug]?.rank === "number"
+          ? actor.system.skills[slug].rank
+          : null);
+    if (rank == null) return null;
+    if (rank < requiredRank) allMet = false;
+  }
+  return allMet;
+}
+
+// Split a prereq into clauses, skip pure-story clauses (treated as GM-verified
+// access per PF2e RAW), and verify each remaining mechanical clause
+// independently. Returns true only when we actually filtered story content
+// OR resolved a class-HP-restriction clause AND every mechanical clause is
+// satisfied — never auto-passes pure-story prereqs (those still go through
+// the parser, which will report unknown).
+function tryStorySplitSatisfied(actor, normalizedText) {
+  if (!normalizedText) return false;
+  const clauses = normalizedText.split(/[,;，；]/).map((s) => s.trim()).filter(Boolean);
+  if (clauses.length === 0) return false;
+  let sawStory = false;
+  let sawHpRestriction = false;
+  let mechanicalCount = 0;
+  for (const c of clauses) {
+    if (isStoryClause(c)) { sawStory = true; continue; }
+    // Class HP-per-level restriction (Barbarian Resiliency etc.): the parser
+    // can't handle this clause shape, so verify directly against
+    // actor.class.system.hp. Failure here aborts the bypass — we MUST NOT
+    // silently pass a mechanical gate.
+    const hpParsed = parseClassHpRestrictionClause(c);
+    if (hpParsed) {
+      const ok = evalClassHpRestrictionClause(actor, c);
+      if (ok === null) return false;   // can't verify → defer to parser
+      if (ok === false) return false;  // actor's class exceeds threshold
+      sawHpRestriction = true;
+      mechanicalCount++;
+      continue;
+    }
+    if (/\b(untrained|trained|expert|master|legendary)\s+in/i.test(c)) {
+      const r = evalSkillClause(actor, c);
+      if (r !== true) return false;
+      mechanicalCount++;
+      continue;
+    }
+    if (clauseMatchesOwnedItem(actor, c)) { mechanicalCount++; continue; }
+    return false;
+  }
+  return (sawStory || sawHpRestriction) && mechanicalCount > 0;
+}
+
 function unknownSeverity() {
   try {
     return game.settings.get(MODULE_ID, "prereqUnknownSeverity") ?? "warn";
@@ -220,6 +385,14 @@ export function auditPrerequisites(actor) {
     const requirementNormalized = hasCJK(requirementText)
       ? normalizeRequirement(requirementText)
       : requirementText;
+
+    // Story-clause + skill-clause split: prereqs like "<Org>'s 成员, trained
+    // in Athletics and Intimidation" can't be verified by the parser as a
+    // whole (the story half is opaque). Split and verify each individually.
+    if (tryStorySplitSatisfied(actor, requirementNormalized)) {
+      pass++;
+      continue;
+    }
 
     let parsed = [];
     try {

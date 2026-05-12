@@ -255,6 +255,13 @@ export function invalidateReverseMap() {
 // or "运动 Athletics" (a creature skill name) sneaks into the map and clobbers
 // the rank/skill words in prereq text — e.g. "特技技能熟练度为大师" comes out
 // as "Acrobatics熟练度 is Maestro" which the parser can't decode.
+//
+// Policy: generic rule vocabulary blocklisted; proper-noun feat references
+// still translated. Keep this list tight to specific common rule words that
+// also happen to appear as standalone bilingual item names somewhere in the
+// PF2E data set. Class slugs (战士), dedication suffix (入门), and full feat
+// names are deliberately NOT blocklisted — those are exactly what the reverse
+// lookup is for ("战士入门" → "Fighter Dedication").
 const RESERVED_GENERIC_TOKENS = new Set([
   // Proficiency ranks (受训 listed once — Set dedupes regardless)
   "未受训", "受训", "专家", "大师", "传奇",
@@ -277,8 +284,22 @@ const RESERVED_GENERIC_TOKENS = new Set([
   "盗窃", "盗术",
   // Ability scores
   "力量", "敏捷", "体质", "智力", "感知", "魅力",
-  // Structural / rule particles
-  "熟练度", "技能", "调整值", "成员",
+  // Vital stats / HP wording (a bilingual creature/feature literally named
+  // "生命 Life" or "生命值 HP" must not rewrite "每级生命值不超过…" prereqs).
+  "生命", "生命值", "HP",
+  // Structural / rule particles (调整值 = modifier, e.g. 体质调整值)
+  "熟练度", "技能", "调整值", "成员", "角色",
+  // Class / build vocabulary — "职业" leaks via items like "职业 Classes";
+  // level/comparator words leak via lore/journal entries.
+  "职业", "等级", "级", "每级",
+  "不超过", "不少于", "或更高", "或以上", "或更多",
+  // Generic structural particles that occasionally appear as bilingual names
+  // in junk entries (single-character particles tend to be no-ops because the
+  // reverse-lookup already requires length >= 2, but pinning them is cheap).
+  "的", "之", "与", "及", "以及", "而",
+  // Feat / class taxonomy words (a bilingual entry "专长 Feat" would otherwise
+  // rewrite "你必须拥有该专长" → "you must have this Feat" mid-sentence).
+  "专长", "领域", "特性",
   // Religion / theology rule words (a deity entry named "伊欧梅黛 Iomedae"
   // must not rewrite the literal token "神祇" or "偏好武器" in prereq text).
   "神祇", "偏好武器", "学识",

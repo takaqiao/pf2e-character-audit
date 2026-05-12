@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.27] - 2026-05-12
+- Story / access clauses (`member of <Org>`, `from <Region>`, `citizen of`, `成员`, `公民`, etc.) skipped from mechanical verification per PF2e RAW (GM-discretion, not auditable).
+- Class HP-restriction clause (Barbarian Resiliency etc.): parses `每级生命值不超过 N` and the literal-translated `per level HP no more than N`; reads class base HP via `attributes.classhp` → `class.hpPerLevel` → `class.system.hp`.
+- cn-normalizer: `察觉` → Perception (+ aliases); new `<skill>为<rank>熟练度` reverse-order pattern; HP/class vocab additions; tightened `(\S)的` → `'s` boundary.
+- Babele blocklist expanded with `生命/生命值/职业/等级/每级/不超过/或更高/的/之/与/及/专长/领域/特性` and others — prevents proper-noun pollution of rule vocabulary.
+- Cleric domain check simplified to focus-pool spell count vs `Initiate + Advanced` feat count.
+
 ## [0.1.26] - 2026-05-12
 - Cleric domain check simplified: read focus pool size directly vs `Initiate + Advanced` feat count. Removes brittle trait/slug heuristic and the over-eager distinct-domain check.
 - AF map race-condition: on first build, fires `pf2e-character-audit.afMapReady` hook; open AuditReportApp instances auto re-render so Reactive Striker etc. flip from false-fail to pass without manual re-audit.

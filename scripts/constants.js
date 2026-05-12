@@ -1,5 +1,5 @@
 export const MODULE_ID = "pf2e-character-audit";
-export const MODULE_VERSION = "0.1.26";
+export const MODULE_VERSION = "0.1.27";
 
 export const ATTRIBUTES = ["str", "dex", "con", "int", "wis", "cha"];
 
