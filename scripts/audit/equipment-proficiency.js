@@ -66,11 +66,44 @@ function weaponMaxRank(actor, weapon) {
   if (category === "advanced") {
     ranks.push(rankOf(actor, "attacks", "advancedWeapons"));
   }
-  // Some specific weapon types are tracked by slug on .attacks too; harmless
-  // to also peek by weapon slug if present.
-  const slug = sys.slug ?? weapon?.slug;
-  if (slug) ranks.push(rankOf(actor, "attacks", slug));
+  // Specific weapon proficiency entries. PF2e's Unconventional Weaponry
+  // (and similar rule elements) add an entry keyed by the weapon's slug.
+  // The exact key format varies across pf2e system versions — sometimes
+  // raw slug, sometimes `<slug>-attack`, sometimes prefixed. Scan all
+  // attack-proficiency keys for any whose key INCLUDES the slug, and
+  // also try common transformations.
+  const slug = String(sys.slug ?? weapon?.slug ?? "").toLowerCase();
+  if (slug && slug.length >= 3) {
+    ranks.push(rankOf(actor, "attacks", slug));
+    const attacksObj = actor?.system?.proficiencies?.attacks;
+    if (attacksObj && typeof attacksObj === "object") {
+      for (const [k, v] of Object.entries(attacksObj)) {
+        if (typeof k === "string" && k.toLowerCase().includes(slug)) {
+          if (typeof v?.rank === "number") ranks.push(v.rank);
+        }
+      }
+    }
+  }
+  // Fallback: if the actor has any feat whose name suggests it grants
+  // specific-weapon proficiency (e.g. "Unconventional Weaponry", "Aldori
+  // Duelist Dedication", "古武熟习"), treat the weapon as if proficient.
+  // Granting feats almost always carry a rule element the PF2e system
+  // already applied — but if that rule didn't run, this fallback prevents
+  // spurious "untrained" alerts on weapons the player explicitly chose.
+  if (Math.max(0, ...ranks) <= 0 && hasWeaponProficiencyFeat(actor)) {
+    return 1; // treat as trained — caller skips emission
+  }
   return Math.max(0, ...ranks);
+}
+
+function hasWeaponProficiencyFeat(actor) {
+  for (const feat of actor?.itemTypes?.feat ?? []) {
+    const slug = String(feat.slug ?? feat.system?.slug ?? "").toLowerCase();
+    if (/unconventional-weaponry|weapon-familiarity|aldori-duelist|exotic-weapon|specific-weapon-prof/.test(slug)) return true;
+    const name = String(feat.name ?? "").toLowerCase();
+    if (/unconventional weaponry|weapon familiarity|aldori duelist|exotic weapon|古武熟习|武器熟练/i.test(name)) return true;
+  }
+  return false;
 }
 
 function isTwoHandedWeapon(weapon) {
@@ -92,7 +125,10 @@ function checkWeapons(actor, issues) {
     if (!isHeld(w)) continue;
     const max = weaponMaxRank(actor, w);
     if (max <= 0) {
-      issues.push(makeIssue("WIELDING_UNTRAINED_WEAPON", SEVERITY.WARN, {
+      // INFO not WARN — we can't reliably detect rule-element-granted
+      // proficiencies (Unconventional Weaponry, archetype dedications),
+      // so the alert is a gentle hint rather than a violation.
+      issues.push(makeIssue("WIELDING_UNTRAINED_WEAPON", SEVERITY.INFO, {
         weaponName: w.name,
         weaponGroup: w.system?.group ?? w.system?.category ?? "unknown"
       }));

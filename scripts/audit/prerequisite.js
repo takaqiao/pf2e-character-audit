@@ -156,10 +156,14 @@ const STORY_CLAUSE_PATTERNS = [
   /(?:^|\b)citizen of\b/i,
   /(?:^|\b)native of\b/i,
   /(?:^|\b)ties? to\b/i,
+  /(?:^|\b)died and\b/i,                   // "you died and returned as a ghost"
+  /(?:^|\b)returned (?:as|in)\b/i,
   /^.*成员\s*$/,                           // "X的成员" / "X's 成员"
   /^来自/,                                  // "来自 X"
   /公民\s*$/,
   /一员\s*$/,
+  /死去/,                                   // "你死去并以..." (Ghost Dedication)
+  /以.*形态归来/,                          // "以幽灵的形态归来"
   /父母.*至少有一/                         // "at least one of your parents is ..."
 ];
 
@@ -244,6 +248,22 @@ function evalClassHpRestrictionClause(actor, clauseText) {
   return classHp <= parsed.threshold;
 }
 
+// "you follow a faith" / "you worship a deity" / "你追随某个信仰" / "信奉神祇" —
+// detected as a mechanical clause and verified against `actor.deity`. Returns
+// true if a deity is set, false if the clause matched but no deity, null if
+// the clause doesn't look like a deity requirement.
+const DEITY_CLAUSE_RE = /(?:^|\b)(?:you\s+(?:follow|worship)\b.*?(?:faith|deity|god)|your\s+(?:deity|god|faith))|你?追随.*?信仰|信奉.*?神|崇拜.*?神|追随.*?神祇/i;
+function evalDeityClause(actor, clauseText) {
+  if (!DEITY_CLAUSE_RE.test(clauseText)) return null;
+  // Try every known PF2e v8 path for deity reference.
+  if (actor?.deity) return true;
+  if ((actor?.itemTypes?.deity ?? []).length > 0) return true;
+  const d = actor?.system?.details?.deity;
+  if (d && (d.value || d.name || (typeof d === "string" && d.length > 0))) return true;
+  if ((actor?.system?.details?.deities ?? []).length > 0) return true;
+  return false;
+}
+
 // Evaluate a normalized skill clause like "trained in Athletics" /
 // "expert in Athletics and Intimidation" against the actor's actual skill
 // ranks. Returns true / false / null (null = unrecognized → defer to parser).
@@ -281,6 +301,7 @@ function tryStorySplitSatisfied(actor, normalizedText) {
   if (clauses.length === 0) return false;
   let sawStory = false;
   let sawHpRestriction = false;
+  let sawDeity = false;
   let mechanicalCount = 0;
   for (const c of clauses) {
     if (isStoryClause(c)) { sawStory = true; continue; }
@@ -297,6 +318,16 @@ function tryStorySplitSatisfied(actor, normalizedText) {
       mechanicalCount++;
       continue;
     }
+    // Deity-required clause: "you follow a faith" / "你追随某个信仰" — verified
+    // by checking actor.deity. Counts as a "parser-can't-handle" signal so the
+    // bypass fires (parser doesn't recognise 追随某个信仰 / "you follow a faith").
+    const deityResult = evalDeityClause(actor, c);
+    if (deityResult !== null) {
+      if (deityResult === false) return false;
+      sawDeity = true;
+      mechanicalCount++;
+      continue;
+    }
     if (/\b(untrained|trained|expert|master|legendary)\s+in/i.test(c)) {
       const r = evalSkillClause(actor, c);
       if (r !== true) return false;
@@ -306,7 +337,7 @@ function tryStorySplitSatisfied(actor, normalizedText) {
     if (clauseMatchesOwnedItem(actor, c)) { mechanicalCount++; continue; }
     return false;
   }
-  return (sawStory || sawHpRestriction) && mechanicalCount > 0;
+  return (sawStory || sawHpRestriction || sawDeity) && mechanicalCount > 0;
 }
 
 function unknownSeverity() {

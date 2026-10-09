@@ -215,6 +215,11 @@ function checkCantripCount(actor, issues) {
         if (isRitualEntry(entry)) continue;
         if (isFocusEntry(entry)) continue;
         if (isInnateEntry(entry)) continue;
+        // Divine Font / cleric harm-or-heal entries are auxiliary
+        // prepared slots dedicated to a single spell; they don't carry
+        // cantrips by design. Detect by name.
+        const entryName = String(entry?.name ?? "");
+        if (/divine\s+font|font\s+\(harmful\)|font\s+\(healing\)|神力源泉|源泉/i.test(entryName)) continue;
 
         const spells = getEntrySpells(actor, entry);
         const cantrips = spells.filter(isCantrip);
@@ -222,7 +227,7 @@ function checkCantripCount(actor, issues) {
           issues.push(makeIssue("CANTRIP_COUNT_LOW", SEVERITY.INFO, {
             actual: cantrips.length,
             expected: expectedCantrips,
-            entryName: entry?.name ?? "(spellcasting)"
+            entryName: entryName || "(spellcasting)"
           }));
         }
       } catch {}
@@ -248,7 +253,13 @@ function checkFocusPool(actor, issues) {
         }
       } catch {}
       if (owned < poolMax) {
-        issues.push(makeIssue("FOCUS_POOL_OVER_FOCUS_SPELLS", SEVERITY.ERROR, {
+        // Demoted to INFO. Per RAW pool max should equal focus spells
+        // known (capped at 3), but PF2e sometimes pre-allocates pool
+        // capacity from class/feat features before the spell items
+        // appear, and our spell-counting heuristic may miss focus
+        // spells stored in unusual entries. The hard cap (>3) stays
+        // an ERROR via FOCUS_POOL_OVER_CAP.
+        issues.push(makeIssue("FOCUS_POOL_OVER_FOCUS_SPELLS", SEVERITY.INFO, {
           poolMax,
           focusSpellsOwned: owned
         }));

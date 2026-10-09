@@ -300,6 +300,12 @@ const RESERVED_GENERIC_TOKENS = new Set([
   // Feat / class taxonomy words (a bilingual entry "专长 Feat" would otherwise
   // rewrite "你必须拥有该专长" → "you must have this Feat" mid-sentence).
   "专长", "领域", "特性",
+  // Spellcasting rule verbs — a bilingual class feature like "施法 Spellcasting"
+  // must not rewrite the compound "施法职业特性" before our normalizer can match it.
+  "施法", "术法", "施展",
+  // Story-flavor tokens used in deity/access prereqs (block so the
+  // story-clause / deity-clause regex sees the original CN form intact).
+  "追随", "信仰", "形态", "信奉", "崇拜",
   // Religion / theology rule words (a deity entry named "伊欧梅黛 Iomedae"
   // must not rewrite the literal token "神祇" or "偏好武器" in prereq text).
   "神祇", "偏好武器", "学识",

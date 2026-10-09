@@ -351,6 +351,10 @@
         "CLERIC_DOMAIN_SPELL_COUNT_OFF": {
           "Title": "牧师领域法术数量不符",
           "Hint": "应有 {expected} 个领域 focus 法术（Domain Initiate {domainInitiate} + Advanced Domain {advancedDomain}），实际 {actual} 个。补法术或调整专长选择。"
+        },
+        "MISSING_TRAINED_SKILLS": {
+          "Title": "受训技能数量不足",
+          "Hint": "职业基础至少应受训 {expected} 项技能（含 INT 加成约 {baseline} 项），实际 {actual} 项。检查背景 / 职业 / Skill Training 专长。"
         }
       }
     },

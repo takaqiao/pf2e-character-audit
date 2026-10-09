@@ -261,31 +261,60 @@ function checkLanguages(actor, issues) {
 }
 
 function checkFeatSlots(actor, expected, issues) {
-  const checks = [
-    { code: "ANCESTRY_FEAT_MISSING", category: "ancestry", expected: expected.ancestryFeats },
-    { code: "CLASS_FEAT_MISSING", category: "class", expected: expected.classFeats },
-    { code: "SKILL_FEAT_MISSING", category: "skill", expected: expected.skillFeats },
-    { code: "GENERAL_FEAT_MISSING", category: "general", expected: expected.generalFeats }
-  ];
+  // Ancestry and class feat slots are exclusive (only feats of that category
+  // fill them). Skill and general slots are NOT — per RAW, skill feats also
+  // carry the `general` trait, so they're a valid choice in a general slot.
+  // We count general + skill together against the combined expected total
+  // and emit at most one issue for that pool when short.
   const allLevels = Object.keys(expected.ancestryFeats).concat(
     Object.keys(expected.classFeats), Object.keys(expected.skillFeats), Object.keys(expected.generalFeats)
   );
   if (allLevels.length === 0) return;
 
-  for (const c of checks) {
-    const owned = actor.itemTypes.feat.filter((f) => {
-      const cat = f.system?.category ?? f.system?.featType;
-      return cat === c.category;
-    });
-    const targetLevels = Object.keys(c.expected).map(Number).filter((k) => k <= expected.level);
-    if (targetLevels.length === 0) continue;
+  const ownedByCat = (cat) => actor.itemTypes.feat.filter((f) => {
+    const c = f.system?.category ?? f.system?.featType;
+    return c === cat;
+  });
+
+  const checkOne = (code, owned, expectedMap) => {
+    const targetLevels = Object.keys(expectedMap).map(Number).filter((k) => k <= expected.level);
+    if (targetLevels.length === 0) return;
     const maxLv = Math.max(...targetLevels);
-    const expectedCumulative = targetLevels.reduce((s, k) => s + (c.expected[k] || 0), 0);
+    const expectedCumulative = targetLevels.reduce((s, k) => s + (expectedMap[k] || 0), 0);
     const got = owned.filter((f) => (f.system?.level?.value ?? 1) <= maxLv).length;
     if (got < expectedCumulative) {
-      issues.push(
-        makeIssue(c.code, SEVERITY.ERROR, { level: maxLv, expected: expectedCumulative, actual: got }, { level: maxLv })
-      );
+      issues.push(makeIssue(code, SEVERITY.ERROR, { level: maxLv, expected: expectedCumulative, actual: got }, { level: maxLv }));
+    }
+  };
+
+  // Ancestry + class: strict per-category counts.
+  checkOne("ANCESTRY_FEAT_MISSING", ownedByCat("ancestry"), expected.ancestryFeats);
+  checkOne("CLASS_FEAT_MISSING", ownedByCat("class"), expected.classFeats);
+
+  // Skill + general: count pooled. A general feat slot accepts a skill feat
+  // (since skill feats have the general trait); shortage shows up in the pool.
+  const skillOwned = ownedByCat("skill");
+  const generalOwned = ownedByCat("general");
+  const pool = [...skillOwned, ...generalOwned];
+
+  const skillLevels = Object.keys(expected.skillFeats).map(Number).filter((k) => k <= expected.level);
+  const generalLevels = Object.keys(expected.generalFeats).map(Number).filter((k) => k <= expected.level);
+  const maxLv = Math.max(0, ...skillLevels, ...generalLevels);
+  if (maxLv === 0) return;
+  const expectedSkill = skillLevels.reduce((s, k) => s + (expected.skillFeats[k] || 0), 0);
+  const expectedGeneral = generalLevels.reduce((s, k) => s + (expected.generalFeats[k] || 0), 0);
+  const expectedPool = expectedSkill + expectedGeneral;
+  const gotPool = pool.filter((f) => (f.system?.level?.value ?? 1) <= maxLv).length;
+
+  if (gotPool < expectedPool) {
+    // Emit under whichever slot is most clearly under-filled — prefer
+    // GENERAL when both pure-general count and pool both fall short.
+    const gotGeneralPure = generalOwned.filter((f) => (f.system?.level?.value ?? 1) <= maxLv).length;
+    const gotSkillPure = skillOwned.filter((f) => (f.system?.level?.value ?? 1) <= maxLv).length;
+    if (gotGeneralPure < expectedGeneral && gotSkillPure >= expectedSkill) {
+      issues.push(makeIssue("GENERAL_FEAT_MISSING", SEVERITY.ERROR, { level: maxLv, expected: expectedGeneral, actual: gotGeneralPure }, { level: maxLv }));
+    } else {
+      issues.push(makeIssue("SKILL_FEAT_MISSING", SEVERITY.ERROR, { level: maxLv, expected: expectedSkill, actual: gotSkillPure }, { level: maxLv }));
     }
   }
 }
@@ -313,21 +342,127 @@ function checkSkillIncreases(actor, expected, issues) {
   const expectedTotal = Object.values(expected.skillIncreases).reduce((s, n) => s + n, 0);
   if (expectedTotal === 0) return;
 
-  // PF2e v8 / Remaster doesn't always populate actor.system.build.skills.
-  // Skip the check entirely when we can't read the data — reporting "0 vs N"
-  // for every higher-level character is just noise.
-  const inc = actor.system?.build?.skills?.increases ?? actor.system?.build?.skills;
-  if (!inc) return;
-  const hasAnyData = (typeof inc === "object")
-    && Object.values(inc).some((v) => Array.isArray(v) ? v.length > 0 : !!v);
-  if (!hasAnyData) return;
+  // PF2e v8 / Remaster rarely populates actor.system.build.skills.increases,
+  // so derive used-increases from the actor's actual skill ranks: every rank
+  // above trained (1) costs one skill increase to reach. Lore skills also
+  // count if they're above trained.
+  const usedFromRanks = countSkillIncreasesFromRanks(actor);
+  // Fall back to the legacy build-data path if the rank derivation gives 0
+  // (e.g. brand-new character with no boosts yet).
+  const buildDerived = countSkillIncreases(actor);
+  const actual = Math.max(usedFromRanks, buildDerived);
 
-  const actual = countSkillIncreases(actor);
   if (actual < expectedTotal) {
     issues.push(
-      makeIssue("SKILL_INCREASE_MISSING", SEVERITY.ERROR, { expected: expectedTotal, actual })
+      makeIssue("SKILL_INCREASE_MISSING", SEVERITY.WARN, { expected: expectedTotal, actual })
     );
   }
+}
+
+// Class baseline trained-skill count = mandatory class skills + free choices.
+// Background adds 1 standard + 1 lore on top. INT mod adds further standards.
+// Skill Training (general feat) adds 1 standard each.
+// Source: PC1/PC2 Remaster class entries.
+const CLASS_BASE_TRAINED = {
+  alchemist: 4,    // Crafting + 3
+  barbarian: 4,    // Athletics + 3
+  bard: 6,         // Occultism + Performance + 4
+  champion: 3,     // Religion + 2
+  cleric: 3,       // Religion + 2
+  druid: 3,        // Nature + 2
+  fighter: 3,
+  guardian: 3,
+  gunslinger: 4,   // Stealth + 3 (varies by way)
+  inventor: 4,     // Crafting + 3
+  investigator: 5, // Society + 4
+  kineticist: 3,   // Athletics or Nature + 2
+  magus: 4,        // Arcana + 3
+  monk: 4,
+  oracle: 5,       // Religion + 4
+  psychic: 4,      // Occultism + 3
+  ranger: 6,       // Nature + Survival + 4
+  rogue: 8,        // Stealth + 7
+  sorcerer: 2,
+  summoner: 5,     // Nature + 4 (eidolon-dependent baseline)
+  swashbuckler: 4, // Acrobatics + 3
+  thaumaturge: 4,  // Arcana / Occultism + 3
+  witch: 4,        // Religion or Arcana + 3
+  wizard: 4,       // Arcana + 3
+  animist: 4,
+  exemplar: 4,
+  commander: 4
+};
+
+function checkTrainedSkillCount(actor, issues) {
+  const classSlug = actor.class?.slug;
+  if (!classSlug) return;
+  const baseClass = CLASS_BASE_TRAINED[classSlug];
+  if (typeof baseClass !== "number") return;            // unknown class
+
+  const intMod = actor.system?.abilities?.int?.mod ?? 0;
+  // 1 background skill (standard, not lore)
+  const fromBackground = 1;
+  // Skill Training general feat: each instance grants 1 trained standard.
+  let fromSkillTraining = 0;
+  for (const f of actor.itemTypes?.feat ?? []) {
+    const slug = String(f.slug ?? f.system?.slug ?? "").toLowerCase();
+    if (slug === "skill-training" || /skill-training$/.test(slug)) fromSkillTraining++;
+  }
+  // Multiclass dedications often grant +1 trained skill.
+  let fromDedications = 0;
+  for (const f of actor.itemTypes?.feat ?? []) {
+    const traits = f.system?.traits?.value ?? [];
+    if (Array.isArray(traits) && traits.includes("dedication")) fromDedications++;
+  }
+
+  const expected = baseClass + fromBackground + Math.max(0, intMod);
+  // Hard floor — anything below class baseline is a real gap.
+  const minExpected = baseClass;
+
+  // Count distinct standard skills the actor is at least Trained in.
+  const STANDARD = ["acrobatics","arcana","athletics","crafting","deception","diplomacy","intimidation","medicine","nature","occultism","performance","religion","society","stealth","survival","thievery"];
+  let trained = 0;
+  for (const slug of STANDARD) {
+    const rank = actor.skills?.[slug]?.rank ?? actor.system?.skills?.[slug]?.rank;
+    if (typeof rank === "number" && rank >= 1) trained++;
+  }
+
+  // Allow extra training from skill-feat-granted skills (Assurance etc.) +
+  // dedications, so the upper bound is never an issue. We only care about
+  // shortfall vs the hard class baseline.
+  if (trained < minExpected) {
+    issues.push(
+      makeIssue("MISSING_TRAINED_SKILLS", SEVERITY.WARN, {
+        expected: minExpected,
+        actual: trained,
+        baseline: expected
+      })
+    );
+  }
+}
+
+// Count skill increases the actor has spent. Per RAW, every step a skill
+// rises beyond Trained costs exactly one increase (trained→expert is 1,
+// →master is 2, →legendary is 3). Initial Trained-rank slots come from
+// class/background/INT mod and don't count.
+function countSkillIncreasesFromRanks(actor) {
+  let used = 0;
+  // Standard 16 skills
+  for (const slug of [
+    "acrobatics","arcana","athletics","crafting","deception","diplomacy",
+    "intimidation","medicine","nature","occultism","performance","religion",
+    "society","stealth","survival","thievery"
+  ]) {
+    const rank = actor.skills?.[slug]?.rank
+      ?? actor.system?.skills?.[slug]?.rank;
+    if (typeof rank === "number" && rank > 1) used += (rank - 1);
+  }
+  // Lore skills are usually under actor.itemTypes.lore as separate items.
+  for (const lore of actor.itemTypes?.lore ?? []) {
+    const rank = lore.system?.proficient?.value ?? lore.system?.rank;
+    if (typeof rank === "number" && rank > 1) used += (rank - 1);
+  }
+  return used;
 }
 
 const GENERIC_TRAITS = new Set(["archetype", "dedication", "uncommon", "rare", "unique", "common", "multiclass"]);
@@ -489,10 +624,13 @@ function checkHP(actor, issues) {
   const conMod = actor.system?.abilities?.con?.mod ?? 0;
   const level = actor.system?.details?.level?.value ?? 1;
   const baseline = ancestryHp + (classHp + conMod) * level;
-  // Many feats / class features ADD hp; flag only when actor's max is below the
-  // unmodified baseline by more than 2 (typo / forgotten leveling).
-  if (max + 2 < baseline) {
-    issues.push(makeIssue("HP_UNDER_EXPECTED", SEVERITY.WARN, { actual: max, baseline }));
+  // Many feats / class features ADD hp; some also SUBTRACT it (e.g.
+  // certain ancestry / feat penalties), and modules may apply rule-element
+  // adjustments that legitimately reduce max. Flag only when actor's max
+  // is significantly below the unmodified baseline AND demote to info —
+  // it's a gentle "did you forget a level-up?" hint, not a rule violation.
+  if (max + 5 < baseline) {
+    issues.push(makeIssue("HP_UNDER_EXPECTED", SEVERITY.INFO, { actual: max, baseline }));
   }
 }
 
@@ -659,6 +797,7 @@ export function auditCompleteness(actor, variants) {
   checkFeatSlots(actor, expected, issues);
   checkArchetypeSlots(actor, expected, variants, issues);
   checkSkillIncreases(actor, expected, issues);
+  checkTrainedSkillCount(actor, issues);
   checkDedications(actor, issues);
   checkDualClass(actor, variants, issues);
   checkStartingEquipment(actor, issues);

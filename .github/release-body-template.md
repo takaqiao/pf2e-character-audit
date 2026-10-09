@@ -8,7 +8,7 @@ https://github.com/takaqiao/pf2e-character-audit/releases/latest/download/module
 
 ## Compatibility
 
-- Foundry VTT v13 ~ v14
+- Foundry VTT: minimum v13; verified v14
 - PF2e system v7+
 
 ## What it does
@@ -21,4 +21,6 @@ Four entry points: character sheet header, party sheet header, Actors directory 
 
 ## Changes
 
-See the commits associated with this tag for the full change list.
+Remove the Foundry core upper-version installation limit. Minimum and verified versions and PF2e requirements remain unchanged.
+
+Retain the deployed character-check fixes and Chinese name parsing improvements.

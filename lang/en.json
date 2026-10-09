@@ -351,6 +351,10 @@
         "CLERIC_DOMAIN_SPELL_COUNT_OFF": {
           "Title": "Cleric domain spell count mismatch",
           "Hint": "Expected {expected} domain focus spells (Domain Initiate {domainInitiate} + Advanced Domain {advancedDomain}), found {actual}. Either add the matching focus spell or the missing feat."
+        },
+        "MISSING_TRAINED_SKILLS": {
+          "Title": "Trained skill count short",
+          "Hint": "Class baseline expects ≥ {expected} trained skills (≈ {baseline} with INT mod), found {actual}. Add missing background / class / Skill Training feats."
         }
       }
     },

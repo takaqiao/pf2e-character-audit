@@ -34,9 +34,9 @@ const SKILL_CN_TO_EN = {
   "表演": "Performance",
   "宗教": "Religion",
   "社群": "Society", "社交": "Society",
-  "隐匿": "Stealth", "潜行": "Stealth",
+  "隐匿": "Stealth", "潜行": "Stealth", "隐秘": "Stealth", "潜匿": "Stealth",
   "生存": "Survival",
-  "盗窃": "Thievery", "盗术": "Thievery",
+  "盗窃": "Thievery", "盗术": "Thievery", "贼活": "Thievery", "盗贼": "Thievery",
   // Perception is technically a separate proficiency in PF2e (not a skill),
   // but appears in skill-style prereqs ("察觉熟练度为大师"). Include it here
   // so the rank-pattern regex picks it up.
@@ -152,7 +152,14 @@ const FEATURE_CN_TO_EN = {
   "奇具": "implement",
   "弱点发掘": "Exploit Vulnerability",
   "能够从法术位施法": "able to cast spells from spell slots",
-  "能够施法": "able to cast spells",
+  // Map all "is a spellcaster" prereq variants to the canonical
+  // parser-recognised form. The pf2e-leveler parser's SPELL_SLOTS_PATTERN
+  // requires the "from spell slots" suffix — bare "able to cast spells"
+  // is not recognised. Every class with a spellcasting class feature has
+  // slot-based casting, so this is functionally equivalent for prereqs.
+  "能够施法": "able to cast spells from spell slots",
+  "施法职业特性": "able to cast spells from spell slots",
+  "spellcasting class feature": "able to cast spells from spell slots",
 
   // Bard muses (drop "缪斯" suffix → bare feat name)
   "丹心缪斯": "Enigma",

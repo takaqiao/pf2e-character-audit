@@ -73,11 +73,19 @@ const LEVEL_GAINS = {
     classDC:   [{ level: 1, rank: 1 }, { level: 5, rank: 2 }, { level: 13, rank: 3 }, { level: 17, rank: 4 }]
   },
   rogue: {
-    fortitude: [{ level: 1, rank: 1 }, { level: 7, rank: 2 }, { level: 15, rank: 3 }],
-    reflex:    [{ level: 1, rank: 2 }, { level: 9, rank: 3 }, { level: 17, rank: 4 }],
-    will:      [{ level: 1, rank: 2 }, { level: 11, rank: 3 }, { level: 19, rank: 4 }],
-    perception:[{ level: 1, rank: 2 }, { level: 7, rank: 3 }, { level: 17, rank: 4 }],
-    classDC:   [{ level: 1, rank: 1 }, { level: 5, rank: 2 }, { level: 13, rank: 3 }, { level: 17, rank: 4 }]
+    // PC1 Remaster Rogue:
+    //   L1: Fort T, Reflex E, Will E, Class DC T, Perception E
+    //   L7  Evasion              → Reflex E → M
+    //   L9  Great Fortitude      → Fort T → E
+    //   L11 Vigilant Senses      → Perception E → M
+    //   L13 Master Tricks        → Class DC T → E
+    //   L15 Improved Evasion     → Reflex M → L
+    //   L17 Slippery Mind        → Will E → M
+    fortitude: [{ level: 1, rank: 1 }, { level: 9, rank: 2 }, { level: 17, rank: 3 }],
+    reflex:    [{ level: 1, rank: 2 }, { level: 7, rank: 3 }, { level: 15, rank: 4 }],
+    will:      [{ level: 1, rank: 2 }, { level: 17, rank: 3 }],
+    perception:[{ level: 1, rank: 2 }, { level: 11, rank: 3 }],
+    classDC:   [{ level: 1, rank: 1 }, { level: 13, rank: 2 }]
   },
   sorcerer: {
     fortitude: [{ level: 1, rank: 1 }, { level: 9, rank: 2 }, { level: 17, rank: 3 }],
